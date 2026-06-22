@@ -52,7 +52,7 @@ _DEF_SCHLS = {
 _DEF_SEC_EMAIL = "secretariat@modelundp.org"
 _DEF_EXT_URL = "https://modelundp.org"
 
-VALID_DOC_STATUSES = ("pending", "debated", "passed", "failed")
+VALID_DOC_STATUSES = ("pending", "passed", "failed")
 
 # Conference local timezone (GMT+3, Türkiye — no DST since 2016)
 LOCAL_TZ = timezone(timedelta(hours=3))
@@ -1546,6 +1546,12 @@ def toggle_summit(doc_id: int):
         abort(400, description="Resolution has no committee.")
     if g.user["role"] != "admin" and row["committee"] != g.user.get("committee"):
         abort(403, description="You can only submit resolutions from your own committee.")
+
+    # Only passed resolutions may be submitted to the International Summit.
+    status_row = db.execute("SELECT status FROM documents WHERE id = ?", (doc_id,)).fetchone()
+    if not row["is_summit"] and (not status_row or status_row["status"] != "passed"):
+        flash("Only passed resolutions can be submitted to the International Summit.", "error")
+        return redirect(request.form.get("next") or url_for("view_document", doc_id=doc_id))
 
     if row["is_summit"]:
         db.execute("UPDATE documents SET is_summit = 0 WHERE id = ?", (doc_id,))

@@ -87,7 +87,7 @@
     </div>
     <div class="chair-actions-row">
         <span class="chair-actions-label">Status</span>
-        {% for s, label in [('pending','Pending'), ('debated','Debated'), ('passed','Passed'), ('failed','Failed')] %}
+        {% for s, label in [('passed','Passed'), ('failed','Failed')] %}
         <form method="post" action="{{ url_for('set_document_status', doc_id=doc.id) }}" class="inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="status" value="{{ s }}">
@@ -99,6 +99,7 @@
         </form>
         {% endfor %}
     </div>
+    {% if doc.status == 'passed' or doc.is_summit %}
     <div class="chair-actions-row">
         <span class="chair-actions-label">International Summit</span>
         <form method="post" action="{{ url_for('toggle_summit', doc_id=doc.id) }}" class="inline">
@@ -111,6 +112,7 @@
         </form>
         <span class="muted small">One resolution per committee.</span>
     </div>
+    {% endif %}
 </div>
 {% endif %}
 
