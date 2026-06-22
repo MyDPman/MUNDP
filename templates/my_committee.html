@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}{{ committee or 'My Committee' }} — MUNDP Portal{% endblock %}
+{% block content %}
+
+{% if not committee %}
+<div class="page-header"><h1>{{ 'Committees' if current_user.role == 'exec_gc' else 'My Committee' }}</h1></div>
+{% if current_user.role == 'exec_gc' and all_committees %}
+<div class="card">
+    <p class="muted small" style="margin-bottom:14px">Select a committee to view its info.</p>
+    <ul class="mc-plain-list" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px">
+        {% for c in all_committees %}
+        <li>
+            <a href="{{ url_for('my_committee') }}?c={{ c | urlencode }}" class="button" style="display:block;text-align:left;">{{ c }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% else %}
+<div class="empty-state">
+    <p>You haven't been assigned to a committee yet.</p>
+    <p class="muted small">An administrator will appoint you to one of the committees.</p>
+</div>
+{% endif %}
+{% else %}
+
+<div class="page-header">
+    <div>
+        <h1>{{ committee }}</h1>
+        {% if current_user.delegation %}
+        <p class="muted small" style="margin:4px 0 0">
+            Representing <strong>{{ current_user.delegation }}</strong>
+        </p>
+        {% endif %}
+    </div>
+    {% if current_user.role == 'exec_gc' %}
+    <div class="header-actions">
+        <a href="{{ url_for('my_committee') }}" class="button">← All Committees</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="mc-info-grid">
+    <section class="card">
+        <div class="mc-label">Chairboard</div>
+        <ul class="mc-plain-list">
+            <li class="mc-person-row">
+                <span class="mc-person-role">President</span>
+                <span class="mc-person-name">{{ info.president or '—' }}</span>
+            </li>
+            {% for dp in info.deputy_presidents %}
+            <li class="mc-person-row mc-person-secondary">
+                <span class="mc-person-role">Deputy President</span>
+                <span class="mc-person-name">{{ dp or '—' }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="card">
+        <div class="mc-label">Agenda Items</div>
+        <ol class="mc-agenda-plain">
+            {% for item in info.agenda_items %}
+            <li>{{ item or '—' }}</li>
+            {% endfor %}
+        </ol>
+    </section>
+</div>
+
+{% set total_res = (awaiting|length) + (pending|length) + (debated|length) %}
+{% if total_res > 0 or pending is defined %}
+<section class="card" style="padding: 0; overflow: hidden;">
+    <div class="mc-section-top">
+        <span class="mc-section-title">Resolutions</span>
+        <span class="muted small">{{ total_res }} total</span>
+    </div>
+
+    {% if awaiting %}
+    <div class="mc-res-group-label mc-res-group-warn">Awaiting approval ({{ awaiting|length }})</div>
+    <table class="data-table mc-res-table">
+        <tbody>
+        {% for d in awaiting %}
+        <tr>
+            <td><a href="{{ url_for('view_document', doc_id=d.id) }}"><strong>{{ d.title }}</strong></a></td>
+            <td class="muted small">{{ d.uploader_name }}</td>
+            <td class="muted small">{{ d.created_at | local_date }}</td>
+            <td><span class="status-badge status-awaiting">Awaiting</span></td>
+            <td class="td-action"><a href="{{ url_for('view_document', doc_id=d.id) }}">Open →</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if pending %}
+    <div class="mc-res-group-label">To be debated ({{ pending|length }})</div>
+    <table class="data-table mc-res-table">
+        <tbody>
+        {% for d in pending %}
+        <tr>
+            <td><a href="{{ url_for('view_document', doc_id=d.id) }}"><strong>{{ d.title }}</strong></a></td>
+            <td class="muted small">{{ d.uploader_name }}</td>
+            <td class="muted small">{{ d.created_at | local_date }}</td>
+            <td class="muted small">{{ d.comment_count }} amendment{{ '' if d.comment_count == 1 else 's' }}</td>
+            <td class="td-action"><a href="{{ url_for('view_document', doc_id=d.id) }}">Open →</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% elif not awaiting and not debated %}
+    <p class="mc-empty-res">No resolutions yet.</p>
+    {% endif %}
+
+    {% if debated %}
+    <div class="mc-res-group-label mc-res-group-done">Debated ({{ debated|length }})</div>
+    <table class="data-table mc-res-table">
+        <tbody>
+        {% for d in debated %}
+        <tr class="mc-row-debated">
+            <td><a href="{{ url_for('view_document', doc_id=d.id) }}"><strong>{{ d.title }}</strong></a></td>
+            <td class="muted small">{{ d.uploader_name }}</td>
+            <td class="muted small">{{ d.created_at | local_date }}</td>
+            <td><span class="status-badge status-debated">Debated</span></td>
+            <td class="td-action"><a href="{{ url_for('view_document', doc_id=d.id) }}">Open →</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if committee_members %}
+<section class="card" style="padding: 0; overflow: hidden;">
+    <div class="mc-section-top">
+        <span class="mc-section-title">Delegations</span>
+        <span class="muted small">{{ committee_members|length }}</span>
+    </div>
+    <table class="data-table mc-res-table">
+        <thead>
+            <tr>
+                <th>Country</th>
+                <th>Display name</th>
+                {% if current_user.role in ('chair', 'admin') %}<th></th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for m in committee_members %}
+        <tr>
+            <td>
+                <span class="delegation-cell">
+                    <img class="country-flag-inline" alt="" data-country-flag="{{ m.delegation }}">
+                    <strong>{{ m.delegation or '—' }}</strong>
+                </span>
+            </td>
+            <td class="muted small">{{ m.display_name }}</td>
+            {% if current_user.role in ('chair', 'admin') %}
+            <td class="td-action">
+                {% set has_perm = m.upload_permission_until and m.upload_permission_until > (now_utc_iso or '') %}
+                {% if has_perm %}
+                <span class="permission-badge permission-badge-mini" data-until="{{ m.upload_permission_until }}">
+                    <span class="permission-dot"></span>
+                    <span><strong class="permission-countdown">--:--</strong> left</span>
+                </span>
+                <form method="post" action="{{ url_for('revoke_upload_permission', user_id=m.id) }}"
+                      class="inline-form" data-no-loading>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="permit-revoke">Revoke</button>
+                </form>
+                {% else %}
+                <form method="post" action="{{ url_for('grant_upload_permission', user_id=m.id) }}"
+                      class="inline-form" data-no-loading>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="primary permit-grant">Permit upload (10 min)</button>
+                </form>
+                {% endif %}
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+{% if current_user.role in ('admin', 'exec_gc') and committee_tally %}
+<section class="card" style="padding: 0; overflow: hidden;">
+    <div class="mc-section-top">
+        <span class="mc-section-title">Tally</span>
+        <span class="muted small">by points</span>
+    </div>
+    <table class="data-table mc-res-table">
+        <thead>
+            <tr>
+                <th>Delegation</th>
+                <th class="text-center">POI</th>
+                <th class="text-center">Speech</th>
+                <th class="text-center">Amendment</th>
+                <th class="text-center">Points</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for delegation, t in committee_tally %}
+        <tr>
+            <td>
+                <span class="delegation-cell">
+                    <img class="country-flag-inline" alt="" data-country-flag="{{ delegation }}">
+                    <strong>{{ delegation }}</strong>
+                </span>
+            </td>
+            <td class="text-center muted small">{{ t.poi or '—' }}</td>
+            <td class="text-center muted small">{{ t.speech or '—' }}</td>
+            <td class="text-center muted small">{{ t.amendment or '—' }}</td>
+            <td class="text-center"><strong>{{ t.total }}</strong></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+{% if current_user.role in ('chair', 'admin') and notes_in_committee %}
+<section class="card" style="padding: 0; overflow: hidden;">
+    <div class="mc-section-top">
+        <span class="mc-section-title">Notes</span>
+        <span class="muted small">{{ notes_in_committee|length }}</span>
+    </div>
+    <ul class="notes-list" style="padding: 16px 20px; margin: 0;">
+        {% for n in notes_in_committee %}
+        <li class="note-item">
+            <div class="note-header">
+                <span class="note-direction">
+                    <span class="note-delegation">
+                        <img class="country-flag-inline" alt="" data-country-flag="{{ n.sender_delegation }}">
+                        <span>{{ n.sender_delegation or n.sender_name }}</span>
+                    </span>
+                    <svg class="note-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    <span class="note-delegation">
+                        <img class="country-flag-inline" alt="" data-country-flag="{{ n.recipient_delegation }}">
+                        <span>{{ n.recipient_delegation }}</span>
+                    </span>
+                </span>
+                <span class="muted small">{{ n.created_at | local }}</span>
+            </div>
+            <div class="note-body">{{ n.body }}</div>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-country-flag]").forEach((img) => {
+        const c = window.COUNTRY_BY_NAME && window.COUNTRY_BY_NAME[img.dataset.countryFlag];
+        if (c) img.src = window.flagUrl(c.iso);
+        else img.hidden = true;
+    });
+    document.querySelectorAll(".permission-badge[data-until]").forEach((badge) => {
+        const until = new Date(badge.dataset.until);
+        const out = badge.querySelector(".permission-countdown");
+        const tick = () => {
+            const ms = until - new Date();
+            if (ms <= 0) {
+                if (out) out.textContent = "0:00";
+                badge.classList.add("permission-badge-expired");
+                return false;
+            }
+            const total = Math.floor(ms / 1000);
+            const m = String(Math.floor(total / 60)).padStart(2, "0");
+            const s = String(total % 60).padStart(2, "0");
+            if (out) out.textContent = `${m}:${s}`;
+            if (total <= 30) badge.classList.add("permission-badge-warn");
+            return true;
+        };
+        if (tick()) setInterval(tick, 1000);
+    });
+});
+</script>
+{% endblock %}

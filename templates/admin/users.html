@@ -1,0 +1,542 @@
+{% extends "base.html" %}
+{% from "_macros.html" import country_picker %}
+{% block title %}Users — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>User management</h1>
+</div>
+
+<section class="card">
+    <h2>Create user</h2>
+    <form method="post" class="form form-grid" id="create-user-form" data-no-loading>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="manual-name-field">
+            Username
+            <input type="text" name="username" maxlength="50" pattern="[a-zA-Z0-9._-]+"
+                   title="Letters, numbers, dot, underscore, hyphen">
+        </label>
+        <label class="manual-name-field">
+            Display name
+            <input type="text" name="display_name" maxlength="100">
+        </label>
+        <label class="participant-name-field">
+            <span id="participant-label-text">Participant name <span class="muted small">(required)</span></span>
+            <input type="text" name="participant_name" maxlength="120"
+                   placeholder="e.g. Alp Suner">
+        </label>
+        <label>
+            Password
+            <input type="text" name="password" required minlength="8" maxlength="128">
+        </label>
+        <label>
+            Role
+            <select name="role" id="create-role" required>
+                <option value="delegate">Delegate</option>
+                <option value="chair">Chair</option>
+                <option value="advisor">Advisor</option>
+                <option value="admin">Admin</option>
+                <option value="exec_gc">EXEC/GC</option>
+            </select>
+        </label>
+        <label class="committee-field">
+            Committee
+            <select name="committee">
+                <option value="">Unassigned</option>
+                {% for c in committees %}
+                    <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label class="role-context-field">
+            <span id="role-context-label">Delegation <span class="muted small">(required)</span></span>
+            <select name="chair_position" id="create-chair-position" hidden>
+                <option value="" disabled selected>Pick a position…</option>
+                <option value="president">President</option>
+                <option value="deputy_1">Deputy President 1</option>
+                <option value="deputy_2">Deputy President 2</option>
+            </select>
+            <select name="advisor_school" id="create-advisor-school" hidden>
+                <option value="" disabled selected>{% if schools %}Pick a school…{% else %}No schools configured yet{% endif %}</option>
+                {% for name in schools.keys() %}
+                    <option value="{{ name }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+            <div class="role-context-delegation">{{ country_picker('delegation') }}</div>
+        </label>
+        <div class="form-actions full-width">
+            <button type="submit" class="primary">Create user</button>
+        </div>
+    </form>
+</section>
+
+<section class="card">
+    <div class="users-head">
+        <h2>All users (<span id="user-count">{{ users|length }}</span>)</h2>
+        <input type="search" id="user-search" class="users-search"
+               placeholder="Search name, username, or delegation…" autocomplete="off">
+    </div>
+
+    <div class="filter-pills" id="role-filter" role="tablist">
+        <button type="button" class="filter-pill active" data-role="">All</button>
+        <button type="button" class="filter-pill" data-role="admin">Admin</button>
+        <button type="button" class="filter-pill" data-role="chair">Chair</button>
+        <button type="button" class="filter-pill" data-role="delegate">Delegate</button>
+        <button type="button" class="filter-pill" data-role="advisor">Advisor</button>
+    </div>
+
+    <ul class="user-list" id="user-list">
+    {% for u in users %}
+        {% include "admin/_user_row.html" %}
+    {% endfor %}
+    </ul>
+
+    <p class="user-empty muted" id="user-empty" hidden>No users match your search.</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-country-flag]").forEach((img) => {
+        const c = window.COUNTRY_BY_NAME && window.COUNTRY_BY_NAME[img.dataset.countryFlag];
+        if (c) img.src = window.flagUrl(c.iso);
+        else img.hidden = true;
+    });
+
+    // Country picker is delegate-only.
+    // Delegates auto-name from committee + country (ISO-3).
+    // Chairs auto-name from committee + position (president / deputy 1 or 2).
+    // Admin & advisor stay manual.
+    const roleSel = document.getElementById("create-role");
+    const createForm = document.getElementById("create-user-form");
+    const contextField = createForm ? createForm.querySelector(".role-context-field") : null;
+    const contextLabel = document.getElementById("role-context-label");
+    const delegationContainer = createForm ? createForm.querySelector(".role-context-delegation") : null;
+    const delegationLabel = createForm ? createForm.querySelector(".country-picker") : null;
+    const delegationInput = delegationLabel ? delegationLabel.querySelector('input[type="hidden"]') : null;
+    const positionSel = document.getElementById("create-chair-position");
+    const schoolSel = document.getElementById("create-advisor-school");
+    const committeeField = createForm ? createForm.querySelector(".committee-field") : null;
+    const committeeSel = createForm ? createForm.querySelector('select[name="committee"]') : null;
+    const nameFields = createForm ? createForm.querySelectorAll(".manual-name-field") : [];
+    const participantField = createForm ? createForm.querySelector(".participant-name-field") : null;
+    const participantInput = createForm ? createForm.querySelector('input[name="participant_name"]') : null;
+    const participantLabelText = document.getElementById("participant-label-text");
+    const SCHOOLS = {{ schools|tojson }};
+    let nextAdminN = {{ next_admin_n|tojson }};
+    const usernameInput = createForm ? createForm.querySelector('input[name="username"]') : null;
+    const displayInput = createForm ? createForm.querySelector('input[name="display_name"]') : null;
+    const ISO3 = {{ country_iso3|tojson }};
+
+    function fillAutoNames() {
+        if (!usernameInput || !displayInput) return;
+        const role = roleSel ? roleSel.value : "";
+        const committee = committeeSel ? committeeSel.value : "";
+        let username = "", display = "";
+        if (role === "delegate") {
+            const country = delegationInput ? delegationInput.value : "";
+            const code = country ? ISO3[country] : null;
+            if (committee && code) {
+                username = `del-${committee.toLowerCase()}-${code.toLowerCase()}`;
+                display = `${committee} - ${code}`;
+            }
+        } else if (role === "chair") {
+            const pos = positionSel ? positionSel.value : "";
+            if (committee && pos) {
+                const c = committee.toLowerCase();
+                if (pos === "president")      { username = `pres-${c}`;     display = `PRES - ${committee}`; }
+                else if (pos === "deputy_1")  { username = `dpres-1-${c}`;  display = `DPRES 1 - ${committee}`; }
+                else if (pos === "deputy_2")  { username = `dpres-2-${c}`;  display = `DPRES 2 - ${committee}`; }
+            }
+        } else if (role === "advisor") {
+            const school = schoolSel ? schoolSel.value : "";
+            const code = school ? SCHOOLS[school] : null;
+            if (code) {
+                username = `adv-${code.toLowerCase()}`;
+                display = `ADV - ${code}`;
+            }
+        } else if (role === "admin") {
+            username = `admin-${nextAdminN}`;
+            display = `ADMIN ${nextAdminN}`;
+        } else if (role === "exec_gc") {
+            const pname = participantInput ? participantInput.value.trim() : "";
+            if (pname) {
+                username = `exec-${pname}`;
+                display = `EXEC/GC - ${pname}`;
+            }
+        }
+        usernameInput.value = username;
+        displayInput.value = display;
+    }
+
+    function updateRoleMode() {
+        if (!roleSel) return;
+        const role = roleSel.value;
+        const isDelegate = role === "delegate";
+        const isChair = role === "chair";
+        const isAdvisor = role === "advisor";
+        const isAdmin = role === "admin";
+        const isExecGc = role === "exec_gc";
+        const showParticipant = !isAdmin;   // all roles except admin need a participant name
+
+        // Username & Display name preview — always visible so the admin can
+        // see exactly what will be generated before submitting.
+        nameFields.forEach((el) => { el.hidden = false; });
+
+        // Participant name field — hidden only for admin.
+        if (participantField) participantField.hidden = !showParticipant;
+        if (participantInput) {
+            if (showParticipant) {
+                participantInput.setAttribute("required", "");
+                // Exec/GC names are latin-hyphenated slugs; others are display names.
+                participantInput.placeholder = isExecGc ? "e.g. can-dagtekin" : "e.g. Alp Suner";
+            } else {
+                participantInput.removeAttribute("required");
+                participantInput.value = "";
+            }
+        }
+        // Update the participant field label for exec_gc.
+        if (participantLabelText) {
+            if (isExecGc) {
+                participantLabelText.innerHTML = 'Name <span class="muted small">(required)</span>';
+            } else {
+                participantLabelText.innerHTML = 'Participant name <span class="muted small">(required)</span>';
+            }
+        }
+
+        // Committee field is needed only for delegate + chair.
+        if (committeeField) committeeField.hidden = !(isDelegate || isChair);
+        if (committeeSel && !(isDelegate || isChair)) committeeSel.value = "";
+
+        // The single context field transforms based on role:
+        //   delegate → Country picker  | chair    → Position select
+        //   advisor  → School select   | admin / exec_gc → field hidden entirely
+        if (contextField) contextField.hidden = isAdmin || isExecGc;
+        if (contextLabel) {
+            if (isDelegate)    contextLabel.innerHTML = 'Delegation <span class="muted small">(required)</span>';
+            else if (isChair)  contextLabel.innerHTML = 'Position <span class="muted small">(required)</span>';
+            else if (isAdvisor) contextLabel.innerHTML = 'School <span class="muted small">(required)</span>';
+        }
+
+        // Country picker — delegate only.
+        if (delegationContainer) delegationContainer.hidden = !isDelegate;
+        if (delegationInput) {
+            if (isDelegate) {
+                delegationInput.setAttribute("required", "");
+            } else {
+                delegationInput.removeAttribute("required");
+                delegationInput.value = "";
+                if (delegationLabel) {
+                    delegationLabel.classList.remove("has-value");
+                    const lbl = delegationLabel.querySelector(".country-picker-label");
+                    if (lbl) lbl.textContent = delegationLabel.dataset.placeholder || "Select a country…";
+                }
+            }
+        }
+
+        // Position dropdown — chair only.
+        if (positionSel) {
+            positionSel.hidden = !isChair;
+            if (isChair) positionSel.setAttribute("required", "");
+            else { positionSel.removeAttribute("required"); positionSel.value = ""; }
+        }
+
+        // School dropdown — advisor only.
+        if (schoolSel) {
+            schoolSel.hidden = !isAdvisor;
+            if (isAdvisor) schoolSel.setAttribute("required", "");
+            else { schoolSel.removeAttribute("required"); schoolSel.value = ""; }
+        }
+
+        // Username + Display name are always read-only previews.
+        [usernameInput, displayInput].forEach((inp) => {
+            if (!inp) return;
+            inp.readOnly = true;
+            inp.classList.add("auto-filled");
+            inp.removeAttribute("required");
+            inp.placeholder = "";
+        });
+        fillAutoNames();
+    }
+
+    if (roleSel) {
+        roleSel.addEventListener("change", updateRoleMode);
+        if (committeeSel) committeeSel.addEventListener("change", fillAutoNames);
+        if (positionSel)  positionSel.addEventListener("change", fillAutoNames);
+        if (schoolSel)    schoolSel.addEventListener("change", fillAutoNames);
+        if (delegationInput) delegationInput.addEventListener("change", () => {
+            if (roleSel.value === "delegate") fillAutoNames();
+        });
+        if (participantInput) participantInput.addEventListener("input", () => {
+            if (roleSel.value === "exec_gc") fillAutoNames();
+        });
+        updateRoleMode();
+    }
+
+    // ---- shared helpers ------------------------------------------------
+    const CURRENT_USER_ID = {{ current_user.id }};
+    const COMMITTEES = {{ committees|tojson }};
+    const csrf = document.querySelector('input[name="csrf_token"]').value;
+    const list = document.getElementById("user-list");
+    const counter = document.getElementById("user-count");
+    const search = document.getElementById("user-search");
+    const empty = document.getElementById("user-empty");
+    const rolePills = document.querySelectorAll("#role-filter .filter-pill");
+    let activeRole = "";
+
+    function esc(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        }[c]));
+    }
+    function setFlag(img) {
+        const c = window.COUNTRY_BY_NAME && window.COUNTRY_BY_NAME[img.dataset.countryFlag];
+        if (c) img.src = window.flagUrl(c.iso);
+        else img.hidden = true;
+    }
+    function bumpCount(delta) {
+        if (!counter) return;
+        counter.textContent = String((parseInt(counter.textContent, 10) || 0) + delta);
+    }
+    function flash(msg, kind) {
+        let area = document.querySelector(".flash-area");
+        if (!area) {
+            area = document.createElement("div");
+            area.className = "flash-area";
+            const main = document.querySelector(".main-inner");
+            main.insertBefore(area, main.firstChild);
+        }
+        const div = document.createElement("div");
+        div.className = "flash flash-" + (kind || "success");
+        div.textContent = msg;
+        area.appendChild(div);
+        setTimeout(() => div.remove(), 5000);
+    }
+
+    // ---- build a new user card (after create) --------------------------
+    function renderCard(u) {
+        const committeeBadge = u.committee
+            ? ` <span class="committee-tag">${esc(u.committee)}</span>`
+            : "";
+        const delegationCell = u.delegation
+            ? `<span class="delegation-cell">
+                   <img class="country-flag-inline" alt="" data-country-flag="${esc(u.delegation)}">
+                   <span>${esc(u.delegation)}</span>
+               </span>`
+            : "";
+        const committeeOpts = ['<option value="">Unassigned</option>']
+            .concat(COMMITTEES.map((c) =>
+                `<option value="${esc(c)}"${u.committee === c ? " selected" : ""}>${esc(c)}</option>`
+            )).join("");
+        const created = window.fmtLocal
+            ? window.fmtLocal(u.created_at, "date") : (u.created_at || "").slice(0, 10);
+        const searchText = [u.username, u.display_name, u.participant_name, u.delegation, u.committee, u.role]
+            .filter(Boolean).join(" ").toLowerCase();
+
+        const li = document.createElement("li");
+        li.className = "user-card";
+        li.dataset.userId = u.id;
+        li.dataset.role = u.role;
+        li.dataset.search = searchText;
+        li.innerHTML = `
+            <div class="user-card-main">
+                <div class="user-identity">
+                    <div class="user-names">
+                        <span class="user-display">${esc(u.display_name)}</span>
+                        <code class="user-username">${esc(u.username)}</code>
+                    </div>
+                    <div class="user-sub muted small">${esc(u.participant_name || "No participant name")}</div>
+                </div>
+                <div class="user-meta">
+                    ${committeeBadge}
+                </div>
+                <div class="user-meta">${delegationCell}</div>
+                <div class="user-created muted small">${esc(created)}</div>
+                <div class="user-card-actions">
+                    ${u.role === "delegate" ? `<button type="submit" form="assign-form-${u.id}" class="primary user-save">Save</button>` : ''}
+                    <button type="button" class="user-edit-toggle">Edit</button>
+                    ${u.id !== CURRENT_USER_ID ? `
+                    <form method="post" action="/admin/users/${u.id}/impersonate" class="inline-form impersonate-form">
+                        <input type="hidden" name="csrf_token" value="${esc(csrf)}">
+                        <button type="submit" class="user-impersonate" title="Sign in as ${esc(u.username)}">Sign in as</button>
+                    </form>
+                    <form method="post" action="/admin/users/${u.id}/delete" class="inline-form delete-user-form" data-no-loading
+                          data-confirm="Delete user ${esc(u.username)}? This cannot be undone.">
+                        <input type="hidden" name="csrf_token" value="${esc(csrf)}">
+                        <button type="submit" class="danger">Delete</button>
+                    </form>` : ''}
+                </div>
+            </div>
+            <div class="user-editor" hidden>
+                ${u.role === "delegate" ? `
+                <form method="post" action="/admin/users/${u.id}/assign" class="user-editor-block assign-form" id="assign-form-${u.id}" data-no-loading>
+                    <input type="hidden" name="csrf_token" value="${esc(csrf)}">
+                    <div class="user-editor-controls">
+                        <div class="ce-stack">
+                            <select name="committee">${committeeOpts}</select>
+                            <div class="country-picker${u.delegation ? ' has-value' : ''}" data-placeholder="Delegation">
+                                <input type="hidden" name="delegation" value="${esc(u.delegation || '')}">
+                                <button type="button" class="country-picker-button">
+                                    <img class="country-flag" ${u.delegation ? '' : 'hidden'} alt="">
+                                    <span class="country-picker-label">${esc(u.delegation || 'Delegation')}</span>
+                                    <svg class="country-picker-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                </button>
+                                <div class="country-picker-popup" hidden>
+                                    <input type="text" class="country-picker-search" placeholder="Search countries…" autocomplete="off">
+                                    <ul class="country-picker-list" role="listbox"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>` : ''}
+                <form method="post" action="/admin/users/${u.id}/reset" class="user-editor-block"
+                      onsubmit="return confirm('Reset password and revoke active sessions for ${esc(u.username)}?');">
+                    <input type="hidden" name="csrf_token" value="${esc(csrf)}">
+                    <div class="user-editor-label">Reset password</div>
+                    <div class="user-editor-controls">
+                        <input type="text" name="password" placeholder="New password" minlength="8" required>
+                        <button type="submit">Reset &amp; sign out devices</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        li.querySelectorAll("[data-country-flag]").forEach(setFlag);
+        li.querySelectorAll(".country-picker").forEach((el) => new window.CountryPicker(el));
+        return li;
+    }
+
+    // ---- search + role filter -----------------------------------------
+    function applyFilters() {
+        const q = (search.value || "").trim().toLowerCase();
+        let shown = 0;
+        list.querySelectorAll(".user-card").forEach((card) => {
+            const roleMatch = !activeRole || card.dataset.role === activeRole;
+            const textMatch = !q || (card.dataset.search || "").includes(q);
+            const match = roleMatch && textMatch;
+            card.hidden = !match;
+            if (match) shown++;
+        });
+        if (empty) empty.hidden = shown !== 0;
+    }
+    if (search) search.addEventListener("input", applyFilters);
+    rolePills.forEach((p) => p.addEventListener("click", () => {
+        rolePills.forEach((x) => x.classList.remove("active"));
+        p.classList.add("active");
+        activeRole = p.dataset.role || "";
+        applyFilters();
+    }));
+
+    // ---- toggle the edit panel ----------------------------------------
+    list.addEventListener("click", (e) => {
+        const toggle = e.target.closest(".user-edit-toggle");
+        if (!toggle) return;
+        const card = toggle.closest(".user-card");
+        const editor = card.querySelector(".user-editor");
+        const open = editor.hidden;
+        editor.hidden = !open;
+        card.classList.toggle("editing", open);
+        toggle.textContent = open ? "Close" : "Edit";
+    });
+
+    // ---- AJAX create + delete -----------------------------------------
+    async function postForm(form) {
+        const data = new FormData(form);
+        const res = await fetch(form.action, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" },
+            body: data,
+        });
+        const json = await res.json().catch(() => ({}));
+        return { ok: res.ok && json.ok, json };
+    }
+
+    document.addEventListener("submit", async (e) => {
+        const form = e.target;
+        if (!form.classList) return;
+
+        if (form.id === "create-user-form") {
+            e.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            if (btn) btn.disabled = true;
+            const { ok, json } = await postForm(form);
+            if (btn) btn.disabled = false;
+            if (!ok) { flash(json.error || "Could not create user.", "error"); return; }
+            list.prepend(renderCard(json.user));
+            bumpCount(+1);
+            applyFilters();
+            flash(`Created user '${json.user.username}'.`, "success");
+            // Keep the admin auto-N preview accurate after each create.
+            if (json.user && json.user.role === "admin") nextAdminN += 1;
+            form.reset();
+            const cp = form.querySelector(".country-picker");
+            if (cp) {
+                cp.classList.remove("has-value");
+                cp.querySelector('input[type="hidden"]').value = "";
+                cp.querySelector(".country-picker-label").textContent = "Select a country…";
+                const img = cp.querySelector(".country-flag");
+                if (img) { img.hidden = true; img.removeAttribute("src"); }
+            }
+            updateRoleMode();
+            return;
+        }
+
+        if (form.classList.contains("delete-user-form")) {
+            e.preventDefault();
+            const confirmMsg = form.dataset.confirm || "Delete this user?";
+            if (!confirm(confirmMsg)) return;
+            const { ok, json } = await postForm(form);
+            if (!ok) { flash(json.error || "Could not delete user.", "error"); return; }
+            const card = form.closest(".user-card");
+            if (card) {
+                card.style.transition = "opacity 0.2s ease";
+                card.style.opacity = "0";
+                setTimeout(() => { card.remove(); applyFilters(); }, 200);
+            }
+            bumpCount(-1);
+            flash("User deleted.", "success");
+            return;
+        }
+
+        // Save committee/delegation in place — no page navigation, so no
+        // full-screen loading overlay ("transition screen").
+        if (form.classList.contains("assign-form")) {
+            e.preventDefault();
+            const saveBtn = document.querySelector(`.user-save[form="${form.id}"]`)
+                || form.querySelector('button[type="submit"]');
+            if (saveBtn) saveBtn.disabled = true;
+            const { ok, json } = await postForm(form);
+            if (saveBtn) saveBtn.disabled = false;
+            if (!ok) { flash(json.error || "Could not save changes.", "error"); return; }
+
+            const card = form.closest(".user-card");
+            if (card) {
+                const metas = card.querySelectorAll(".user-card-main .user-meta");
+                if (metas[0]) {
+                    metas[0].innerHTML = json.committee
+                        ? `<span class="committee-tag">${esc(json.committee)}</span>` : "";
+                }
+                if (metas[1]) {
+                    metas[1].innerHTML = json.delegation
+                        ? `<span class="delegation-cell">
+                               <img class="country-flag-inline" alt="" data-country-flag="${esc(json.delegation)}">
+                               <span>${esc(json.delegation)}</span>
+                           </span>` : "";
+                    metas[1].querySelectorAll("[data-country-flag]").forEach(setFlag);
+                }
+                const u = {
+                    username: card.querySelector(".user-username")?.textContent || "",
+                    display: card.querySelector(".user-display")?.textContent || "",
+                    sub: card.querySelector(".user-sub")?.textContent || "",
+                };
+                card.dataset.search = [u.username, u.display, u.sub, json.delegation, json.committee, card.dataset.role]
+                    .filter(Boolean).join(" ").toLowerCase();
+                applyFilters();
+            }
+            flash("Assignment updated.", "success");
+            return;
+        }
+    });
+});
+</script>
+{% endblock %}

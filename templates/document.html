@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% block title %}{{ doc.title }} — MUNDP Portal{% endblock %}
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.min.mjs" type="module"></script>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        {% set status_label = {'pending': 'To be debated', 'debated': 'Debated', 'passed': 'Passed', 'failed': 'Failed'}[doc.status] %}
+        <h1>
+            {{ doc.title }}
+            {% if doc.committee %}<span class="committee-tag">{{ doc.committee }}</span>{% endif %}
+            {% if not doc.approved %}<span class="status-badge status-awaiting">Awaiting approval</span>{% endif %}
+            {% if doc.approved %}<span class="status-badge status-{{ doc.status }}">{{ status_label }}</span>{% endif %}
+            {% if doc.is_summit %}<span class="status-badge status-summit">International Summit</span>{% endif %}
+        </h1>
+        {% if doc.agenda_item %}
+        <div class="agenda-line">
+            <span class="agenda-label">Agenda item</span>
+            <span class="agenda-text">{{ doc.agenda_item }}</span>
+        </div>
+        {% endif %}
+
+        <div class="main-submitter">
+            <span class="ms-label">Main Submitter</span>
+            <span class="ms-name">{{ doc.uploader_delegation or doc.uploader_name }}</span>
+        </div>
+
+        <div class="muted small">
+            {{ doc.created_at | local }}
+            {% if doc.filename %}
+            · <a href="{{ url_for('serve_document', doc_id=doc.id) }}" download="{{ doc.filename }}">Download original PDF</a>
+            {% endif %}
+        </div>
+        {% if doc.description %}<p>{{ doc.description }}</p>{% endif %}
+    </div>
+    <div class="header-actions">
+        <a href="{{ url_for('dashboard') }}" class="button">← Back</a>
+        {% if current_user.role == 'admin' or current_user.id == doc.uploader_id %}
+        <form method="post" action="{{ url_for('delete_document', doc_id=doc.id) }}"
+              class="inline"
+              onsubmit="return confirm('Delete this document and all its comments? This cannot be undone.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="danger">Delete</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% set chair_owns = current_user.role == 'admin' or (current_user.role == 'chair' and current_user.committee == doc.committee) %}
+{% set is_final = doc.approved and doc.status in ('passed', 'failed') %}
+
+{% if not doc.approved %}
+<div class="approval-banner {% if chair_owns %}approval-banner-chair{% else %}approval-banner-uploader{% endif %}">
+    {% if chair_owns %}
+    <div class="approval-text">
+        <strong>Awaiting your approval.</strong>
+        Only the uploader and chairs of {{ doc.committee }} can see this resolution until you approve it.
+    </div>
+    <form method="post" action="{{ url_for('approve_document', doc_id=doc.id) }}" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="status-btn status-btn-passed">✓ Approve and publish</button>
+    </form>
+    {% else %}
+    <div class="approval-text">
+        <strong>Pending chair approval.</strong>
+        Other delegates won't see this resolution until a chair of {{ doc.committee }} approves it.
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if chair_owns and doc.approved and not is_final %}
+<div class="chair-actions">
+    <div class="chair-actions-row">
+        <span class="chair-actions-label">Status</span>
+        {% for s, label in [('pending','Pending'), ('debated','Debated'), ('passed','Passed'), ('failed','Failed')] %}
+        <form method="post" action="{{ url_for('set_document_status', doc_id=doc.id) }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="status" value="{{ s }}">
+            <button type="submit"
+                    class="status-btn status-btn-{{ s }} {% if doc.status == s %}active{% endif %}"
+                    {% if doc.status == s %}disabled{% endif %}>
+                {{ label }}
+            </button>
+        </form>
+        {% endfor %}
+    </div>
+    <div class="chair-actions-row">
+        <span class="chair-actions-label">International Summit</span>
+        <form method="post" action="{{ url_for('toggle_summit', doc_id=doc.id) }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if doc.is_summit %}
+                <button type="submit" class="status-btn status-btn-summit-on">✓ Submitted to Summit (withdraw)</button>
+            {% else %}
+                <button type="submit" class="status-btn status-btn-summit">Submit to International Summit</button>
+            {% endif %}
+        </form>
+        <span class="muted small">One resolution per committee.</span>
+    </div>
+</div>
+{% endif %}
+
+{% if doc.approved %}
+{% set is_committee_delegate = current_user.role == 'delegate' and current_user.committee == doc.committee %}
+{% if doc.voting_status != 'closed' or chair_owns %}
+<section class="voting-card voting-{{ doc.voting_status }}">
+    <header class="voting-header">
+        <h2>{% if is_final %}Final result{% else %}Voting{% endif %}</h2>
+        <span class="voting-status-pill voting-pill-{{ doc.voting_status }}">
+            {% if is_final and doc.status == 'passed' %}Passed
+            {% elif is_final and doc.status == 'failed' %}Failed
+            {% elif doc.voting_status == 'closed' %}Not open
+            {% elif doc.voting_status == 'open' %}Open
+            {% else %}Locked{% endif %}
+        </span>
+    </header>
+
+    {% if doc.voting_status != 'closed' %}
+    {% set total_cast = vote_tally['for'] + vote_tally['against'] %}
+    {% set not_voted = (eligible_voters - total_cast) if eligible_voters >= total_cast else 0 %}
+    <div class="vote-tally">
+        <div class="tally-block tally-for">
+            <span class="tally-label">For</span>
+            <span class="tally-number">{{ vote_tally['for'] }}</span>
+        </div>
+        <div class="tally-block tally-against">
+            <span class="tally-label">Against</span>
+            <span class="tally-number">{{ vote_tally['against'] }}</span>
+        </div>
+        <div class="tally-block tally-pending">
+            <span class="tally-label">Not voted</span>
+            <span class="tally-number">{{ not_voted }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if doc.voting_status == 'open' and is_committee_delegate and not is_final %}
+    <div class="vote-actions">
+        <form method="post" action="{{ url_for('cast_vote', doc_id=doc.id) }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="choice" value="for">
+            <button type="submit" class="vote-btn vote-btn-for {% if my_vote == 'for' %}active{% endif %}">
+                {% if my_vote == 'for' %}✓ Voted For{% else %}Vote For{% endif %}
+            </button>
+        </form>
+        <form method="post" action="{{ url_for('cast_vote', doc_id=doc.id) }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="choice" value="against">
+            <button type="submit" class="vote-btn vote-btn-against {% if my_vote == 'against' %}active{% endif %}">
+                {% if my_vote == 'against' %}✓ Voted Against{% else %}Vote Against{% endif %}
+            </button>
+        </form>
+        <span class="muted small">You can change your vote until the chair locks it.</span>
+    </div>
+    {% elif doc.voting_status == 'locked' and is_committee_delegate and my_vote and not is_final %}
+    <div class="vote-actions">
+        <span class="muted small">Your vote: <strong>{{ my_vote|capitalize }}</strong> (locked)</span>
+    </div>
+    {% endif %}
+
+    {% if chair_owns and not is_final %}
+    <div class="voting-controls">
+        {% if doc.voting_status == 'closed' %}
+        <form method="post" action="{{ url_for('voting_control', doc_id=doc.id, action='open') }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="status-btn status-btn-summit">Open voting</button>
+        </form>
+        {% elif doc.voting_status == 'open' %}
+        <form method="post" action="{{ url_for('voting_control', doc_id=doc.id, action='lock') }}" class="inline"
+              onsubmit="return confirm('Lock the vote? Final tally will be counted and the resolution status will be set automatically.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="status-btn status-btn-passed">Lock vote & count</button>
+        </form>
+        <form method="post" action="{{ url_for('voting_control', doc_id=doc.id, action='reset') }}" class="inline"
+              onsubmit="return confirm('Reset voting? All cast votes will be deleted.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="status-btn status-btn-failed">Reset</button>
+        </form>
+        {% elif doc.voting_status == 'locked' %}
+        <form method="post" action="{{ url_for('voting_control', doc_id=doc.id, action='open') }}" class="inline"
+              onsubmit="return confirm('Reopen voting? Existing votes stay but delegates can change them again.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="status-btn">Reopen voting</button>
+        </form>
+        <form method="post" action="{{ url_for('voting_control', doc_id=doc.id, action='reset') }}" class="inline"
+              onsubmit="return confirm('Reset voting? All cast votes will be deleted.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="status-btn status-btn-failed">Reset</button>
+        </form>
+        {% endif %}
+        <span class="muted small">{{ eligible_voters }} eligible delegate{{ '' if eligible_voters == 1 else 's' }} in {{ doc.committee }}.</span>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+{% endif %}
+
+<div class="viewer-layout {% if is_final %}viewer-layout-final{% endif %}">
+    {% if google_doc_embed_url %}
+    <section class="gdoc-pane">
+        <div class="gdoc-toolbar">
+            <span class="gdoc-label">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+                Refresh to see changes made to the document
+            </span>
+            <span class="spacer"></span>
+            <a class="button" href="{{ doc.google_doc_url }}" target="_blank" rel="noopener noreferrer">
+                Open in Google Docs ↗
+            </a>
+        </div>
+        <iframe class="gdoc-frame"
+                src="{{ google_doc_embed_url }}"
+                title="Resolution working document"
+                loading="lazy"
+                sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+    </section>
+    {% else %}
+    <section class="pdf-pane">
+        <div class="pdf-toolbar">
+            <button id="prev-page" type="button">‹ Prev</button>
+            <span>Page <span id="page-num">1</span> / <span id="page-count">?</span></span>
+            <button id="next-page" type="button">Next ›</button>
+            <span class="spacer"></span>
+            <button id="zoom-out" type="button">−</button>
+            <span id="zoom-level">100%</span>
+            <button id="zoom-in" type="button">+</button>
+        </div>
+        <div id="pdf-container" class="pdf-container">
+            <canvas id="pdf-canvas"></canvas>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if not is_final %}
+    <aside class="comments-pane">
+        <h2>Amendments</h2>
+        <div id="comments-list" class="comments-list">
+            <p class="muted small">Loading…</p>
+        </div>
+
+        {% if current_user.role == 'delegate' and current_user.committee == doc.committee %}
+        <form id="comment-form" class="form comment-form">
+            <label>
+                <span>Location</span>
+                <input type="text" id="amend-clause" class="amend-location-input"
+                       placeholder="3, a, ii" required maxlength="120">
+            </label>
+            <label>
+                <span>Amendment</span>
+                <textarea id="comment-body" rows="3" maxlength="5000"
+                          placeholder="describe exact change proposed" required></textarea>
+            </label>
+            <label class="inline">
+                <input type="checkbox" id="attach-page" checked>
+                Tag with current PDF page (<span id="current-page-hint">1</span>)
+            </label>
+            <div class="form-actions">
+                <button type="submit" class="primary">Submit amendment</button>
+            </div>
+        </form>
+        {% elif current_user.role == 'delegate' %}
+        <div class="chair-amendment-notice muted small">
+            You can view amendments here, but only delegates of {{ doc.committee }} can submit them.
+        </div>
+        {% else %}
+        <div class="chair-amendment-notice muted small">
+            Chairs review delegates' amendments here. Updates to the resolution happen during debate.
+        </div>
+        {% endif %}
+    </aside>
+    {% endif %}
+</div>
+
+<script>
+    window.MUNDP = {
+        docId: {{ doc.id }},
+        pdfUrl: {{ url_for('serve_document', doc_id=doc.id) | tojson }},
+        commentsUrl: {{ url_for('comments', doc_id=doc.id) | tojson }},
+        currentUserId: {{ current_user.id }},
+        currentUserRole: {{ current_user.role | tojson }},
+        csrfToken: {{ csrf_token() | tojson }},
+    };
+</script>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/viewer.js') }}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-country-flag]").forEach((img) => {
+        const c = window.COUNTRY_BY_NAME && window.COUNTRY_BY_NAME[img.dataset.countryFlag];
+        if (c) img.src = window.flagUrl(c.iso);
+        else img.hidden = true;
+    });
+
+    // ---- Live voting + status sync --------------------------------------
+    const votingUrl = "{{ url_for('api_voting', doc_id=doc.id) }}";
+    const card = document.querySelector(".voting-card");
+    if (!card) return;
+
+    let lastFingerprint = null;
+    function setText(sel, txt) {
+        const el = card.querySelector(sel);
+        if (el && el.textContent !== String(txt)) el.textContent = txt;
+    }
+    async function tick() {
+        try {
+            const res = await fetch(votingUrl, {
+                credentials: "same-origin",
+                headers: { "Accept": "application/json" },
+            });
+            if (!res.ok) return;
+            const json = await res.json();
+            if (!json.ok) return;
+            const fp = JSON.stringify([
+                json.voting_status, json.doc_status, json.tally.for,
+                json.tally.against, json.my_vote
+            ]);
+            if (fp === lastFingerprint) return;
+            // First sync: just remember and don't reload
+            if (lastFingerprint === null) { lastFingerprint = fp; return; }
+            // Something changed — easiest is a soft reload to pick up server-rendered controls
+            window.location.reload();
+        } catch (e) { /* swallow */ }
+    }
+    setInterval(tick, 5000);
+    tick();
+});
+</script>
+{% endblock %}

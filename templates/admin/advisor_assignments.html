@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% from "_macros.html" import country_picker %}
+{% block title %}Advisor assignments — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Advised delegations</h1>
+        <p class="muted small">
+            For <strong>{{ advisor.participant_name or advisor.display_name }}</strong>
+            (<code>{{ advisor.username }}</code>)
+        </p>
+    </div>
+    <div class="header-actions">
+        <a href="{{ url_for('admin_users') }}" class="button">← Back to users</a>
+    </div>
+</div>
+
+<section class="card">
+    <h2>Add a delegation</h2>
+    <p class="muted small">Each row gives this advisor read access to one delegation in one committee.</p>
+    <form method="post" class="form form-grid">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="add">
+        <label>
+            Country
+            {{ country_picker('country', placeholder='Pick a country…', required=true) }}
+        </label>
+        <label>
+            Committee
+            <select name="committee" required>
+                <option value="" disabled selected>Pick a committee…</option>
+                {% for c in committees %}
+                    <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <div class="form-actions full-width">
+            <button type="submit" class="primary">Add assignment</button>
+        </div>
+    </form>
+</section>
+
+<section class="card">
+    <h2>Current assignments ({{ assignments|length }})</h2>
+    {% if assignments %}
+    <div class="table-scroll">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Country</th>
+                <th>Committee</th>
+                <th>Added</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for a in assignments %}
+            <tr>
+                <td>
+                    <span class="delegation-cell">
+                        <img class="country-flag-inline" alt="" data-country-flag="{{ a.country }}">
+                        <span>{{ a.country }}</span>
+                    </span>
+                </td>
+                <td><span class="committee-tag">{{ a.committee }}</span></td>
+                <td class="muted small">{{ a.created_at | local_date }}</td>
+                <td>
+                    <form method="post" class="inline"
+                          onsubmit="return confirm('Remove {{ a.country }} – {{ a.committee }} from this advisor?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="remove">
+                        <input type="hidden" name="assignment_id" value="{{ a.id }}">
+                        <button type="submit" class="danger">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted small empty-committee">This advisor has no delegations assigned yet.</p>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-country-flag]").forEach((img) => {
+        const c = window.COUNTRY_BY_NAME && window.COUNTRY_BY_NAME[img.dataset.countryFlag];
+        if (c) img.src = window.flagUrl(c.iso);
+        else img.hidden = true;
+    });
+});
+</script>
+{% endblock %}

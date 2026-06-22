@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mundp-preview",
+      "runtimeExecutable": "/tmp/mundp_preview_launch.sh",
+      "runtimeArgs": [],
+      "port": 5055
+    }
+  ]
+}

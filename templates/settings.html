@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Settings — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Settings</h1>
+</div>
+
+<section class="card">
+    <h2>Your profile</h2>
+    <dl class="settings-list">
+        <div class="settings-row">
+            <dt>Participant name</dt>
+            <dd>
+                <strong>{{ me.participant_name or '—' }}</strong>
+                <span class="muted small">read-only · contact an admin to correct</span>
+            </dd>
+        </div>
+        <div class="settings-row">
+            <dt>Display name</dt>
+            <dd>{{ me.display_name }}</dd>
+        </div>
+        <div class="settings-row">
+            <dt>Username</dt>
+            <dd><code>{{ me.username }}</code></dd>
+        </div>
+        <div class="settings-row">
+            <dt>Role</dt>
+            <dd><span class="role role-{{ me.role }}">{{ me.role }}</span></dd>
+        </div>
+        <div class="settings-row">
+            <dt>Committee</dt>
+            <dd>
+                {% if me.committee %}<span class="committee-tag">{{ me.committee }}</span>
+                {% else %}<span class="muted small">—</span>{% endif %}
+            </dd>
+        </div>
+        <div class="settings-row">
+            <dt>Delegation</dt>
+            <dd>
+                {% if me.delegation %}
+                    <span class="delegation-cell">
+                        <img class="country-flag-inline" alt="" data-country-flag="{{ me.delegation }}">
+                        <span>{{ me.delegation }}</span>
+                    </span>
+                {% else %}
+                    <span class="muted small">—</span>
+                {% endif %}
+            </dd>
+        </div>
+        <div class="settings-row">
+            <dt>Account created</dt>
+            <dd class="muted small">{{ me.created_at | local_date }}</dd>
+        </div>
+    </dl>
+</section>
+
+<section class="card">
+    <h2>Contact details</h2>
+    <form method="post" action="{{ url_for('settings_update_contact') }}" class="form form-grid">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>
+            Email
+            <input type="text" name="email" maxlength="200"
+                   value="{{ me.email or '' }}" placeholder="you@example.com" autocomplete="email">
+        </label>
+        <label>
+            Phone
+            <input type="text" name="phone" maxlength="40"
+                   value="{{ me.phone or '' }}" placeholder="+90 555 123 4567" autocomplete="tel">
+        </label>
+        <div class="form-actions full-width">
+            <button type="submit" class="primary">Save contact details</button>
+        </div>
+    </form>
+</section>
+
+<section class="card">
+    <h2>Change password</h2>
+    <form method="post" action="{{ url_for('settings_change_password') }}" class="form form-grid">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="full-width">
+            Current password
+            <input type="password" name="current_password" autocomplete="current-password" required>
+        </label>
+        <label>
+            New password
+            <input type="password" name="new_password" minlength="8" autocomplete="new-password" required>
+        </label>
+        <label>
+            Confirm new password
+            <input type="password" name="new_password_confirm" minlength="8" autocomplete="new-password" required>
+        </label>
+        <div class="form-actions full-width">
+            <button type="submit" class="primary">Update password</button>
+        </div>
+    </form>
+    <p class="muted small">Changing your password signs out every other device.</p>
+</section>
+
+<section class="card">
+    <h2>Credits</h2>
+    <p class="muted small">The people and tools behind MyDP.</p>
+    <div class="form-actions" style="justify-content: flex-start; margin-top: 12px;">
+        <a href="{{ url_for('credits') }}" class="button">View Credits →</a>
+    </div>
+</section>
+
+<section class="card">
+    <h2>Active sessions</h2>
+    {% if other_sessions > 0 %}
+    <p>You have <strong>{{ other_sessions }}</strong> other active session{{ '' if other_sessions == 1 else 's' }} signed in.</p>
+    <form method="post" action="{{ url_for('settings_sign_out_others') }}" class="inline"
+          onsubmit="return confirm('Sign out every other device?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="danger">Sign out other devices</button>
+    </form>
+    {% else %}
+    <p class="muted small">No other devices are signed in.</p>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-country-flag]").forEach((img) => {
+        const c = window.COUNTRY_BY_NAME && window.COUNTRY_BY_NAME[img.dataset.countryFlag];
+        if (c) img.src = window.flagUrl(c.iso);
+        else img.hidden = true;
+    });
+});
+</script>
+{% endblock %}

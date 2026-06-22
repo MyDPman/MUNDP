@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Schedule — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Schedule</h1>
+        <p class="muted">{{ location }}</p>
+    </div>
+</div>
+
+{% if current_user.role in ('admin', 'exec_gc') %}
+<div class="schedule-grid">
+    {% for day in schedule %}
+    <section class="card schedule-card">
+        <header class="committee-header">
+            <h2>{{ day.day }}</h2>
+            <span class="muted small">{{ day['items']|length }} sessions</span>
+        </header>
+        <ul class="schedule-list">
+            {% for time, label in day['items'] %}
+            <li>
+                <span class="schedule-time">{{ time }}</span>
+                <span class="schedule-detail">{{ label }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>Schedule to be determined</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,87 @@
+{% from "_macros.html" import country_picker %}
+<li class="user-card" data-user-id="{{ u.id }}" data-role="{{ u.role }}"
+    data-search="{{ (u.username ~ ' ' ~ u.display_name ~ ' ' ~ (u.participant_name or '') ~ ' ' ~ (u.delegation or '') ~ ' ' ~ (u.committee or '') ~ ' ' ~ u.role) | lower }}">
+    <div class="user-card-main">
+        <div class="user-identity">
+            <div class="user-names">
+                <span class="user-display">{{ u.display_name }}</span>
+                <code class="user-username">{{ u.username }}</code>
+            </div>
+            <div class="user-sub muted small">{{ u.participant_name or 'No participant name' }}</div>
+        </div>
+        <div class="user-meta">
+            {% if u.committee %}<span class="committee-tag">{{ u.committee }}</span>{% endif %}
+        </div>
+        <div class="user-meta">
+            {% if u.delegation %}
+                <span class="delegation-cell">
+                    <img class="country-flag-inline" alt="" data-country-flag="{{ u.delegation }}">
+                    <span>{{ u.delegation }}</span>
+                </span>
+            {% endif %}
+        </div>
+        <div class="user-created muted small">{{ u.created_at | local_date }}</div>
+        <div class="user-card-actions">
+            {% if u.role == 'delegate' %}
+            <button type="submit" form="assign-form-{{ u.id }}" class="primary user-save">Save</button>
+            {% endif %}
+            <button type="button" class="user-edit-toggle">Edit</button>
+            {% if u.id != current_user.id %}
+            <form method="post" action="{{ url_for('admin_impersonate', user_id=u.id) }}"
+                  class="inline-form impersonate-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="user-impersonate"
+                        title="Sign in as {{ u.username }}">Sign in as</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_delete_user', user_id=u.id) }}"
+                  class="inline-form delete-user-form" data-no-loading
+                  data-confirm="Delete user {{ u.username }}? This cannot be undone.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="danger">Delete</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="user-editor" hidden>
+        {% if u.role == 'delegate' %}
+        <form method="post" action="{{ url_for('admin_assign_committee', user_id=u.id) }}"
+              class="user-editor-block assign-form" id="assign-form-{{ u.id }}" data-no-loading>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="user-editor-controls">
+                <div class="ce-stack">
+                    <select name="committee">
+                        <option value="" {% if not u.committee %}selected{% endif %}>Unassigned</option>
+                        {% for c in committees %}
+                            <option value="{{ c }}" {% if u.committee == c %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                    {{ country_picker('delegation', value=u.delegation or '', placeholder='Delegation') }}
+                </div>
+            </div>
+        </form>
+        {% endif %}
+
+        {% if u.role == 'advisor' %}
+        <div class="user-editor-block">
+            <div class="user-editor-label">Advised delegations</div>
+            <div class="user-editor-controls">
+                <a class="button" href="{{ url_for('admin_advisor_assignments', user_id=u.id) }}">
+                    Manage advised delegations
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('admin_reset_password', user_id=u.id) }}"
+              class="user-editor-block"
+              onsubmit="return confirm('Reset password and revoke active sessions for {{ u.username }}?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="user-editor-label">Reset password</div>
+            <div class="user-editor-controls">
+                <input type="text" name="password" placeholder="New password" minlength="8" required>
+                <button type="submit">Reset &amp; sign out devices</button>
+            </div>
+        </form>
+    </div>
+</li>

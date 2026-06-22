@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Contact — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Contact the Secretariat</h1>
+</div>
+
+<form method="post" class="form card contact-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <p class="contact-recipient">
+        To: <strong>{{ secretariat_email }}</strong>
+    </p>
+    <div class="form-grid">
+        <label>
+            Your name
+            <input type="text" name="name" required maxlength="100" value="{{ form.name or current_user.display_name }}">
+        </label>
+        <label>
+            Your email (optional)
+            <input type="text" name="email" maxlength="200" value="{{ form.email or '' }}" placeholder="you@example.com">
+        </label>
+    </div>
+    <label>
+        Subject (optional)
+        <input type="text" name="subject" maxlength="200" value="{{ form.subject or '' }}">
+    </label>
+    <label>
+        Message
+        <textarea name="body" rows="7" maxlength="5000" required>{{ form.body or '' }}</textarea>
+    </label>
+    <div class="form-actions">
+        <a href="mailto:{{ secretariat_email }}" class="button">Open in email app</a>
+        <button type="submit" class="primary">Send message</button>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}Configurations — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Configurations</h1>
+    {% if current_user.role == 'exec_gc' %}
+    <div class="header-actions">
+        <span class="muted small">Read-only view</span>
+    </div>
+    {% endif %}
+</div>
+{% if current_user.role == 'exec_gc' %}
+<style>
+    .card form input, .card form select, .card form textarea { pointer-events: none; background: #f5f6fa; }
+    .form-actions { display: none !important; }
+    .cfg-remove, .cfg-add { display: none !important; }
+</style>
+{% endif %}
+
+<!-- ============================== Schools ============================== -->
+<section class="card">
+    <h2>Schools</h2>
+    <form method="post" action="{{ url_for('admin_config_schools') }}" class="form" id="schools-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <table class="data-table cfg-table">
+            <thead>
+                <tr>
+                    <th>School name</th>
+                    <th>Short code</th>
+                    <th class="cfg-actions"></th>
+                </tr>
+            </thead>
+            <tbody id="schools-rows">
+                {% for name, code in cfg.schools.items() %}
+                <tr class="cfg-row">
+                    <td><input type="text" name="school_name[]" value="{{ name }}" placeholder="Koç School" maxlength="120"></td>
+                    <td><input type="text" name="school_code[]" value="{{ code }}" placeholder="KOC" maxlength="16" class="mono-input"></td>
+                    <td class="cfg-actions"><button type="button" class="cfg-remove">Remove</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="form-actions">
+            <button type="button" class="cfg-add" data-target="#schools-rows" data-template="schools">+ Add school</button>
+            <button type="submit" class="primary">Save schools</button>
+        </div>
+    </form>
+    <template id="tpl-schools">
+        <tr class="cfg-row">
+            <td><input type="text" name="school_name[]" placeholder="School name" maxlength="120"></td>
+            <td><input type="text" name="school_code[]" placeholder="CODE" maxlength="16" class="mono-input"></td>
+            <td class="cfg-actions"><button type="button" class="cfg-remove">Remove</button></td>
+        </tr>
+    </template>
+</section>
+
+<!-- ============================ Committees ============================== -->
+<section class="card">
+    <h2>Committees &amp; agenda items</h2>
+    <form method="post" action="{{ url_for('admin_config_committees') }}" class="form" id="committees-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div id="committees-rows" class="cfg-committee-list">
+            {% for c in cfg.committees %}
+            <div class="cfg-committee-row">
+                <div class="cfg-committee-head">
+                    <input type="text" name="committee_code[]" value="{{ c.code }}" placeholder="UNHCR" maxlength="16" class="mono-input cfg-committee-code">
+                    <button type="button" class="cfg-remove">Remove committee</button>
+                </div>
+                <label class="cfg-committee-agenda-label">
+                    Agenda items <span class="muted small">(one per line)</span>
+                    <textarea name="committee_agenda[]" rows="3" placeholder="One agenda item per line">{{ c.agenda_items | join('\n') }}</textarea>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="form-actions">
+            <button type="button" class="cfg-add" data-target="#committees-rows" data-template="committee">+ Add committee</button>
+            <button type="submit" class="primary">Save committees</button>
+        </div>
+    </form>
+    <template id="tpl-committee">
+        <div class="cfg-committee-row">
+            <div class="cfg-committee-head">
+                <input type="text" name="committee_code[]" placeholder="CODE" maxlength="16" class="mono-input cfg-committee-code">
+                <button type="button" class="cfg-remove">Remove committee</button>
+            </div>
+            <label class="cfg-committee-agenda-label">
+                Agenda items <span class="muted small">(one per line)</span>
+                <textarea name="committee_agenda[]" rows="3" placeholder="One agenda item per line"></textarea>
+            </label>
+        </div>
+    </template>
+</section>
+
+<!-- ========================= Chairs roster ============================== -->
+<section class="card">
+    <h2>Chairs roster</h2>
+    <p class="muted small">Each chair is a user account auto-named from committee + position. Edit their human name here.</p>
+    {% for code, slots in roster.items() %}
+    <div class="cfg-roster-committee">
+        <div class="section-label">{{ code }}</div>
+        <ul class="cfg-roster-slots">
+            {% for slot_key, slot_label in [('president','President'),('deputy_1','Deputy President 1'),('deputy_2','Deputy President 2')] %}
+            {% set chair = slots[slot_key] %}
+            <li class="cfg-roster-slot">
+                <div class="cfg-roster-position"><strong>{{ slot_label }}</strong><br>
+                    <span class="muted small">{% if chair %}<code>{{ chair.username }}</code>{% else %}vacant{% endif %}</span>
+                </div>
+                {% if chair %}
+                <form method="post" action="{{ url_for('admin_config_chair_name', user_id=chair.id) }}" class="cfg-roster-form" data-no-loading>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="text" name="participant_name" value="{{ chair.participant_name }}" placeholder="Real name" maxlength="120" required>
+                    <button type="submit" class="primary">Save</button>
+                </form>
+                {% else %}
+                <span class="muted small cfg-roster-vacant">Create a chair user with this position to fill this slot.</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</section>
+
+<!-- ============================== Conference =========================== -->
+<section class="card">
+    <h2>Conference info</h2>
+    <form method="post" action="{{ url_for('admin_config_conference') }}" class="form form-grid">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>
+            Conference location
+            <input type="text" name="location" value="{{ cfg.conference.location or '' }}" maxlength="160" placeholder="The Koç School, Istanbul">
+        </label>
+        <label>
+            Secretariat email
+            <input type="text" name="secretariat_email" value="{{ cfg.conference.secretariat_email or '' }}" maxlength="160" placeholder="secretariat@example.org">
+        </label>
+        <label class="full-width">
+            External website URL
+            <input type="text" name="external_website_url" value="{{ cfg.conference.external_website_url or '' }}" maxlength="240" placeholder="https://...">
+        </label>
+        <label>
+            Upload permission window (minutes)
+            <input type="number" name="upload_permission_minutes" value="{{ cfg.upload_permission_minutes }}" min="1" max="240" required>
+        </label>
+        <div class="form-actions full-width">
+            <button type="submit" class="primary">Save conference info</button>
+        </div>
+    </form>
+</section>
+
+<!-- ============================== Schedule ============================= -->
+<section class="card">
+    <h2>Schedule</h2>
+    <p class="muted small">Each day has a title and a block of items. Format: <code>TIME | Label</code> (one per line).</p>
+    <form method="post" action="{{ url_for('admin_config_schedule') }}" class="form" id="schedule-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div id="schedule-rows" class="cfg-committee-list">
+            {% for day in cfg.schedule %}
+            <div class="cfg-committee-row">
+                <div class="cfg-committee-head">
+                    <input type="text" name="day_title[]" value="{{ day.day }}" placeholder="Friday, 22 May 2026" maxlength="120" class="cfg-day-title">
+                    <button type="button" class="cfg-remove">Remove day</button>
+                </div>
+                <label class="cfg-committee-agenda-label">
+                    Items
+                    <textarea name="day_items[]" rows="{{ (day['items']|length) + 2 }}" placeholder="09:30 – 10:00 | Buses arrive">{% for it in day['items'] %}{{ it[0] }}{% if it[1] %} | {{ it[1] }}{% endif %}
+{% endfor %}</textarea>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="form-actions">
+            <button type="button" class="cfg-add" data-target="#schedule-rows" data-template="day">+ Add day</button>
+            <button type="submit" class="primary">Save schedule</button>
+        </div>
+    </form>
+    <template id="tpl-day">
+        <div class="cfg-committee-row">
+            <div class="cfg-committee-head">
+                <input type="text" name="day_title[]" placeholder="Day title" maxlength="120" class="cfg-day-title">
+                <button type="button" class="cfg-remove">Remove day</button>
+            </div>
+            <label class="cfg-committee-agenda-label">
+                Items
+                <textarea name="day_items[]" rows="5" placeholder="09:30 – 10:00 | Buses arrive"></textarea>
+            </label>
+        </div>
+    </template>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // "Add row" buttons clone from a <template>
+    document.querySelectorAll(".cfg-add").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const target = document.querySelector(btn.dataset.target);
+            const tpl = document.getElementById("tpl-" + btn.dataset.template);
+            if (!target || !tpl) return;
+            const node = tpl.content.firstElementChild.cloneNode(true);
+            target.appendChild(node);
+        });
+    });
+    // "Remove" buttons on each row
+    document.addEventListener("click", (e) => {
+        const btn = e.target.closest(".cfg-remove");
+        if (!btn) return;
+        const row = btn.closest(".cfg-row, .cfg-committee-row");
+        if (row) row.remove();
+    });
+});
+</script>
+{% endblock %}

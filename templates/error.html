@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }} — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="error-card">
+    <h1>{{ code }}</h1>
+    <p>{{ message }}</p>
+    {% if current_user %}
+        <p><a href="{{ url_for('dashboard') }}">Back to documents</a></p>
+    {% else %}
+        <p><a href="{{ url_for('login') }}">Go to sign in</a></p>
+    {% endif %}
+</div>
+{% endblock %}

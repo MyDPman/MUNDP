@@ -1,0 +1,16 @@
+{% macro country_picker(name, value='', placeholder='Select a country…', required=false, include_chairboard=false) -%}
+<div class="country-picker {% if value %}has-value{% endif %}"
+     data-placeholder="{{ placeholder }}"
+     data-include-chairboard="{{ 'true' if include_chairboard else 'false' }}">
+    <input type="hidden" name="{{ name }}" value="{{ value }}"{% if required %} required{% endif %}>
+    <button type="button" class="country-picker-button">
+        <img class="country-flag" {% if not value %}hidden{% endif %} alt="">
+        <span class="country-picker-label">{{ value or placeholder }}</span>
+        <svg class="country-picker-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="country-picker-popup" hidden>
+        <input type="text" class="country-picker-search" placeholder="Search countries…" autocomplete="off">
+        <ul class="country-picker-list" role="listbox"></ul>
+    </div>
+</div>
+{%- endmacro %}

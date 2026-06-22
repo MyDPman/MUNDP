@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Tally — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Tally Tracker</h1>
+</div>
+
+{% if not items %}
+<div class="empty-state">
+    <p>No delegations assigned yet.</p>
+    <p class="muted small">Ask an administrator to add the countries you advise.</p>
+</div>
+{% else %}
+
+<section class="card tally-card">
+    <header class="committee-header">
+        <h2>Assigned delegations</h2>
+        <span class="muted small">{{ items|length }} delegation{{ '' if items|length == 1 else 's' }}</span>
+    </header>
+
+    <table class="data-table embedded tally-table">
+        <thead>
+            <tr>
+                <th>Delegation</th>
+                <th class="num">POI</th>
+                <th class="num">Speech</th>
+                <th class="num">Amendment</th>
+                <th class="num">Total points</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for it in items %}
+            <tr>
+                <td>
+                    <span class="delegation-cell">
+                        <img class="country-flag-inline" alt="" data-country-flag="{{ it.country }}">
+                        <span>
+                            <strong>{{ it.country }}</strong> –
+                            <span class="committee-tag">{{ it.committee }}</span>
+                            {% if it.participant_name %}
+                                <span class="muted small">({{ it.participant_name }})</span>
+                            {% else %}
+                                <span class="muted small">(—)</span>
+                            {% endif %}
+                        </span>
+                    </span>
+                </td>
+                <td class="num"><span class="tally-count">{{ it.totals.poi }}</span></td>
+                <td class="num"><span class="tally-count">{{ it.totals.speech }}</span></td>
+                <td class="num"><span class="tally-count">{{ it.totals.amendment }}</span></td>
+                <td class="num"><strong class="tally-total">{{ it.totals.total }}</strong></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-country-flag]").forEach((img) => {
+        const c = window.COUNTRY_BY_NAME && window.COUNTRY_BY_NAME[img.dataset.countryFlag];
+        if (c) img.src = window.flagUrl(c.iso);
+        else img.hidden = true;
+    });
+});
+</script>
+{% endblock %}

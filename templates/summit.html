@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}International Summit — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>International Summit</h1>
+</div>
+
+<div class="summit-grid">
+    {% for committee in committees %}
+    {% set info = committee_info[committee] %}
+    {% set submission = by_committee[committee] %}
+    <section class="committee-card">
+        <header class="committee-header">
+            <h2>{{ committee }}</h2>
+            {% if submission %}
+                <span class="status-badge status-summit">Submitted</span>
+            {% endif %}
+        </header>
+
+        <details class="committee-section chairs-toggle">
+            <summary class="section-label">
+                Chairs
+                <svg class="chairs-chev" viewBox="0 0 24 24" width="14" height="14" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </summary>
+            <ul class="people-list">
+                <li>
+                    <span class="role-tag">President</span>
+                    <span class="person-name">{{ info.president or '—' }}</span>
+                </li>
+                {% for dp in info.deputy_presidents %}
+                <li>
+                    <span class="role-tag">Deputy President</span>
+                    <span class="person-name">{{ dp or '—' }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </details>
+
+        <details class="committee-section agenda-toggle">
+            <summary class="section-label">
+                Agenda items
+                <svg class="chairs-chev" viewBox="0 0 24 24" width="14" height="14" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </summary>
+            <ol class="agenda-list">
+                {% for item in info.agenda_items %}
+                <li>{{ item or '—' }}</li>
+                {% endfor %}
+            </ol>
+        </details>
+
+        <div class="committee-section">
+            <div class="section-label">Summit submission</div>
+            {% if submission %}
+            <a href="{{ url_for('view_document', doc_id=submission.id) }}" class="resolution-link">
+                <span class="resolution-title">{{ submission.title }}</span>
+                <span class="muted small">
+                    {{ submission.uploader_name }} · {{ submission.created_at | local_date }} ·
+                    {{ submission.comment_count }} amendment{{ '' if submission.comment_count == 1 else 's' }}
+                </span>
+            </a>
+            {% else %}
+            <p class="muted small empty-committee">{{ committee }} has not yet submitted a resolution to the Summit.</p>
+            {% endif %}
+        </div>
+    </section>
+    {% endfor %}
+</div>
+{% endblock %}

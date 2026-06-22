@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Sign in — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="auth-card">
+    <h1>Sign in</h1>
+    <form method="post" class="form" id="login-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>
+            Username
+            <input type="text" name="username" autocomplete="username" required autofocus>
+        </label>
+        <label>
+            Password
+            <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+
+        <section class="user-agreement" aria-label="User Agreement">
+            <h2 class="agreement-title">User Agreement</h2>
+            <ul class="agreement-list">
+                <li>I hereby agree to not use the tools given to be damagingly for the conference, attendees and anyone else.</li>
+                <li>I hereby agree to abide by the conference rules, MyDP usage rules.</li>
+                <li>I hereby know that not agreeing to the user agreement means that I won't be able to use MyDP.</li>
+                <li>I hereby know that necessary action will be taken against me if I violate the user agreement, conference rules or any warnings from the relevant people.</li>
+            </ul>
+            <label class="agreement-check inline">
+                <input type="checkbox" name="agree" id="agree-check" value="yes">
+                <span>I have read and agree to the User Agreement.</span>
+            </label>
+        </section>
+
+        <button type="submit" class="primary" id="signin-btn" hidden>Sign in</button>
+    </form>
+    <div class="auth-logo">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="MUNDP logo">
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+    // The Sign in button doesn't exist until the User Agreement is accepted.
+    const check = document.getElementById("agree-check");
+    const btn = document.getElementById("signin-btn");
+    if (!check || !btn) return;
+    const sync = () => { btn.hidden = !check.checked; };
+    check.addEventListener("change", sync);
+    sync();
+})();
+</script>
+{% endblock %}

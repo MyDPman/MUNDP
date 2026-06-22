@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% from "_macros.html" import country_picker %}
+{% block title %}Note Passing — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Note Passing</h1>
+</div>
+
+{% if current_user.role == 'advisor' %}
+    {% if committees %}
+    <form method="post" class="card form notes-compose">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="notes-compose-header">
+            <div class="notes-compose-meta">
+                <div class="section-label">From</div>
+                <div class="notes-from-pill">
+                    <span class="role role-advisor">advisor</span>
+                    <span>{{ current_user.participant_name or current_user.display_name }}</span>
+                </div>
+            </div>
+            <div class="notes-compose-meta">
+                <div class="section-label">Committee Chairboard</div>
+                <select name="committee" required class="committee-select">
+                    <option value="" disabled selected>Pick a Chairboard…</option>
+                    {% for c in committees %}<option value="{{ c }}">{{ c }} Chairboard</option>{% endfor %}
+                </select>
+            </div>
+        </div>
+        <label>
+            Message
+            <textarea name="body" rows="4" maxlength="2000" required></textarea>
+        </label>
+        <div class="notes-banner">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.6" fill="currentColor"/></svg>
+            Advisors can only message Chairboards of their assigned committees.
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="primary">Send to Chairboard</button>
+        </div>
+    </form>
+    {% else %}
+    <div class="empty-state">
+        <p>You haven't been assigned to any delegations yet.</p>
+        <p class="muted small">Ask an administrator to assign your advised delegations before you can send notes.</p>
+    </div>
+    {% endif %}
+{% elif current_user.role == 'admin' %}
+    <form method="post" class="card form notes-compose">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="notes-compose-header">
+            <div class="notes-compose-meta">
+                <div class="section-label">From</div>
+                <div class="notes-from-pill">
+                    <span class="role role-admin">admin</span>
+                    <span>{{ current_user.display_name }}</span>
+                </div>
+            </div>
+            <div class="notes-compose-meta">
+                <div class="section-label">Committee</div>
+                <select name="committee" required class="committee-select">
+                    <option value="" disabled selected>Pick a committee…</option>
+                    {% for c in committees %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="notes-compose-meta">
+                <div class="section-label">To</div>
+                {{ country_picker('recipient_delegation', placeholder='Chairboard or a country…', required=true, include_chairboard=true) }}
+            </div>
+        </div>
+        <label>
+            Message
+            <textarea name="body" rows="4" maxlength="2000" required></textarea>
+        </label>
+        <div class="notes-banner">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.6" fill="currentColor"/></svg>
+            Admins are a party in every committee. All notes are visible to the chairs.
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="primary">Send note</button>
+        </div>
+    </form>
+{% else %}
+    {% if not user_committee %}
+        <div class="empty-state">
+            <p>You need a committee assignment before you can pass notes.</p>
+            <p class="muted small">Ask an admin to appoint you to a committee.</p>
+        </div>
+    {% elif current_user.role == 'delegate' and not current_user.delegation %}
+        <div class="empty-state">
+            <p>Your delegation hasn't been set yet.</p>
+            <p class="muted small">Ask an admin to assign you a country before you can send notes.</p>
+        </div>
+    {% else %}
+        {% set is_chair = current_user.role == 'chair' %}
+        <form method="post" class="card form notes-compose">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="notes-compose-header">
+                <div class="notes-compose-meta">
+                    <div class="section-label">From</div>
+                    <div class="notes-from-pill">
+                        {% if is_chair and not current_user.delegation %}
+                            <span class="role role-chair">chair</span>
+                            <span>{{ current_user.display_name }} · {{ user_committee }}</span>
+                        {% else %}
+                            <img class="country-flag-inline" alt="" data-country-flag="{{ current_user.delegation }}">
+                            <span>{{ current_user.delegation }} · {{ user_committee }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="notes-compose-meta">
+                    <div class="section-label">To</div>
+                    {{ country_picker('recipient_delegation', placeholder='Chairboard or a country…', required=true, include_chairboard=true) }}
+                </div>
+            </div>
+            <label>
+                Message
+                <textarea name="body" rows="4" maxlength="2000" required></textarea>
+            </label>
+            <div class="notes-banner">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.6" fill="currentColor"/></svg>
+                {% if is_chair %}You and other chairs see every note exchanged in this committee.{% else %}All notes passed are viewed by chairs.{% endif %}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="primary">Send note</button>
+            </div>
+        </form>
+    {% endif %}
+{% endif %}
+
+<section class="card">
+    <div class="section-label">{{ inbox_label }} <span class="muted small">({{ notes|length }})</span></div>
+    {% if notes %}
+    <ul class="notes-list">
+        {% for n in notes %}
+        <li class="note-item">
+            <div class="note-header">
+                <span class="note-direction">
+                    <span class="note-delegation">
+                        <img class="country-flag-inline" alt="" data-country-flag="{{ n.sender_delegation }}">
+                        <span>{{ n.sender_delegation or n.sender_name }}</span>
+                    </span>
+                    <svg class="note-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    <span class="note-delegation">
+                        <img class="country-flag-inline" alt="" data-country-flag="{{ n.recipient_delegation }}">
+                        <span>{{ n.recipient_delegation }}</span>
+                    </span>
+                </span>
+                <span class="muted small">
+                    {% if current_user.role in ('admin', 'chair') %}<span class="committee-tag">{{ n.committee }}</span>{% endif %}
+                    {{ n.created_at | local }}
+                </span>
+            </div>
+            <div class="note-body">{{ n.body }}</div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted small empty-committee">No notes yet.</p>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-country-flag]").forEach((img) => {
+        const c = window.COUNTRY_BY_NAME && window.COUNTRY_BY_NAME[img.dataset.countryFlag];
+        if (c) img.src = window.flagUrl(c.iso);
+        else img.hidden = true;
+    });
+});
+</script>
+{% endblock %}

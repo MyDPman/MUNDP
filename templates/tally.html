@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% block title %}Tally Tracker — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Tally Tracker</h1>
+    {% if scope_committees %}
+    <div class="header-actions">
+        <a class="button" href="{{ url_for('tally_export_csv') }}" download
+           title="Download a CSV. Upload it to Google Drive, then 'Open with Google Sheets'.">
+            ⤓ Export to Google Sheets
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if not scope_committees %}
+<div class="empty-state">
+    <p>You need to be assigned to a committee to use the Tally Tracker.</p>
+</div>
+{% else %}
+
+{% for committee in scope_committees %}
+{% set delegations = data[committee] %}
+<section class="card tally-card" data-committee="{{ committee }}">
+    <header class="committee-header">
+        <h2>{{ committee }}</h2>
+        <span class="muted small">{{ delegations|length }} delegation{{ '' if delegations|length == 1 else 's' }}</span>
+        <span class="spacer"></span>
+        <form method="post" action="{{ url_for('tally_reset') }}" class="inline"
+              onsubmit="return confirm('Reset all {{ committee }} tally entries to zero? You can undo this from the Recent resets section.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="committee" value="{{ committee }}">
+            <button type="submit" class="button">↺ Reset {{ committee }}</button>
+        </form>
+    </header>
+
+    {% if delegations %}
+    <table class="data-table embedded tally-table">
+        <thead>
+            <tr>
+                <th>Delegation</th>
+                <th class="num">POI</th>
+                <th class="num">Speech</th>
+                <th class="num">Amendment</th>
+                <th class="num">Total points</th>
+                <th>Record</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for delegation, t in delegations %}
+            <tr data-delegation="{{ delegation }}" data-committee="{{ committee }}">
+                <td>
+                    <span class="delegation-cell">
+                        <img class="country-flag-inline" alt="" data-country-flag="{{ delegation }}">
+                        <span>{{ delegation }}</span>
+                    </span>
+                </td>
+                <td class="num"><span class="tally-count" data-cell="poi">{{ t.poi }}</span></td>
+                <td class="num"><span class="tally-count" data-cell="speech">{{ t.speech }}</span></td>
+                <td class="num"><span class="tally-count" data-cell="amendment">{{ t.amendment }}</span></td>
+                <td class="num"><strong class="tally-total" data-cell="total">{{ t.total }}</strong></td>
+                <td class="tally-record">
+                    {% for kind in ['poi', 'speech', 'amendment'] %}
+                    <form method="post" action="{{ url_for('tally') }}" class="inline tally-add-form" data-no-loading>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="committee" value="{{ committee }}">
+                        <input type="hidden" name="delegation" value="{{ delegation }}">
+                        <input type="hidden" name="kind" value="{{ kind }}">
+                        <button type="submit" class="tally-btn tally-btn-{{ kind }}"
+                                title="+{{ tally_points[kind] }} {{ tally_labels[kind] }}">
+                            +{{ tally_labels[kind] }}
+                        </button>
+                    </form>
+                    {% endfor %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="muted small empty-committee">No delegations assigned to {{ committee }} yet.</p>
+    {% endif %}
+</section>
+{% endfor %}
+
+{% if recent_resets %}
+<section class="card">
+    <div class="section-label">Recent resets <span class="muted small">({{ recent_resets|length }})</span></div>
+    <ul class="tally-recent">
+        {% for r in recent_resets %}
+        <li>
+            <span class="muted small mono">{{ r.performed_at | local_short }}</span>
+            <span class="committee-tag">{{ r.committee }}</span>
+            <span>{{ r.entry_count }} entries archived</span>
+            <span class="muted small">by {{ r.performer_name or '—' }}</span>
+            <form method="post" action="{{ url_for('tally_reset_undo', reset_id=r.id) }}"
+                  class="inline"
+                  onsubmit="return confirm('Restore the {{ r.entry_count }} archived entries for {{ r.committee }}?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="link-button">Undo reset</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+<section class="card">
+    <div class="section-label">Recent activity <span class="muted small" id="recent-count">({{ recent|length }})</span></div>
+    <ul class="tally-recent" id="recent-list">
+        {% for r in recent %}
+        <li data-entry-id="{{ r.id }}" data-committee="{{ r.committee }}" data-delegation="{{ r.delegation }}">
+            <span class="muted small mono">{{ r.created_at | local_time_only }}</span>
+            <span class="delegation-cell">
+                <img class="country-flag-inline" alt="" data-country-flag="{{ r.delegation }}">
+                <span>{{ r.delegation }}</span>
+            </span>
+            <span class="committee-tag">{{ r.committee }}</span>
+            <span class="tally-event tally-event-{{ r.kind }}">{{ tally_labels[r.kind] }} +{{ r.points }}</span>
+            <span class="muted small">by {{ r.recorder_name }}</span>
+            <form method="post" action="{{ url_for('delete_tally', entry_id=r.id) }}"
+                  class="inline tally-undo-form" data-no-loading>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="link-button">Undo</button>
+            </form>
+        </li>
+        {% endfor %}
+        {% if not recent %}
+        <li class="muted small empty-recent">No tallies recorded yet.</li>
+        {% endif %}
+    </ul>
+</section>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const TALLY_LABELS = {{ tally_labels|tojson }};
+
+function setCountryFlag(img) {
+    const c = window.COUNTRY_BY_NAME && window.COUNTRY_BY_NAME[img.dataset.countryFlag];
+    if (c) img.src = window.flagUrl(c.iso);
+    else img.hidden = true;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-country-flag]").forEach(setCountryFlag);
+
+    function applyTotals(committee, delegation, totals) {
+        const row = document.querySelector(
+            `.tally-card[data-committee="${committee}"] tr[data-delegation="${CSS.escape(delegation)}"]`
+        );
+        if (!row) return;
+        ["poi", "speech", "amendment", "total"].forEach((k) => {
+            const cell = row.querySelector(`[data-cell="${k}"]`);
+            if (cell) {
+                cell.textContent = totals[k] ?? 0;
+                cell.classList.remove("flash-bump");
+                // restart animation
+                void cell.offsetWidth;
+                cell.classList.add("flash-bump");
+            }
+        });
+    }
+
+    function fmtTime(iso) {
+        // backend timestamps are UTC; convert to Türkiye time
+        return window.fmtLocal ? window.fmtLocal(iso, "time") : (iso || "").slice(11, 16);
+    }
+
+    function prependRecent(entry) {
+        const list = document.getElementById("recent-list");
+        if (!list) return;
+        const empty = list.querySelector(".empty-recent");
+        if (empty) empty.remove();
+
+        const li = document.createElement("li");
+        li.dataset.entryId = entry.id;
+        li.dataset.committee = entry.committee;
+        li.dataset.delegation = entry.delegation;
+        li.innerHTML = `
+            <span class="muted small mono">${fmtTime(entry.created_at)}</span>
+            <span class="delegation-cell">
+                <img class="country-flag-inline" alt="" data-country-flag="${entry.delegation}">
+                <span>${entry.delegation}</span>
+            </span>
+            <span class="committee-tag">${entry.committee}</span>
+            <span class="tally-event tally-event-${entry.kind}">${entry.label} +${entry.points}</span>
+            <span class="muted small">by ${entry.recorder_name}</span>
+            <form method="post" action="/tally/${entry.id}/delete" class="inline tally-undo-form" data-no-loading>
+                <input type="hidden" name="csrf_token" value="${document.querySelector('input[name=csrf_token]').value}">
+                <button type="submit" class="link-button">Undo</button>
+            </form>
+        `;
+        li.querySelectorAll("[data-country-flag]").forEach(setCountryFlag);
+        list.prepend(li);
+        // trim to 30 entries client-side
+        const items = list.querySelectorAll("li[data-entry-id]");
+        if (items.length > 30) items[items.length - 1].remove();
+        const counter = document.getElementById("recent-count");
+        if (counter) counter.textContent = `(${list.querySelectorAll("li[data-entry-id]").length})`;
+    }
+
+    function removeRecent(entryId) {
+        const li = document.querySelector(`#recent-list li[data-entry-id="${entryId}"]`);
+        if (li) li.remove();
+        const counter = document.getElementById("recent-count");
+        if (counter) {
+            const n = document.querySelectorAll("#recent-list li[data-entry-id]").length;
+            counter.textContent = `(${n})`;
+            if (n === 0) {
+                const list = document.getElementById("recent-list");
+                const li2 = document.createElement("li");
+                li2.className = "muted small empty-recent";
+                li2.textContent = "No tallies recorded yet.";
+                list.appendChild(li2);
+            }
+        }
+    }
+
+    async function submitJson(form) {
+        const data = new FormData(form);
+        const res = await fetch(form.action, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" },
+            body: data,
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || !json.ok) {
+            alert(json.error || "Something went wrong.");
+            return null;
+        }
+        return json;
+    }
+
+    document.addEventListener("submit", async (e) => {
+        const form = e.target;
+        if (!form.classList) return;
+        // Add tally
+        if (form.classList.contains("tally-add-form")) {
+            e.preventDefault();
+            const btn = form.querySelector("button");
+            if (btn) btn.disabled = true;
+            const json = await submitJson(form);
+            if (btn) btn.disabled = false;
+            if (json) {
+                applyTotals(json.committee, json.delegation, json.totals);
+                prependRecent(json.entry);
+            }
+            return;
+        }
+        // Undo tally
+        if (form.classList.contains("tally-undo-form")) {
+            e.preventDefault();
+            const li = form.closest("li");
+            const entryId = li ? li.dataset.entryId : null;
+            const json = await submitJson(form);
+            if (json) {
+                applyTotals(json.committee, json.delegation, json.totals);
+                if (entryId) removeRecent(entryId);
+            }
+            return;
+        }
+    });
+});
+</script>
+{% endblock %}

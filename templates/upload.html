@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Upload Resolution — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Upload a Resolution</h1>
+    {% if permission_until_iso and not permission_blocked %}
+    <div class="header-actions">
+        <span class="permission-badge" data-until="{{ permission_until_iso }}">
+            <span class="permission-dot"></span>
+            <span>Upload window: <strong class="permission-countdown">--:--</strong></span>
+        </span>
+    </div>
+    {% endif %}
+</div>
+
+<div class="upload-shell{% if permission_blocked %} upload-shell-blocked{% endif %}">
+{% if permission_blocked %}
+<div class="upload-block-overlay">
+    <div class="upload-block-card">
+        <h2>Upload is permission-based</h2>
+        <p>Resolution uploads are gated. Ask your committee's chair to grant
+            you a <strong>10-minute</strong> upload window — once they do,
+            this page becomes active and you can submit your resolution
+            before the window expires.</p>
+        <p class="muted small">Chairs grant upload permission from their
+            <em>My Committee</em> page.</p>
+    </div>
+</div>
+{% endif %}
+<form method="post" enctype="multipart/form-data" class="form card">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>
+        Committee
+        {% if locked_committee %}
+            <div class="locked-field">
+                <span class="committee-tag">{{ locked_committee }}</span>
+                <span class="muted small">You upload only to your own committee.</span>
+            </div>
+            <input type="hidden" name="committee" value="{{ locked_committee }}">
+        {% else %}
+            <select name="committee" id="upload-committee" required>
+                <option value="" disabled selected>Choose a committee…</option>
+                {% for c in committees %}
+                    <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+            </select>
+        {% endif %}
+    </label>
+    <label>
+        Agenda item
+        <select name="agenda_item" id="upload-agenda" required>
+            {% if locked_committee %}
+                <option value="" disabled selected>Pick an agenda item…</option>
+                {% for item in committee_info[locked_committee].agenda_items %}
+                    {% if item %}<option value="{{ item }}">{{ item }}</option>{% endif %}
+                {% endfor %}
+            {% else %}
+                <option value="" disabled selected>Pick a committee first…</option>
+            {% endif %}
+        </select>
+    </label>
+    <label>
+        Google Doc URL <span class="muted small">(required)</span>
+        <input type="text" name="google_doc_url" required maxlength="500"
+               placeholder="https://docs.google.com/document/d/...">
+        <span class="muted small">
+            Set sharing to "Anyone with the link · Viewer" (or Commenter / Editor) so delegates can read the live document.
+        </span>
+    </label>
+    <div class="form-actions">
+        <a href="{{ url_for('dashboard') }}" class="button">Cancel</a>
+        <button type="submit" class="primary"{% if permission_blocked %} disabled{% endif %}>Upload</button>
+    </div>
+</form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if not locked_committee %}
+<script>
+const COMMITTEE_AGENDA = {{ committee_info|tojson }};
+document.addEventListener("DOMContentLoaded", () => {
+    const committeeSel = document.getElementById("upload-committee");
+    const agendaSel = document.getElementById("upload-agenda");
+    if (!committeeSel || !agendaSel) return;
+    function refresh() {
+        const c = committeeSel.value;
+        const info = COMMITTEE_AGENDA[c];
+        agendaSel.innerHTML = "";
+        if (!info) {
+            const opt = document.createElement("option");
+            opt.value = ""; opt.disabled = true; opt.selected = true;
+            opt.textContent = "Pick a committee first…";
+            agendaSel.appendChild(opt);
+            return;
+        }
+        const placeholder = document.createElement("option");
+        placeholder.value = ""; placeholder.disabled = true; placeholder.selected = true;
+        placeholder.textContent = "Pick an agenda item…";
+        agendaSel.appendChild(placeholder);
+        (info.agenda_items || []).forEach((item) => {
+            if (!item) return;
+            const opt = document.createElement("option");
+            opt.value = item;
+            opt.textContent = item;
+            agendaSel.appendChild(opt);
+        });
+    }
+    committeeSel.addEventListener("change", refresh);
+    refresh();
+});
+</script>
+{% endif %}
+{% if permission_until_iso and not permission_blocked %}
+<script>
+(function () {
+    const badge = document.querySelector(".permission-badge");
+    if (!badge) return;
+    const until = new Date(badge.dataset.until);
+    const countdown = badge.querySelector(".permission-countdown");
+    const submit = document.querySelector(".form-actions button[type='submit']");
+    function tick() {
+        const ms = until - new Date();
+        if (ms <= 0) {
+            countdown.textContent = "expired";
+            badge.classList.add("permission-badge-expired");
+            if (submit) submit.disabled = true;
+            return false;
+        }
+        const total = Math.floor(ms / 1000);
+        const m = String(Math.floor(total / 60)).padStart(2, "0");
+        const s = String(total % 60).padStart(2, "0");
+        countdown.textContent = `${m}:${s}`;
+        if (total <= 30) badge.classList.add("permission-badge-warn");
+        return true;
+    }
+    if (tick()) setInterval(tick, 1000);
+})();
+</script>
+{% endif %}
+{% endblock %}

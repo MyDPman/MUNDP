@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Resolutions — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Resolutions</h1>
+    {% if current_user.role == 'admin' or (current_user.role in ('chair', 'delegate') and current_user.committee) %}
+        <a href="{{ url_for('upload') }}" class="primary button">+ Upload Resolution</a>
+    {% endif %}
+</div>
+
+{% if documents %}
+<div class="filter-pills" role="tablist">
+    <button type="button" class="filter-pill active" data-filter="">All</button>
+    {% for c in ['UNIDO','UNHCR','OHCHR','UNDPPA','UNESCO'] %}
+        <button type="button" class="filter-pill" data-filter="{{ c }}">{{ c }}</button>
+    {% endfor %}
+    <button type="button" class="filter-pill" data-filter="__general__">General</button>
+</div>
+<div class="dashboard-toolbar">
+    <input type="search" id="doc-search" placeholder="Filter by title, committee, or uploader…" autocomplete="off">
+    <span class="muted small" id="doc-count">{{ documents|length }} resolutions</span>
+</div>
+<table class="data-table" id="doc-table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Uploaded by</th>
+            <th>Date</th>
+            <th>Size</th>
+            <th>Amendments</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for d in documents %}
+        <tr data-committee="{{ d.committee or '__general__' }}">
+            <td>
+                <a href="{{ url_for('view_document', doc_id=d.id) }}"><strong>{{ d.title }}</strong></a>
+                {% if d.description %}
+                    <div class="muted small">{{ d.description }}</div>
+                {% endif %}
+            </td>
+            <td>
+                {% if d.uploader_delegation %}
+                    <span class="delegation-cell">
+                        <img class="country-flag-inline" alt="" data-country-flag="{{ d.uploader_delegation }}">
+                        <span>{{ d.uploader_delegation }}</span>
+                    </span>
+                {% else %}
+                    {{ d.uploader_name }}
+                {% endif %}
+            </td>
+            <td>{{ d.created_at | local }}</td>
+            <td>{% if d.size_bytes %}{{ '%.1f' % (d.size_bytes / 1024 / 1024) }} MB{% else %}<span class="muted small">—</span>{% endif %}</td>
+            <td>{{ d.comment_count }}</td>
+            <td><a href="{{ url_for('view_document', doc_id=d.id) }}">Open →</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <p>No resolutions yet.</p>
+    {% if current_user.role == 'admin' or (current_user.role in ('chair', 'delegate') and current_user.committee) %}
+        <p><a href="{{ url_for('upload') }}" class="primary button">Upload the first one</a></p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if documents %}
+<script>
+(function () {
+    document.querySelectorAll("[data-country-flag]").forEach((img) => {
+        const c = window.COUNTRY_BY_NAME && window.COUNTRY_BY_NAME[img.dataset.countryFlag];
+        if (c) img.src = window.flagUrl(c.iso);
+        else img.hidden = true;
+    });
+
+    const input = document.getElementById("doc-search");
+    const tbody = document.querySelector("#doc-table tbody");
+    const count = document.getElementById("doc-count");
+    const pills = document.querySelectorAll(".filter-pill");
+    const total = {{ documents|length }};
+    if (!input || !tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll("tr")).map((r) => ({
+        el: r,
+        text: r.innerText.toLowerCase(),
+        committee: r.dataset.committee || "",
+    }));
+
+    let activeCommittee = "";
+
+    function applyFilters() {
+        const q = input.value.trim().toLowerCase();
+        let shown = 0;
+        rows.forEach(({ el, text, committee }) => {
+            const committeeMatch = !activeCommittee || committee === activeCommittee;
+            const textMatch = !q || text.includes(q);
+            const match = committeeMatch && textMatch;
+            el.style.display = match ? "" : "none";
+            if (match) shown++;
+        });
+        const filtering = q || activeCommittee;
+        count.textContent = filtering
+            ? `${shown} of ${total} resolutions`
+            : `${total} resolutions`;
+    }
+
+    input.addEventListener("input", applyFilters);
+
+    pills.forEach((p) => p.addEventListener("click", () => {
+        pills.forEach((x) => x.classList.remove("active"));
+        p.classList.add("active");
+        activeCommittee = p.dataset.filter || "";
+        applyFilters();
+    }));
+})();
+</script>
+{% endif %}
+{% endblock %}
