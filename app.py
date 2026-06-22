@@ -302,7 +302,8 @@ app.teardown_appcontext(close_db)
 def before_request():
     enforce_network_allowlist()
     load_current_user()
-    verify_csrf()
+    if request.endpoint != "setup":
+        verify_csrf()
     # EXEC/GC users are restricted to a small set of pages — everything else
     # 403s. The redirect from "/" to "/schedule" is handled in index().
     user = getattr(g, "user", None)
@@ -533,6 +534,40 @@ def _compute_badges() -> dict:
 # ---------------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------------
+@app.route("/setup", methods=["GET", "POST"])
+def setup():
+    db = get_db()
+    if db.execute("SELECT COUNT(*) FROM users WHERE role='admin'").fetchone()[0] > 0:
+        return redirect(url_for("login"))
+    error = None
+    if request.method == "POST":
+        username = (request.form.get("username") or "").strip().lower()
+        display_name = (request.form.get("display_name") or "").strip()
+        password = request.form.get("password") or ""
+        if not username or not display_name or len(password) < 8:
+            error = "All fields required; password min 8 chars."
+        else:
+            try:
+                db.execute(
+                    "INSERT INTO users (username, display_name, password_hash, role) VALUES (?, ?, ?, 'admin')",
+                    (username, display_name, hash_password(password)),
+                )
+                db.commit()
+                return redirect(url_for("login"))
+            except Exception as e:
+                error = str(e)
+    return f"""<!doctype html><html><body style="font-family:sans-serif;max-width:400px;margin:80px auto;padding:20px">
+    <h2>First-run setup</h2>
+    {"<p style='color:red'>" + error + "</p>" if error else ""}
+    <form method=post>
+        <input type=hidden name=csrf_token value="">
+        <p><input name=username placeholder=Username style="width:100%;padding:8px;box-sizing:border-box"></p>
+        <p><input name=display_name placeholder="Display name" style="width:100%;padding:8px;box-sizing:border-box"></p>
+        <p><input type=password name=password placeholder="Password (min 8 chars)" style="width:100%;padding:8px;box-sizing:border-box"></p>
+        <button type=submit style="padding:10px 20px">Create admin</button>
+    </form></body></html>"""
+
+
 @app.route("/")
 def index():
     user = getattr(g, "user", None)
