@@ -667,7 +667,10 @@ def dashboard():
         vis_params,
     ).fetchall()
     _mark_seen("resolutions_last_seen_at")
-    return render_template("dashboard.html", documents=docs)
+    FINAL = ("passed", "failed", "debated")
+    active_docs  = [d for d in docs if d["status"] not in FINAL]
+    debated_docs = [d for d in docs if d["status"] in FINAL]
+    return render_template("dashboard.html", active_docs=active_docs, debated_docs=debated_docs)
 
 
 # ---------------------------------------------------------------------------
