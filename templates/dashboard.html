@@ -26,16 +26,24 @@
             <th>Title</th>
             <th>Uploaded by</th>
             <th>Date</th>
-            <th>Size</th>
+            <th>Status</th>
             <th>Amendments</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
     {% for d in documents %}
-        <tr data-committee="{{ d.committee or '__general__' }}">
+        {% set can_view = current_user.role in ('admin', 'chair') or
+                          d.uploader_id == current_user.id or
+                          d.in_debate or
+                          d.status in ('debated', 'passed', 'failed') %}
+        <tr data-committee="{{ d.committee or '__general__' }}" {% if not can_view %}class="res-locked"{% endif %}>
             <td>
+                {% if can_view %}
                 <a href="{{ url_for('view_document', doc_id=d.id) }}"><strong>{{ d.title }}</strong></a>
+                {% else %}
+                <strong>{{ d.title }}</strong>
+                {% endif %}
                 {% if d.description %}
                     <div class="muted small">{{ d.description }}</div>
                 {% endif %}
@@ -51,9 +59,27 @@
                 {% endif %}
             </td>
             <td>{{ d.created_at | local }}</td>
-            <td>{% if d.size_bytes %}{{ '%.1f' % (d.size_bytes / 1024 / 1024) }} MB{% else %}<span class="muted small">—</span>{% endif %}</td>
+            <td>
+                {% if d.in_debate %}
+                    <span class="status-badge status-in-debate">In Debate</span>
+                {% elif d.status == 'debated' %}
+                    <span class="status-badge status-debated">Debated</span>
+                {% elif d.status == 'passed' %}
+                    <span class="status-badge status-passed">Passed</span>
+                {% elif d.status == 'failed' %}
+                    <span class="status-badge status-failed">Failed</span>
+                {% else %}
+                    <span class="status-badge status-pending">Submitted</span>
+                {% endif %}
+            </td>
             <td>{{ d.comment_count }}</td>
-            <td><a href="{{ url_for('view_document', doc_id=d.id) }}">Open →</a></td>
+            <td>
+                {% if can_view %}
+                <a href="{{ url_for('view_document', doc_id=d.id) }}">Open →</a>
+                {% else %}
+                <span class="muted small">Not in debate</span>
+                {% endif %}
+            </td>
         </tr>
     {% endfor %}
     </tbody>

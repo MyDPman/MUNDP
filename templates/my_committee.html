@@ -96,12 +96,30 @@
     <table class="data-table mc-res-table">
         <tbody>
         {% for d in pending %}
+        {% set can_view = current_user.role in ('admin', 'chair') or
+                          d.uploader_id == current_user.id or d.in_debate %}
         <tr>
-            <td><a href="{{ url_for('view_document', doc_id=d.id) }}"><strong>{{ d.title }}</strong></a></td>
+            <td>
+                {% if can_view %}
+                <a href="{{ url_for('view_document', doc_id=d.id) }}"><strong>{{ d.title }}</strong></a>
+                {% else %}
+                <strong>{{ d.title }}</strong>
+                {% endif %}
+            </td>
             <td class="muted small">{{ d.uploader_name }}</td>
             <td class="muted small">{{ d.created_at | local_date }}</td>
-            <td class="muted small">{{ d.comment_count }} amendment{{ '' if d.comment_count == 1 else 's' }}</td>
-            <td class="td-action"><a href="{{ url_for('view_document', doc_id=d.id) }}">Open →</a></td>
+            <td>
+                {% if d.in_debate %}
+                <span class="status-badge status-in-debate">In Debate</span>
+                {% else %}
+                <span class="muted small">{{ d.comment_count }} amendment{{ '' if d.comment_count == 1 else 's' }}</span>
+                {% endif %}
+            </td>
+            <td class="td-action">
+                {% if can_view %}
+                <a href="{{ url_for('view_document', doc_id=d.id) }}">Open →</a>
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
         </tbody>
@@ -119,7 +137,11 @@
             <td><a href="{{ url_for('view_document', doc_id=d.id) }}"><strong>{{ d.title }}</strong></a></td>
             <td class="muted small">{{ d.uploader_name }}</td>
             <td class="muted small">{{ d.created_at | local_date }}</td>
-            <td><span class="status-badge status-debated">Debated</span></td>
+            <td>
+                {% if d.status == 'passed' %}<span class="status-badge status-passed">Passed</span>
+                {% elif d.status == 'failed' %}<span class="status-badge status-failed">Failed</span>
+                {% else %}<span class="status-badge status-debated">Debated</span>{% endif %}
+            </td>
             <td class="td-action"><a href="{{ url_for('view_document', doc_id=d.id) }}">Open →</a></td>
         </tr>
         {% endfor %}

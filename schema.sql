@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS documents (
     approved_by  INTEGER REFERENCES users(id) ON DELETE SET NULL,
     voting_status TEXT NOT NULL DEFAULT 'closed', -- closed, open, locked
     voting_locked_at TEXT,
+    in_debate    INTEGER NOT NULL DEFAULT 0,      -- 1 = chair marked as in debate (visible to delegates)
     body_text    TEXT,                            -- editable working text (chair can edit)
     body_updated_at TEXT,
     body_updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL,

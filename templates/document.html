@@ -12,6 +12,7 @@
             {% if doc.committee %}<span class="committee-tag">{{ doc.committee }}</span>{% endif %}
             {% if not doc.approved %}<span class="status-badge status-awaiting">Awaiting approval</span>{% endif %}
             {% if doc.approved %}<span class="status-badge status-{{ doc.status }}">{{ status_label }}</span>{% endif %}
+            {% if doc.in_debate %}<span class="status-badge status-in-debate">In Debate</span>{% endif %}
             {% if doc.is_summit %}<span class="status-badge status-summit">International Summit</span>{% endif %}
         </h1>
         {% if doc.agenda_item %}
@@ -72,6 +73,18 @@
 
 {% if chair_owns and doc.approved and not is_final %}
 <div class="chair-actions">
+    <div class="chair-actions-row">
+        <span class="chair-actions-label">House visibility</span>
+        <form method="post" action="{{ url_for('toggle_in_debate', doc_id=doc.id) }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if doc.in_debate %}
+            <button type="submit" class="status-btn status-btn-debated active">In Debate — visible to house (click to hide)</button>
+            {% else %}
+            <button type="submit" class="status-btn status-btn-pending">Mark as In Debate</button>
+            {% endif %}
+        </form>
+        <span class="muted small">Only resolutions marked "In Debate" are readable by delegates.</span>
+    </div>
     <div class="chair-actions-row">
         <span class="chair-actions-label">Status</span>
         {% for s, label in [('pending','Pending'), ('debated','Debated'), ('passed','Passed'), ('failed','Failed')] %}

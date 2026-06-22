@@ -388,12 +388,10 @@ def _doc_visibility_clause(prefix="d"):
             f"({prefix}.approved = 1 OR {prefix}.uploader_id = ? OR {prefix}.committee = ?)",
             [user["id"], committee],
         )
-    # delegate
-    committee = (user.get("committee") or "").strip()
+    # delegate — sees all approved docs in the list, plus own uploads
     return (
-        f"({prefix}.uploader_id = ? OR ({prefix}.approved = 1 AND "
-        f"({prefix}.committee = ? OR {prefix}.status != 'pending')))",
-        [user["id"], committee],
+        f"({prefix}.uploader_id = ? OR {prefix}.approved = 1)",
+        [user["id"]],
     )
 
 
@@ -656,7 +654,8 @@ def dashboard():
     docs = db.execute(
         f"""
         SELECT d.id, d.title, d.description, d.filename, d.size_bytes,
-               d.committee, d.created_at, d.approved,
+               d.committee, d.created_at, d.approved, d.status, d.in_debate,
+               d.uploader_id,
                u.display_name AS uploader_name,
                u.delegation   AS uploader_delegation,
                (SELECT COUNT(*) FROM comments c WHERE c.document_id = d.id) AS comment_count
@@ -1147,6 +1146,7 @@ def my_committee():
     rows = db.execute(
         f"""
         SELECT d.id, d.title, d.created_at, d.status, d.size_bytes, d.approved,
+               d.in_debate, d.uploader_id,
                u.display_name AS uploader_name,
                (SELECT COUNT(*) FROM comments c WHERE c.document_id = d.id) AS comment_count
         FROM documents d
@@ -1159,8 +1159,8 @@ def my_committee():
     # Resolutions that haven't been approved yet sit in their own bucket.
     awaiting = [r for r in rows if not r["approved"]]
     approved = [r for r in rows if r["approved"]]
-    debated = [r for r in approved if r["status"] == "debated"]
-    pending = [r for r in approved if r["status"] != "debated"]
+    debated = [r for r in approved if r["status"] in ("debated", "passed", "failed")]
+    pending = [r for r in approved if r["status"] not in ("debated", "passed", "failed")]
 
     committee_members = db.execute(
         """
@@ -1306,6 +1306,28 @@ def set_document_status(doc_id: int):
     db.commit()
     flash(f"Marked as {new_status}.", "success")
     return redirect(request.form.get("next") or url_for("view_document", doc_id=doc_id))
+
+
+@app.route("/documents/<int:doc_id>/in_debate", methods=["POST"])
+@roles_required("chair")
+def toggle_in_debate(doc_id: int):
+    db = get_db()
+    row = db.execute(
+        "SELECT id, committee, in_debate FROM documents WHERE id = ?", (doc_id,)
+    ).fetchone()
+    if not row:
+        abort(404)
+    if g.user["role"] != "admin" and row["committee"] != g.user.get("committee"):
+        abort(403, description="You can only update resolutions in your own committee.")
+    new_val = 0 if row["in_debate"] else 1
+    db.execute("UPDATE documents SET in_debate = ? WHERE id = ?", (new_val, doc_id))
+    db.commit()
+    flash(
+        "Resolution is now visible to the house." if new_val
+        else "Resolution is no longer visible to the house.",
+        "success",
+    )
+    return redirect(url_for("view_document", doc_id=doc_id))
 
 
 def _vote_tally(db, doc_id: int) -> dict:
@@ -2080,6 +2102,7 @@ def view_document(doc_id: int):
         SELECT d.id, d.title, d.description, d.filename, d.stored_name,
                d.size_bytes, d.committee, d.agenda_item, d.status, d.is_summit,
                d.approved, d.approved_at, d.voting_status, d.voting_locked_at,
+               d.in_debate,
                d.body_text, d.body_updated_at, d.body_updated_by,
                d.google_doc_url,
                d.created_at, d.uploader_id,
@@ -2098,6 +2121,16 @@ def view_document(doc_id: int):
         if (g.user["role"] == "chair"
                 and doc["committee"] != g.user.get("committee")):
             abort(404)
+    if doc and doc["approved"] and g.user["role"] == "delegate":
+        # Delegates may only read a resolution that is in debate, already
+        # debated/voted on, or that they uploaded themselves.
+        readable = (
+            doc["uploader_id"] == g.user["id"]
+            or doc["in_debate"]
+            or doc["status"] in ("debated", "passed", "failed")
+        )
+        if not readable:
+            abort(403)
 
     vote_tally = {"for": 0, "against": 0}
     eligible_voters = 0
@@ -2159,11 +2192,19 @@ def delete_document(doc_id: int):
 def serve_document(doc_id: int):
     db = get_db()
     row = db.execute(
-        "SELECT stored_name, filename FROM documents WHERE id = ?",
+        "SELECT stored_name, filename, approved, in_debate, status, uploader_id FROM documents WHERE id = ?",
         (doc_id,),
     ).fetchone()
     if not row:
         abort(404)
+    if row["approved"] and g.user["role"] == "delegate":
+        readable = (
+            row["uploader_id"] == g.user["id"]
+            or row["in_debate"]
+            or row["status"] in ("debated", "passed", "failed")
+        )
+        if not readable:
+            abort(403)
     return send_from_directory(
         UPLOAD_DIR, row["stored_name"],
         mimetype="application/pdf",
@@ -2177,7 +2218,7 @@ def serve_document(doc_id: int):
 def comments(doc_id: int):
     db = get_db()
     doc = db.execute(
-        "SELECT id, approved, uploader_id, committee FROM documents WHERE id = ?",
+        "SELECT id, approved, uploader_id, committee, in_debate, status FROM documents WHERE id = ?",
         (doc_id,),
     ).fetchone()
     if not doc:
@@ -2187,6 +2228,14 @@ def comments(doc_id: int):
             abort(404)
         if g.user["role"] == "chair" and doc["committee"] != g.user.get("committee"):
             abort(404)
+    if doc["approved"] and g.user["role"] == "delegate":
+        readable = (
+            doc["uploader_id"] == g.user["id"]
+            or doc["in_debate"]
+            or doc["status"] in ("debated", "passed", "failed")
+        )
+        if not readable:
+            abort(403)
 
     if request.method == "POST":
         if g.user["role"] != "delegate":

@@ -74,6 +74,8 @@ def _migrate(conn: sqlite3.Connection) -> None:
         )
     if "google_doc_url" not in doc_cols:
         conn.execute("ALTER TABLE documents ADD COLUMN google_doc_url TEXT")
+    if "in_debate" not in doc_cols:
+        conn.execute("ALTER TABLE documents ADD COLUMN in_debate INTEGER NOT NULL DEFAULT 0")
 
     # 1f. Rebuild documents to allow nullable filename/stored_name (Google Doc
     #     URL is now mandatory; the PDF is optional).

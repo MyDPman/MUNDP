@@ -1598,6 +1598,11 @@ button.danger:hover { background: var(--danger); }
     color: #1f1500;
     border-color: #b45309;
 }
+.status-in-debate {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.5);
+}
 
 /* Approval banner */
 .approval-banner {
@@ -2274,6 +2279,8 @@ button.danger:hover { background: var(--danger); }
 .mc-res-table thead th { padding: 8px 16px; }
 .mc-row-debated td { opacity: 0.65; }
 .mc-row-debated:hover td { opacity: 1; }
+.res-locked td { opacity: 0.6; }
+.res-locked:hover td { opacity: 0.85; }
 .td-action { text-align: right; white-space: nowrap; }
 .td-action a { color: #1d4ed8; font-weight: 600; font-size: 13px; }
 .mc-empty-res {
@@ -3542,6 +3549,8 @@ select.select-readonly {
 .status-summit,
 .page-header .status-summit { background: #07054d; color: #ffffff; border-color: #07054d; }
 .status-awaiting { background: #f59e0b; color: #ffffff; border-color: #f59e0b; }
+.status-in-debate,
+.page-header .status-in-debate { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
 
 /* Committee tag pill inside the dark committee card — invert for contrast */
 .committee-card .committee-tag {
