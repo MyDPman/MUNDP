@@ -127,3 +127,4 @@ uploads/                # PDF files (one per document)
 - No user-facing password reset (admin must reset).
 - Rate-limit state is in-memory; if you scale to multiple workers/hosts, move it to Redis.
 - SQLite is fine for hundreds of users; if you outgrow it, swap to Postgres via small changes in `lib/db.py`.
+# MUNDP
