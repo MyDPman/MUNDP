@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Home — MUNDP Portal{% endblock %}
+
+{% block head %}
+<style>
+.home-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 0 64px;
+}
+.home-hero {
+    border-bottom: 2px solid #07054d;
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+}
+.home-hero h1 {
+    font-size: 2.6rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #07054d;
+    margin: 0 0 8px;
+}
+.home-hero p {
+    font-size: 1rem;
+    color: #4b557b;
+    margin: 0;
+}
+.home-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(7,5,77,0.12);
+    border: 1px solid rgba(7,5,77,0.12);
+}
+.home-card {
+    background: #ffffff;
+    padding: 24px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.1s;
+}
+.home-card:hover {
+    background: rgba(7,5,77,0.04);
+}
+.home-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #07054d;
+    letter-spacing: 0.01em;
+}
+.home-card-desc {
+    font-size: 0.82rem;
+    color: #4b557b;
+    line-height: 1.4;
+    flex: 1;
+}
+.home-card-arrow {
+    font-size: 0.8rem;
+    color: rgba(7,5,77,0.4);
+    margin-top: 8px;
+}
+@media (max-width: 700px) {
+    .home-grid { grid-template-columns: repeat(2, 1fr); }
+    .home-hero h1 { font-size: 1.8rem; }
+}
+@media (max-width: 420px) {
+    .home-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="home-wrap">
+    <div class="home-hero">
+        <h1>Welcome to MUNDP</h1>
+        <p>MyDP — the official delegate portal for Model United Nations of Dokuz Eylül Polikolej.</p>
+    </div>
+
+    <div class="home-grid">
+
+        {% if current_user.role != 'exec_gc' %}
+        <a class="home-card" href="{{ url_for('dashboard') }}">
+            <div class="home-card-title">Resolutions</div>
+            <div class="home-card-desc">View and manage submitted resolutions from all committees.</div>
+            <div class="home-card-arrow">Open →</div>
+        </a>
+        {% endif %}
+
+        <a class="home-card" href="{{ url_for('summit') }}">
+            <div class="home-card-title">Summit</div>
+            <div class="home-card-desc">Committee proceedings, delegate roster, and summit overview.</div>
+            <div class="home-card-arrow">Open →</div>
+        </a>
+
+        {% if current_user.role in ('admin', 'chair', 'advisor', 'exec_gc') %}
+        <a class="home-card" href="{{ url_for('tally') }}">
+            <div class="home-card-title">Tally</div>
+            <div class="home-card-desc">Track and manage votes across delegations and committees.</div>
+            <div class="home-card-arrow">Open →</div>
+        </a>
+        {% endif %}
+
+        {% if current_user.role not in ('advisor', 'exec_gc') %}
+        <a class="home-card" href="{{ url_for('upload') }}">
+            <div class="home-card-title">Upload Resolution</div>
+            <div class="home-card-desc">Submit a new resolution document for your committee.</div>
+            <div class="home-card-arrow">Open →</div>
+        </a>
+        {% endif %}
+
+        {% if current_user.role != 'exec_gc' %}
+        <a class="home-card" href="{{ url_for('notes') }}">
+            <div class="home-card-title">Notes</div>
+            <div class="home-card-desc">Personal notes — private to your account.</div>
+            <div class="home-card-arrow">Open →</div>
+        </a>
+        {% endif %}
+
+        <a class="home-card" href="{{ url_for('schedule') }}">
+            <div class="home-card-title">Schedule</div>
+            <div class="home-card-desc">Conference programme and session timetable.</div>
+            <div class="home-card-arrow">Open →</div>
+        </a>
+
+        <a class="home-card" href="{{ url_for('help_page') }}">
+            <div class="home-card-title">Help</div>
+            <div class="home-card-desc">Guidance on using the portal and delegate resources.</div>
+            <div class="home-card-arrow">Open →</div>
+        </a>
+
+        <a class="home-card" href="{{ url_for('settings') }}">
+            <div class="home-card-title">Settings</div>
+            <div class="home-card-desc">Update your password, display name, and account details.</div>
+            <div class="home-card-arrow">Open →</div>
+        </a>
+
+        {% if current_user.role == 'admin' %}
+        <a class="home-card" href="{{ url_for('admin_users') }}">
+            <div class="home-card-title">Admin — Users</div>
+            <div class="home-card-desc">Manage delegate accounts, roles, and committee assignments.</div>
+            <div class="home-card-arrow">Open →</div>
+        </a>
+
+        <a class="home-card" href="{{ url_for('admin_config') }}">
+            <div class="home-card-title">Admin — Config</div>
+            <div class="home-card-desc">Configure committees, schools, and conference settings.</div>
+            <div class="home-card-arrow">Open →</div>
+        </a>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

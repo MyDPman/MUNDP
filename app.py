@@ -570,9 +570,7 @@ def setup():
 def index():
     user = getattr(g, "user", None)
     if user:
-        if user.get("role") == "exec_gc":
-            return redirect(url_for("schedule"))
-        return redirect(url_for("dashboard"))
+        return render_template("home.html")
     return redirect(url_for("login"))
 
 
