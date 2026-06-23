@@ -7,14 +7,14 @@
 .home-hero {
     display: flex;
     align-items: center;
-    gap: 28px;
+    gap: 32px;
     padding: 56px 0 48px;
     border-bottom: 2px solid #07054d;
     margin-bottom: 52px;
 }
 .home-hero-logo {
-    width: 88px;
-    height: 88px;
+    width: 120px;
+    height: 120px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -23,16 +23,8 @@
     font-weight: 800;
     letter-spacing: -1px;
     color: #07054d;
-    margin: 0 0 6px;
+    margin: 0;
     line-height: 1;
-    text-transform: uppercase;
-}
-.home-hero-text .home-tagline {
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: rgba(7,5,77,0.38);
 }
 
 /* ── Section label ───────────────────────────────────────────── */
@@ -57,41 +49,28 @@
 .home-card {
     background: #ffffff;
     border: 1px solid rgba(7,5,77,0.13);
+    border-radius: 6px;
     border-left: 3px solid transparent;
-    padding: 24px 22px 20px;
+    padding: 22px 22px 18px;
     display: flex;
     flex-direction: column;
     text-decoration: none;
     color: inherit;
-    transition: border-left-color 0.15s, box-shadow 0.15s, background 0.1s;
-    position: relative;
+    transition: border-left-color 0.15s, box-shadow 0.15s;
 }
 .home-card:hover {
     border-left-color: #07054d;
-    background: #ffffff;
     box-shadow: 0 4px 18px rgba(7,5,77,0.09);
-}
-.home-card-icon {
-    font-size: 1.3rem;
-    margin-bottom: 14px;
-    line-height: 1;
-    opacity: 0.75;
 }
 .home-card-title {
     font-size: 0.95rem;
     font-weight: 700;
     color: #07054d;
-    margin-bottom: 6px;
     letter-spacing: 0.01em;
-}
-.home-card-desc {
-    font-size: 0.8rem;
-    color: #4b557b;
-    line-height: 1.5;
     flex: 1;
 }
 .home-card-arrow {
-    margin-top: 16px;
+    margin-top: 14px;
     font-size: 0.78rem;
     font-weight: 600;
     letter-spacing: 0.05em;
@@ -105,7 +84,7 @@
 @media (max-width: 750px) {
     .home-grid { grid-template-columns: repeat(2, 1fr); }
     .home-hero-text h1 { font-size: 2rem; }
-    .home-hero-logo { width: 60px; height: 60px; }
+    .home-hero-logo { width: 80px; height: 80px; }
 }
 @media (max-width: 460px) {
     .home-grid { grid-template-columns: 1fr; }
@@ -116,10 +95,9 @@
 {% block content %}
 
 <div class="home-hero">
-    <img class="home-hero-logo" src="{{ url_for('static', filename='img/myDPlogo.png') }}" alt="MyDP">
+    <img class="home-hero-logo" src="{{ url_for('static', filename='img/mydp_world.png') }}" alt="MyDP">
     <div class="home-hero-text">
         <h1>Welcome to MUNDP</h1>
-        <div class="home-tagline">Delegate Portal</div>
     </div>
 </div>
 
@@ -129,80 +107,60 @@
 
     {% if current_user.role != 'exec_gc' %}
     <a class="home-card" href="{{ url_for('dashboard') }}">
-        <div class="home-card-icon">📄</div>
         <div class="home-card-title">Resolutions</div>
-        <div class="home-card-desc">View and manage submitted resolutions from all committees.</div>
         <div class="home-card-arrow">Open →</div>
     </a>
     {% endif %}
 
     <a class="home-card" href="{{ url_for('summit') }}">
-        <div class="home-card-icon">🌐</div>
         <div class="home-card-title">Summit</div>
-        <div class="home-card-desc">Committee proceedings, delegate roster, and summit overview.</div>
         <div class="home-card-arrow">Open →</div>
     </a>
 
     {% if current_user.role in ('admin', 'chair', 'advisor', 'exec_gc') %}
     <a class="home-card" href="{{ url_for('tally') }}">
-        <div class="home-card-icon">🗳️</div>
         <div class="home-card-title">Tally</div>
-        <div class="home-card-desc">Track and manage votes across delegations and committees.</div>
         <div class="home-card-arrow">Open →</div>
     </a>
     {% endif %}
 
     {% if current_user.role not in ('advisor', 'exec_gc') %}
     <a class="home-card" href="{{ url_for('upload') }}">
-        <div class="home-card-icon">⬆️</div>
         <div class="home-card-title">Upload Resolution</div>
-        <div class="home-card-desc">Submit a new resolution document for your committee.</div>
         <div class="home-card-arrow">Open →</div>
     </a>
     {% endif %}
 
     {% if current_user.role != 'exec_gc' %}
     <a class="home-card" href="{{ url_for('notes') }}">
-        <div class="home-card-icon">📝</div>
         <div class="home-card-title">Notes</div>
-        <div class="home-card-desc">Personal notes — private to your account.</div>
         <div class="home-card-arrow">Open →</div>
     </a>
     {% endif %}
 
     <a class="home-card" href="{{ url_for('schedule') }}">
-        <div class="home-card-icon">📅</div>
         <div class="home-card-title">Schedule</div>
-        <div class="home-card-desc">Conference programme and session timetable.</div>
         <div class="home-card-arrow">Open →</div>
     </a>
 
     <a class="home-card" href="{{ url_for('help_page') }}">
-        <div class="home-card-icon">💡</div>
         <div class="home-card-title">Help</div>
-        <div class="home-card-desc">Guidance on using the portal and delegate resources.</div>
         <div class="home-card-arrow">Open →</div>
     </a>
 
     <a class="home-card" href="{{ url_for('settings') }}">
-        <div class="home-card-icon">⚙️</div>
         <div class="home-card-title">Settings</div>
-        <div class="home-card-desc">Update your password, display name, and account details.</div>
         <div class="home-card-arrow">Open →</div>
     </a>
 
     {% if current_user.role == 'admin' %}
     <a class="home-card" href="{{ url_for('admin_users') }}">
-        <div class="home-card-icon">👥</div>
         <div class="home-card-title">Admin — Users</div>
-        <div class="home-card-desc">Manage delegate accounts, roles, and committee assignments.</div>
         <div class="home-card-arrow">Open →</div>
     </a>
 
     <a class="home-card" href="{{ url_for('admin_config') }}">
-        <div class="home-card-icon">🛠️</div>
         <div class="home-card-title">Admin — Config</div>
-        <div class="home-card-desc">Configure committees, schools, and conference settings.</div>
         <div class="home-card-arrow">Open →</div>
     </a>
     {% endif %}
