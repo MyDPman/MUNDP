@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}MUNDP Portal{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/myDPlogo.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script>
     // Conference time helper — formats UTC strings in Türkiye time (GMT+3).
@@ -36,7 +37,7 @@
 {% if current_user %}
 <aside class="sidebar">
     <a class="sidebar-brand" href="{{ url_for('dashboard') }}">
-        <img src="{{ url_for('static', filename='img/MyDP.png') }}" alt="MyDP" class="brand-logo">
+        <img src="{{ url_for('static', filename='img/myDPlogo.png') }}" alt="MyDP" class="brand-logo">
         <span class="brand-text">MyDP</span>
     </a>
 
