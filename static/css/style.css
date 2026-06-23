@@ -5640,10 +5640,12 @@ button.danger:hover, .danger.button:hover {
 .sidebar-footer { border-top-color: rgba(255, 255, 255, 0.12) !important; }
 .sidebar-brand { border-bottom-color: rgba(255, 255, 255, 0.12) !important; }
 
-/* Force body to white, no background image */
+/* Textured background on all pages */
 body {
-    background-color: #ffffff !important;
-    background-image: none !important;
+    background-color: #f9f9f9 !important;
+    background-image: url('/static/img/webbg.png') !important;
+    background-repeat: repeat !important;
+    background-size: auto !important;
 }
 .auth-card,
 .card,
