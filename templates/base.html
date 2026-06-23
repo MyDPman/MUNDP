@@ -42,13 +42,11 @@
     </a>
 
     <nav class="sidebar-nav" aria-label="Primary">
-        {% if current_user.role != 'exec_gc' %}
         <a class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}"
            href="{{ url_for('dashboard') }}">
             <span>Resolutions</span>
             {% if badges.resolutions %}<span class="nav-badge">{{ badges.resolutions }}</span>{% endif %}
         </a>
-        {% endif %}
         <a class="nav-item {% if request.endpoint == 'summit' %}active{% endif %}"
            href="{{ url_for('summit') }}">
             <span>International Summit</span>
@@ -69,20 +67,18 @@
             <span>Config</span>
         </a>
         {% endif %}
-        {% if current_user.role != 'exec_gc' %}
         <a class="nav-item {% if request.endpoint == 'notes' %}active{% endif %}"
            href="{{ url_for('notes') }}">
             <span>Note Passing</span>
             {% if badges.notes %}<span class="nav-badge">{{ badges.notes }}</span>{% endif %}
         </a>
-        {% endif %}
         {% if current_user.role in ('admin', 'chair', 'advisor', 'exec_gc') %}
         <a class="nav-item {% if request.endpoint == 'tally' %}active{% endif %}"
            href="{{ url_for('tally') }}">
             <span>Tally</span>
         </a>
         {% endif %}
-        {% if current_user.role != 'advisor' and current_user.role != 'exec_gc' %}
+        {% if current_user.role != 'advisor' %}
         <a class="nav-item {% if request.endpoint == 'upload' %}active{% endif %}"
            href="{{ url_for('upload') }}">
             <span>Upload</span>

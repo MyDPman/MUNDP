@@ -105,12 +105,10 @@
 
 <div class="home-grid">
 
-    {% if current_user.role != 'exec_gc' %}
     <a class="home-card" href="{{ url_for('dashboard') }}">
         <div class="home-card-title">Resolutions</div>
         <div class="home-card-arrow">Open →</div>
     </a>
-    {% endif %}
 
     <a class="home-card" href="{{ url_for('summit') }}">
         <div class="home-card-title">Summit</div>
@@ -124,19 +122,17 @@
     </a>
     {% endif %}
 
-    {% if current_user.role not in ('advisor', 'exec_gc') %}
+    {% if current_user.role != 'advisor' %}
     <a class="home-card" href="{{ url_for('upload') }}">
         <div class="home-card-title">Upload Resolution</div>
         <div class="home-card-arrow">Open →</div>
     </a>
     {% endif %}
 
-    {% if current_user.role != 'exec_gc' %}
     <a class="home-card" href="{{ url_for('notes') }}">
         <div class="home-card-title">Notes</div>
         <div class="home-card-arrow">Open →</div>
     </a>
-    {% endif %}
 
     <a class="home-card" href="{{ url_for('schedule') }}">
         <div class="home-card-title">Schedule</div>
