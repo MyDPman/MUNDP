@@ -5644,8 +5644,10 @@ button.danger:hover, .danger.button:hover {
 body {
     background-color: #f9f9f9 !important;
     background-image: url('/static/img/webbg.png') !important;
-    background-repeat: repeat !important;
-    background-size: auto !important;
+    background-repeat: no-repeat !important;
+    background-size: cover !important;
+    background-attachment: fixed !important;
+    background-position: center !important;
 }
 .auth-card,
 .card,
