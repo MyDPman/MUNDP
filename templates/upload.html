@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Upload Resolution — MUNDP Portal{% endblock %}
+{% block title %}Submit a Resolution / Clause — MUNDP Portal{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h1>Upload a Resolution</h1>
+    <h1>Submit a Resolution / Clause</h1>
     {% if permission_until_iso and not permission_blocked %}
     <div class="header-actions">
         <span class="permission-badge" data-until="{{ permission_until_iso }}">
@@ -17,10 +17,10 @@
 {% if permission_blocked %}
 <div class="upload-block-overlay">
     <div class="upload-block-card">
-        <h2>Upload is permission-based</h2>
-        <p>Resolution uploads are gated. Ask your committee's chair to grant
-            you a <strong>10-minute</strong> upload window — once they do,
-            this page becomes active and you can submit your resolution
+        <h2>Submission is permission-based</h2>
+        <p>Resolution / clause submissions are gated. Ask your committee's chair to grant
+            you a <strong>10-minute</strong> submission window — once they do,
+            this page becomes active and you can submit your resolution / clause
             before the window expires.</p>
         <p class="muted small">Chairs grant upload permission from their
             <em>My Committee</em> page.</p>

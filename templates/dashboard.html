@@ -4,7 +4,7 @@
 <div class="page-header">
     <h1>Resolutions</h1>
     {% if current_user.role == 'admin' or (current_user.role in ('chair', 'delegate') and current_user.committee) %}
-        <a href="{{ url_for('upload') }}" class="primary button">+ Upload Resolution</a>
+        <a href="{{ url_for('upload') }}" class="primary button">+ Submit a Resolution / Clause</a>
     {% endif %}
 </div>
 

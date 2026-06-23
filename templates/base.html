@@ -81,7 +81,7 @@
         {% if current_user.role != 'advisor' %}
         <a class="nav-item {% if request.endpoint == 'upload' %}active{% endif %}"
            href="{{ url_for('upload') }}">
-            <span>Upload</span>
+            <span>Submission</span>
         </a>
         {% endif %}
         <a class="nav-item {% if request.endpoint == 'schedule' %}active{% endif %}"
