@@ -5,89 +5,99 @@
 <style>
 /* ── Hero ────────────────────────────────────────────────────── */
 .home-hero {
-    display: flex;
-    align-items: center;
-    gap: 32px;
-    padding: 56px 0 48px;
-    border-bottom: 2px solid #07054d;
-    margin-bottom: 52px;
+    text-align: center;
+    padding: 80px 0 68px;
+    margin-bottom: 60px;
+    border-bottom: 1px solid rgba(7,5,77,0.15);
 }
 .home-hero-logo {
-    width: 120px;
-    height: 120px;
+    width: 160px;
+    height: 160px;
     object-fit: contain;
-    flex-shrink: 0;
+    display: block;
+    margin: 0 auto 32px;
 }
-.home-hero-text h1 {
-    font-size: 3rem;
+.home-hero h1 {
+    font-size: 3.6rem;
     font-weight: 800;
-    letter-spacing: -1px;
+    letter-spacing: -2px;
     color: #07054d;
-    margin: 0;
+    margin: 0 0 24px;
     line-height: 1;
+}
+.home-hero-line {
+    width: 52px;
+    height: 3px;
+    background: #07054d;
+    margin: 0 auto;
+    border-radius: 2px;
 }
 
 /* ── Section label ───────────────────────────────────────────── */
 .home-section-label {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(7,5,77,0.4);
-    margin-bottom: 16px;
+    color: rgba(7,5,77,0.38);
+    margin-bottom: 18px;
 }
 
 /* ── Grid ────────────────────────────────────────────────────── */
 .home-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 64px;
+    gap: 16px;
+    margin-bottom: 80px;
 }
 
 /* ── Cards ───────────────────────────────────────────────────── */
 .home-card {
     background: #ffffff;
-    border: 1px solid rgba(7,5,77,0.13);
-    border-radius: 6px;
-    border-left: 3px solid transparent;
-    padding: 22px 22px 18px;
+    border: 1px solid rgba(7,5,77,0.11);
+    border-top: 3px solid #07054d;
+    border-radius: 8px;
+    padding: 32px 28px 26px;
+    min-height: 116px;
     display: flex;
     flex-direction: column;
     text-decoration: none;
     color: inherit;
-    transition: border-left-color 0.15s, box-shadow 0.15s;
+    transition: box-shadow 0.2s, transform 0.18s;
 }
 .home-card:hover {
-    border-left-color: #07054d;
-    box-shadow: 0 4px 18px rgba(7,5,77,0.09);
+    box-shadow: 0 10px 32px rgba(7,5,77,0.11);
+    transform: translateY(-3px);
 }
 .home-card-title {
-    font-size: 0.95rem;
+    font-size: 1.05rem;
     font-weight: 700;
     color: #07054d;
-    letter-spacing: 0.01em;
+    line-height: 1.3;
     flex: 1;
 }
 .home-card-arrow {
-    margin-top: 14px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    color: rgba(7,5,77,0.35);
-    transition: color 0.15s;
+    margin-top: 22px;
+    font-size: 1rem;
+    color: rgba(7,5,77,0.28);
+    align-self: flex-end;
+    transition: color 0.15s, transform 0.18s;
 }
 .home-card:hover .home-card-arrow {
     color: #07054d;
+    transform: translateX(4px);
 }
 
-@media (max-width: 750px) {
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 780px) {
     .home-grid { grid-template-columns: repeat(2, 1fr); }
-    .home-hero-text h1 { font-size: 2rem; }
-    .home-hero-logo { width: 80px; height: 80px; }
+    .home-hero h1 { font-size: 2.4rem; letter-spacing: -1px; }
+    .home-hero-logo { width: 110px; height: 110px; }
+    .home-hero { padding: 56px 0 48px; }
 }
 @media (max-width: 460px) {
     .home-grid { grid-template-columns: 1fr; }
+    .home-hero h1 { font-size: 1.9rem; }
 }
 </style>
 {% endblock %}
@@ -96,68 +106,67 @@
 
 <div class="home-hero">
     <img class="home-hero-logo" src="{{ url_for('static', filename='img/mydp_world.png') }}" alt="MyDP">
-    <div class="home-hero-text">
-        <h1>Welcome to MUNDP</h1>
-    </div>
+    <h1>Welcome to MUNDP</h1>
+    <div class="home-hero-line"></div>
 </div>
 
-<div class="home-section-label">Quick Access</div>
+<div class="home-section-label">Navigate</div>
 
 <div class="home-grid">
 
     <a class="home-card" href="{{ url_for('dashboard') }}">
         <div class="home-card-title">Resolutions</div>
-        <div class="home-card-arrow">Open →</div>
+        <div class="home-card-arrow">→</div>
     </a>
 
     <a class="home-card" href="{{ url_for('summit') }}">
-        <div class="home-card-title">Summit</div>
-        <div class="home-card-arrow">Open →</div>
+        <div class="home-card-title">International Summit</div>
+        <div class="home-card-arrow">→</div>
     </a>
 
     {% if current_user.role in ('admin', 'chair', 'advisor', 'exec_gc') %}
     <a class="home-card" href="{{ url_for('tally') }}">
         <div class="home-card-title">Tally</div>
-        <div class="home-card-arrow">Open →</div>
+        <div class="home-card-arrow">→</div>
     </a>
     {% endif %}
 
     {% if current_user.role != 'advisor' %}
     <a class="home-card" href="{{ url_for('upload') }}">
         <div class="home-card-title">Submit a Resolution / Clause</div>
-        <div class="home-card-arrow">Open →</div>
+        <div class="home-card-arrow">→</div>
     </a>
     {% endif %}
 
     <a class="home-card" href="{{ url_for('notes') }}">
         <div class="home-card-title">Notes</div>
-        <div class="home-card-arrow">Open →</div>
+        <div class="home-card-arrow">→</div>
     </a>
 
     <a class="home-card" href="{{ url_for('schedule') }}">
         <div class="home-card-title">Schedule</div>
-        <div class="home-card-arrow">Open →</div>
+        <div class="home-card-arrow">→</div>
     </a>
 
     <a class="home-card" href="{{ url_for('help_page') }}">
         <div class="home-card-title">Help</div>
-        <div class="home-card-arrow">Open →</div>
+        <div class="home-card-arrow">→</div>
     </a>
 
     <a class="home-card" href="{{ url_for('settings') }}">
         <div class="home-card-title">Settings</div>
-        <div class="home-card-arrow">Open →</div>
+        <div class="home-card-arrow">→</div>
     </a>
 
     {% if current_user.role == 'admin' %}
     <a class="home-card" href="{{ url_for('admin_users') }}">
         <div class="home-card-title">Admin — Users</div>
-        <div class="home-card-arrow">Open →</div>
+        <div class="home-card-arrow">→</div>
     </a>
 
     <a class="home-card" href="{{ url_for('admin_config') }}">
         <div class="home-card-title">Admin — Config</div>
-        <div class="home-card-arrow">Open →</div>
+        <div class="home-card-arrow">→</div>
     </a>
     {% endif %}
 
