@@ -90,14 +90,23 @@
 
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 780px) {
-    .home-grid { grid-template-columns: repeat(2, 1fr); }
-    .home-hero h1 { font-size: 2.4rem; letter-spacing: -1px; }
-    .home-hero-logo { width: 110px; height: 110px; }
-    .home-hero { padding: 56px 0 48px; }
+    .home-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .home-hero h1 { font-size: 2.2rem; letter-spacing: -1px; }
+    .home-hero-logo { width: 90px; height: 90px; }
+    .home-hero { padding: 40px 0 36px; margin-bottom: 36px; }
+    .home-card { padding: 20px 16px 16px; min-height: 80px; }
+    .home-card-title { font-size: 0.9rem; }
+    .home-card-arrow { margin-top: 12px; font-size: 0.85rem; }
 }
 @media (max-width: 460px) {
-    .home-grid { grid-template-columns: 1fr; }
-    .home-hero h1 { font-size: 1.9rem; }
+    .home-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .home-hero h1 { font-size: 1.7rem; letter-spacing: -0.5px; }
+    .home-hero-logo { width: 64px; height: 64px; margin-bottom: 18px; }
+    .home-hero { padding: 28px 0 28px; margin-bottom: 28px; }
+    .home-card { padding: 16px 14px 14px; min-height: 70px; border-radius: 6px; }
+    .home-card-title { font-size: 0.82rem; }
+    .home-card-arrow { margin-top: 10px; font-size: 0.78rem; }
+    .home-section-label { font-size: 0.62rem; margin-bottom: 12px; }
 }
 </style>
 {% endblock %}
