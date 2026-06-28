@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "mundp-preview",
-      "runtimeExecutable": "/tmp/mundp_preview_launch.sh",
-      "runtimeArgs": [],
-      "port": 5055
+      "runtimeExecutable": "/Users/can/Desktop/MUNDP/.venv/bin/python",
+      "runtimeArgs": ["app.py"],
+      "port": 5055,
+      "cwd": "/Users/can/Desktop/MUNDP"
     }
   ]
 }
