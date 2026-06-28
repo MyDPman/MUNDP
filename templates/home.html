@@ -6,179 +6,86 @@
 /* ── Hero ────────────────────────────────────────────────────── */
 .home-hero {
     text-align: center;
-    padding: 80px 0 68px;
-    margin-bottom: 60px;
-    border-bottom: 1px solid rgba(7,5,77,0.15);
+    padding: 80px 0 72px;
+    animation: heroFadeIn 0.6s ease both;
+}
+@keyframes heroFadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 .home-hero-logo {
-    width: 160px;
-    height: 160px;
+    width: 180px;
+    height: 180px;
     object-fit: contain;
     display: block;
-    margin: 0 auto 32px;
+    margin: 0 auto 36px;
+    filter: drop-shadow(0 8px 28px rgba(7,5,77,0.13));
+    animation: logoFloat 6s ease-in-out infinite;
 }
-.home-hero h1 {
-    font-size: 3.6rem;
+@keyframes logoFloat {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+}
+.home-hero-title {
+    font-size: 4.6rem;
     font-weight: 800;
-    letter-spacing: -2px;
+    letter-spacing: -4px;
     color: #07054d;
-    margin: 0 0 24px;
+    margin: 0 0 10px;
     line-height: 1;
 }
-.home-hero-line {
-    width: 52px;
-    height: 3px;
-    background: #07054d;
-    margin: 0 auto;
-    border-radius: 2px;
-}
-
-/* ── Section label ───────────────────────────────────────────── */
-.home-section-label {
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
+.home-hero-sub {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: rgba(7,5,77,0.38);
-    margin-bottom: 18px;
+    margin: 0 0 28px;
 }
-
-/* ── Grid ────────────────────────────────────────────────────── */
-.home-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 80px;
+.home-hero-line {
+    width: 36px;
+    height: 2px;
+    background: rgba(7,5,77,0.18);
+    margin: 0 auto 20px;
+    border-radius: 2px;
 }
-
-/* ── Cards ───────────────────────────────────────────────────── */
-.home-card {
-    background: #ffffff;
-    border: 1px solid rgba(7,5,77,0.11);
-    border-top: 3px solid #07054d;
-    border-radius: 8px;
-    padding: 32px 28px 26px;
-    min-height: 116px;
-    display: flex;
-    flex-direction: column;
-    text-decoration: none;
-    color: inherit;
-    transition: box-shadow 0.2s, transform 0.18s;
-}
-.home-card:hover {
-    box-shadow: 0 10px 32px rgba(7,5,77,0.11);
-    transform: translateY(-3px);
-}
-.home-card-title {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #07054d;
-    line-height: 1.3;
-    flex: 1;
-}
-.home-card-arrow {
-    margin-top: 22px;
+.home-hero-greeting {
     font-size: 1rem;
-    color: rgba(7,5,77,0.28);
-    align-self: flex-end;
-    transition: color 0.15s, transform 0.18s;
+    color: rgba(7,5,77,0.50);
+    margin: 0;
+    letter-spacing: 0.01em;
 }
-.home-card:hover .home-card-arrow {
+.home-hero-greeting strong {
     color: #07054d;
-    transform: translateX(4px);
+    font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .home-hero     { animation: none; }
+    .home-hero-logo { animation: none; }
 }
 
 /* ── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 780px) {
-    .home-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .home-hero h1 { font-size: 2.2rem; letter-spacing: -1px; }
-    .home-hero-logo { width: 90px; height: 90px; }
-    .home-hero { padding: 40px 0 36px; margin-bottom: 36px; }
-    .home-card { padding: 20px 16px 16px; min-height: 80px; }
-    .home-card-title { font-size: 0.9rem; }
-    .home-card-arrow { margin-top: 12px; font-size: 0.85rem; }
+@media (max-width: 700px) {
+    .home-hero-title { font-size: 2.8rem; letter-spacing: -2px; }
+    .home-hero { padding: 52px 0 48px; }
+    .home-hero-logo { width: 130px; height: 130px; }
 }
-@media (max-width: 460px) {
-    .home-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .home-hero h1 { font-size: 1.7rem; letter-spacing: -0.5px; }
-    .home-hero-logo { width: 64px; height: 64px; margin-bottom: 18px; }
-    .home-hero { padding: 28px 0 28px; margin-bottom: 28px; }
-    .home-card { padding: 16px 14px 14px; min-height: 70px; border-radius: 6px; }
-    .home-card-title { font-size: 0.82rem; }
-    .home-card-arrow { margin-top: 10px; font-size: 0.78rem; }
-    .home-section-label { font-size: 0.62rem; margin-bottom: 12px; }
+@media (max-width: 420px) {
+    .home-hero-title { font-size: 2.1rem; letter-spacing: -1px; }
+    .home-hero-logo { width: 100px; height: 100px; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-
 <div class="home-hero">
-    <img class="home-hero-logo" src="{{ url_for('static', filename='img/mydp_world.png') }}" alt="MyDP">
-    <h1>Welcome to MUNDP</h1>
+    <img class="home-hero-logo"
+         src="{{ url_for('static', filename='img/mydp_world_fix.png') }}"
+         alt="MyDP">
+    <h1 class="home-hero-title">Welcome to MyDP</h1>
+    <p class="home-hero-sub">MUNDP Digital Interface</p>
     <div class="home-hero-line"></div>
+    <p class="home-hero-greeting">Hello, <strong>{{ current_user.display_name }}</strong></p>
 </div>
-
-<div class="home-section-label">Navigate</div>
-
-<div class="home-grid">
-
-    <a class="home-card" href="{{ url_for('dashboard') }}">
-        <div class="home-card-title">Resolutions</div>
-        <div class="home-card-arrow">→</div>
-    </a>
-
-    <a class="home-card" href="{{ url_for('summit') }}">
-        <div class="home-card-title">International Summit</div>
-        <div class="home-card-arrow">→</div>
-    </a>
-
-    {% if current_user.role in ('admin', 'chair', 'advisor', 'exec_gc') %}
-    <a class="home-card" href="{{ url_for('tally') }}">
-        <div class="home-card-title">Tally</div>
-        <div class="home-card-arrow">→</div>
-    </a>
-    {% endif %}
-
-    {% if current_user.role != 'advisor' %}
-    <a class="home-card" href="{{ url_for('upload') }}">
-        <div class="home-card-title">Submit a Resolution / Clause</div>
-        <div class="home-card-arrow">→</div>
-    </a>
-    {% endif %}
-
-    <a class="home-card" href="{{ url_for('notes') }}">
-        <div class="home-card-title">Notes</div>
-        <div class="home-card-arrow">→</div>
-    </a>
-
-    <a class="home-card" href="{{ url_for('schedule') }}">
-        <div class="home-card-title">Schedule</div>
-        <div class="home-card-arrow">→</div>
-    </a>
-
-    <a class="home-card" href="{{ url_for('help_page') }}">
-        <div class="home-card-title">Help</div>
-        <div class="home-card-arrow">→</div>
-    </a>
-
-    <a class="home-card" href="{{ url_for('settings') }}">
-        <div class="home-card-title">Settings</div>
-        <div class="home-card-arrow">→</div>
-    </a>
-
-    {% if current_user.role == 'admin' %}
-    <a class="home-card" href="{{ url_for('admin_users') }}">
-        <div class="home-card-title">Admin — Users</div>
-        <div class="home-card-arrow">→</div>
-    </a>
-
-    <a class="home-card" href="{{ url_for('admin_config') }}">
-        <div class="home-card-title">Admin — Config</div>
-        <div class="home-card-arrow">→</div>
-    </a>
-    {% endif %}
-
-</div>
-
 {% endblock %}

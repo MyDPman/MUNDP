@@ -78,8 +78,8 @@ a:hover { text-decoration: underline; }
     pointer-events: auto;
 }
 .loading-logo {
-    width: 160px;
-    height: 160px;
+    width: 200px;
+    height: auto;
     object-fit: contain;
     animation: loadingSpin 1.1s linear infinite;
     filter: drop-shadow(0 6px 18px rgba(7, 5, 77, 0.18));
@@ -121,8 +121,9 @@ a:hover { text-decoration: underline; }
 }
 .sidebar-brand:hover { text-decoration: none; }
 .brand-logo {
-    width: 100%;
-    height: auto;
+    width: auto;
+    height: 36px;
+    max-width: 100%;
     object-fit: contain;
     display: block;
     border-radius: 0;
@@ -141,10 +142,10 @@ a:hover { text-decoration: underline; }
     display: flex;
     align-items: center;
     gap: 0;
-    padding: 8px 10px;
+    padding: 6px 10px;
     border-radius: 0;
     color: rgba(255, 255, 255, 0.75);
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 500;
     text-decoration: none;
     transition: background 0.1s ease, color 0.1s ease;
@@ -507,7 +508,7 @@ button.danger:hover { background: #b91c1c; border-color: #b91c1c; }
     justify-content: center;
 }
 .auth-logo img {
-    width: 120px;
+    width: 180px;
     height: auto;
     display: block;
     opacity: 0.90;
@@ -5549,7 +5550,7 @@ button.danger:hover, .danger.button:hover {
 /* ============================================================== */
 
 /* Logo size — must win over all theme blocks */
-.brand-logo { height: auto !important; width: 100% !important; border-radius: 0 !important; }
+.brand-logo { height: 36px !important; width: auto !important; max-width: 100% !important; border-radius: 0 !important; }
 
 /* Reset dark-theme button variables to light-theme values */
 :root {
