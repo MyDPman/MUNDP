@@ -6043,7 +6043,7 @@ button, .button,
     /* ── Content clears the 56px fixed bar and spans full width ── */
     body.has-sidebar {
         padding-left: 0 !important;
-        padding-top: 56px !important;
+        padding-top: 76px !important;
         padding-bottom: 0 !important;
     }
 
@@ -6052,7 +6052,7 @@ button, .button,
         position: fixed !important;
         top: 0 !important; left: 0 !important; right: 0 !important;
         width: 100% !important;
-        height: 56px !important;
+        height: 76px !important;
         flex-direction: row !important;
         align-items: center !important;
         gap: 0 !important;
@@ -6070,7 +6070,7 @@ button, .button,
     .sidebar-brand {
         display: flex !important;
         align-items: center !important;
-        height: 56px !important;
+        height: 76px !important;
         flex: 1 1 auto !important;
         min-width: 0 !important;
         padding: 0 0 0 16px !important;
@@ -6081,9 +6081,9 @@ button, .button,
         z-index: 201;   /* stay above the dim overlay when drawer is open */
     }
     .brand-logo {
-        height: 30px !important;
+        height: 48px !important;
         width: auto !important;
-        max-width: 150px !important;
+        max-width: 230px !important;
         border-radius: 0 !important;
         background: transparent !important;
         box-shadow: none !important;
@@ -6097,8 +6097,8 @@ button, .button,
         align-items: center;
         justify-content: center;
         gap: 5px;
-        width: 56px;
-        height: 56px;
+        width: 64px;
+        height: 76px;
         flex: 0 0 auto;
         background: none;
         border: none;
@@ -6109,7 +6109,7 @@ button, .button,
     }
     .nav-hamburger span {
         display: block;
-        width: 22px; height: 2px;
+        width: 26px; height: 2px;
         background: rgba(255,255,255,0.92);
         border-radius: 2px;
     }
@@ -6126,10 +6126,10 @@ button, .button,
     /* ── Drawer: full nav slides in from the left ── */
     .sidebar-nav {
         position: fixed !important;
-        top: 56px !important; left: 0 !important;
+        top: 76px !important; left: 0 !important;
         width: 272px !important;
         max-width: 82vw !important;
-        height: calc(100vh - 56px) !important;
+        height: calc(100vh - 76px) !important;
         background: #07054d !important;
         flex-direction: column !important;
         flex: none !important;
@@ -6179,7 +6179,7 @@ button, .button,
     .sidebar-imp-return { width: 100% !important; }
 
     /* ── Main content ── */
-    .main-area { min-height: calc(100vh - 56px); }
+    .main-area { min-height: calc(100vh - 76px); }
     body.has-sidebar .main-inner {
         max-width: 100% !important;
         margin: 0 !important;
