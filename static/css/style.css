@@ -5550,7 +5550,7 @@ button.danger:hover, .danger.button:hover {
 /* ============================================================== */
 
 /* Logo size — must win over all theme blocks */
-.brand-logo { height: 56px !important; width: auto !important; max-width: 100% !important; border-radius: 0 !important; }
+.brand-logo { height: auto !important; width: 100% !important; max-width: 188px !important; border-radius: 0 !important; }
 
 /* Reset dark-theme button variables to light-theme values */
 :root {
