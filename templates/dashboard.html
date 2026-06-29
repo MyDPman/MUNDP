@@ -37,7 +37,6 @@
         <tr>
             <th>Title</th>
             <th>Uploaded by</th>
-            <th>Date</th>
             <th>Status</th>
             <th>Amendments</th>
             <th></th>
@@ -67,7 +66,6 @@
                     {{ d.uploader_name }}
                 {% endif %}
             </td>
-            <td>{{ d.created_at | local }}</td>
             <td>
                 {% if d.in_debate %}
                     <span class="status-badge status-in-debate">In Debate</span>
@@ -105,7 +103,6 @@
             <th>Title</th>
             <th>Committee</th>
             <th>Uploaded by</th>
-            <th>Date</th>
             <th></th>
         </tr>
     </thead>
@@ -127,7 +124,6 @@
                     {{ d.uploader_name }}
                 {% endif %}
             </td>
-            <td>{{ d.created_at | local }}</td>
             <td><a href="{{ url_for('view_document', doc_id=d.id) }}">Open →</a></td>
         </tr>
     {% endfor %}

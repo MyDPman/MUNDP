@@ -6274,10 +6274,11 @@ button, .button,
     }
 
     /* amendment count reads naturally instead of a bare "0"
-       (cell is a flex box, so use column-gap rather than a leading space) */
-    #doc-table tbody td:nth-child(5) { gap: 4px; }
-    #doc-table tbody td:nth-child(5):not(:empty)::after { content: "amendments"; }
-    #doc-table tbody td:nth-child(5):empty { display: none !important; }
+       (cell is a flex box, so use column-gap rather than a leading space)
+       — 4th column now that the Date column has been removed */
+    #doc-table tbody td:nth-child(4) { gap: 4px; }
+    #doc-table tbody td:nth-child(4):not(:empty)::after { content: "amendments"; }
+    #doc-table tbody td:nth-child(4):empty { display: none !important; }
 
     /* keep the status pill and inline flag compact */
     #doc-table tbody .status-badge,
