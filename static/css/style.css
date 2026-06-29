@@ -6206,3 +6206,82 @@ button, .button,
     /* Home hero sits a little closer to the bar */
     .home-hero { padding-top: 40px !important; }
 }
+
+/* ==============================================================
+   Resolutions lists (dashboard) — compact mobile cards
+   The generic .data-table→card rule stacks every field as a tall
+   full-width block, so each resolution became a 6-line "crammed box".
+   For the two resolution tables, lay each row out as a bold title on
+   top + one slim muted meta line. Markup and JS are unchanged, so
+   filtering, search, tabs and links all behave exactly as before.
+   ============================================================== */
+@media (max-width: 600px) {
+    #doc-table tbody tr,
+    #debated-table tbody tr {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 5px 12px !important;
+        padding: 11px 14px !important;
+    }
+
+    /* every cell: inline, no divider/padding, small + muted by default */
+    #doc-table tbody td,
+    #debated-table tbody td {
+        display: inline-flex !important;
+        align-items: center;
+        width: auto !important;
+        max-width: 100%;
+        padding: 0 !important;
+        border-bottom: none !important;
+        white-space: normal;
+        font-size: 12.5px;
+        color: var(--muted);
+        line-height: 1.35;
+    }
+
+    /* title: full first line, dark + prominent, description stacks under it */
+    #doc-table tbody td:first-child,
+    #debated-table tbody td:first-child {
+        display: flex !important;
+        flex-direction: column;
+        align-items: flex-start;
+        flex: 1 1 100%;
+        font-size: 15px;
+        color: var(--text);
+        margin-bottom: 1px;
+    }
+    #doc-table tbody td:first-child a,
+    #doc-table tbody td:first-child strong,
+    #debated-table tbody td:first-child a,
+    #debated-table tbody td:first-child strong {
+        font-size: 15px;
+        font-weight: 700;
+    }
+    #doc-table tbody td:first-child .muted.small,
+    #debated-table tbody td:first-child .muted.small {
+        font-size: 12px;
+        font-weight: 400;
+        margin-top: 2px;
+    }
+
+    /* the trailing "Open →" cell hugs the right edge */
+    #doc-table tbody td:last-child,
+    #debated-table tbody td:last-child {
+        margin-left: auto;
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    /* amendment count reads naturally instead of a bare "0"
+       (cell is a flex box, so use column-gap rather than a leading space) */
+    #doc-table tbody td:nth-child(5) { gap: 4px; }
+    #doc-table tbody td:nth-child(5):not(:empty)::after { content: "amendments"; }
+    #doc-table tbody td:nth-child(5):empty { display: none !important; }
+
+    /* keep the status pill and inline flag compact */
+    #doc-table tbody .status-badge,
+    #debated-table tbody .status-badge { padding: 3px 9px; font-size: 11px; }
+    #doc-table tbody .country-flag-inline,
+    #debated-table tbody .country-flag-inline { width: 16px; height: auto; margin-right: 4px; }
+}
