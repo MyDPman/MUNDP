@@ -6020,3 +6020,23 @@ button, .button,
 /* ── Hamburger / overlay: hidden by default, shown at ≤600px ── */
 .nav-hamburger { display: none; }
 .nav-overlay { display: none; }
+
+/* ── Mobile brand-logo fix (must come after all overrides above) ─────────
+   The desktop .brand-logo rule sets width:100%/max-width:188px which makes
+   the 2:1 horizontal wordmark ~95px tall — overflowing the 56px mobile bar.
+   Constrain by height instead, and hide brand-text (the wordmark already
+   includes the name). Applies from 820px down so tablet bar also stays clean.
+   ─────────────────────────────────────────────────────────────────────── */
+@media (max-width: 820px) {
+    .brand-logo {
+        height: 34px !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+    .brand-text { display: none !important; }
+}
+
+/* Home hero: tighten top padding on mobile so content sits closer to bar */
+@media (max-width: 600px) {
+    .home-hero { padding-top: 40px !important; }
+}
