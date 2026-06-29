@@ -6021,22 +6021,188 @@ button, .button,
 .nav-hamburger { display: none; }
 .nav-overlay { display: none; }
 
-/* ── Mobile brand-logo fix (must come after all overrides above) ─────────
-   The desktop .brand-logo rule sets width:100%/max-width:188px which makes
-   the 2:1 horizontal wordmark ~95px tall — overflowing the 56px mobile bar.
-   Constrain by height instead, and hide brand-text (the wordmark already
-   includes the name). Applies from 820px down so tablet bar also stays clean.
-   ─────────────────────────────────────────────────────────────────────── */
+/* ==============================================================
+   AUTHORITATIVE MOBILE LAYOUT  (≤820px)
+   Appended last so it wins over every scattered responsive block
+   above. Phones and small tablets get a fixed navy top bar with a
+   hamburger that slides the full sidebar in as a drawer — mirroring
+   the desktop sidebar contents. Desktop (>820px) is untouched.
+   ============================================================== */
 @media (max-width: 820px) {
+
+    /* ── Background: drop the wavy webbg texture, use a clean tint.
+         (Desktop keeps the texture; on phones `cover`+`fixed` zoomed
+         and juddered, which read as a broken gray visual.) ── */
+    html, body { overflow-x: hidden; }
+    body {
+        background-image: none !important;
+        background-color: #f5f6f9 !important;
+        background-attachment: scroll !important;
+    }
+
+    /* ── Content clears the 56px fixed bar and spans full width ── */
+    body.has-sidebar {
+        padding-left: 0 !important;
+        padding-top: 56px !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* ── Top bar ── */
+    .sidebar {
+        position: fixed !important;
+        top: 0 !important; left: 0 !important; right: 0 !important;
+        width: 100% !important;
+        height: 56px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        z-index: 200 !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255,255,255,0.12) !important;
+        box-shadow: 0 2px 10px rgba(5,3,40,0.22) !important;
+    }
+
+    /* ── Brand: just the white "My + globe" wordmark, no extra text.
+         (A ≤600px theme block paints brand/nav charcoal #242830; force
+         transparent so the navy .sidebar bar shows through uniformly.) ── */
+    .sidebar-brand {
+        display: flex !important;
+        align-items: center !important;
+        height: 56px !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        padding: 0 0 0 16px !important;
+        margin: 0 !important;
+        border-bottom: none !important;
+        background: transparent !important;
+        position: relative;
+        z-index: 201;   /* stay above the dim overlay when drawer is open */
+    }
     .brand-logo {
-        height: 34px !important;
+        height: 30px !important;
         width: auto !important;
-        max-width: none !important;
+        max-width: 150px !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
     }
     .brand-text { display: none !important; }
-}
 
-/* Home hero: tighten top padding on mobile so content sits closer to bar */
-@media (max-width: 600px) {
+    /* ── Hamburger button ── */
+    .nav-hamburger {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        width: 56px;
+        height: 56px;
+        flex: 0 0 auto;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        position: relative;
+        z-index: 201;   /* stay above the dim overlay when drawer is open */
+    }
+    .nav-hamburger span {
+        display: block;
+        width: 22px; height: 2px;
+        background: rgba(255,255,255,0.92);
+        border-radius: 2px;
+    }
+
+    /* ── Dim overlay behind the open drawer ── */
+    .nav-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(5,3,40,0.5);
+        z-index: 198;
+    }
+    .nav-overlay.visible { display: block !important; }
+
+    /* ── Drawer: full nav slides in from the left ── */
+    .sidebar-nav {
+        position: fixed !important;
+        top: 56px !important; left: 0 !important;
+        width: 272px !important;
+        max-width: 82vw !important;
+        height: calc(100vh - 56px) !important;
+        background: #07054d !important;
+        flex-direction: column !important;
+        flex: none !important;
+        padding: 10px 10px 96px !important;
+        gap: 2px !important;
+        overflow-y: auto !important;
+        z-index: 199 !important;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        box-shadow: 4px 0 26px rgba(5,3,40,0.4);
+        scrollbar-width: none;
+    }
+    .sidebar-nav.nav-open { transform: translateX(0) !important; }
+    .sidebar-nav::-webkit-scrollbar { display: none; }
+
+    .nav-item {
+        flex-direction: row !important;
+        align-items: center !important;
+        padding: 12px 16px !important;
+        font-size: 0.95rem !important;
+        border-radius: 0 !important;
+        border-left: 3px solid transparent !important;
+        opacity: 1 !important;
+    }
+    .nav-item span { display: inline !important; }
+    .nav-badge { margin-left: auto !important; }
+
+    /* ── Footer pinned to the bottom of the drawer ── */
+    .sidebar-footer {
+        position: fixed !important;
+        bottom: 0 !important; left: 0 !important;
+        width: 272px !important;
+        max-width: 82vw !important;
+        z-index: 200 !important;
+        background: #07054d !important;
+        border-top: 1px solid rgba(255,255,255,0.14) !important;
+        padding: 12px 16px !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+    }
+    .sidebar-footer.nav-open { transform: translateX(0) !important; }
+    .user-card { display: flex !important; padding: 0 !important; }
+    .sidebar-signout { width: 100% !important; padding: 9px 14px !important; font-size: 13px !important; }
+    .sidebar-imp-return { width: 100% !important; }
+
+    /* ── Main content ── */
+    .main-area { min-height: calc(100vh - 56px); }
+    body.has-sidebar .main-inner {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 20px 16px 40px !important;
+    }
+
+    /* Page header stacks; actions go full width */
+    .page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    .page-header h1 { font-size: 22px !important; }
+    .header-actions { width: 100%; flex-wrap: wrap; gap: 8px; }
+
+    /* Nothing should force the page to scroll sideways */
+    .main-inner img,
+    .main-inner table,
+    .card, .data-table, .pdf-pane, .gdoc-pane,
+    .working-text-card, .committee-card, .org-card {
+        max-width: 100% !important;
+    }
+
+    /* Home hero sits a little closer to the bar */
     .home-hero { padding-top: 40px !important; }
 }
