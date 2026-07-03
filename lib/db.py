@@ -311,7 +311,7 @@ def _migrate(conn: sqlite3.Connection) -> None:
             "committee", "delegation", "notes_last_seen_at",
             "amendments_last_seen_at", "resolutions_last_seen_at",
             "outside_since", "participant_name", "email", "phone",
-            "upload_permission_until", "created_at",
+            "upload_permission_until", "exec_role_id", "created_at",
         ]
         present_cols = [c for c in all_cols if c in cols_now]
         cols_list = ", ".join(present_cols)
@@ -327,6 +327,7 @@ def _migrate(conn: sqlite3.Connection) -> None:
                 role                     TEXT NOT NULL CHECK (role IN ('admin', 'chair', 'delegate', 'advisor', 'exec_gc')),
                 committee                TEXT,
                 delegation               TEXT,
+                exec_role_id             INTEGER REFERENCES roles(id) ON DELETE SET NULL,
                 notes_last_seen_at       TEXT,
                 amendments_last_seen_at  TEXT,
                 resolutions_last_seen_at TEXT,
@@ -351,3 +352,12 @@ def _migrate(conn: sqlite3.Connection) -> None:
             updated_by  INTEGER REFERENCES users(id) ON DELETE SET NULL
         )
     """)
+
+    # 7. EXEC/GC roles: admin-defined role names (roles table, created via
+    #    schema.sql on every boot) + users.exec_role_id linking an exec_gc
+    #    user to one role. Add the column for DBs that predate this feature.
+    user_cols_now2 = [r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "exec_role_id" not in user_cols_now2:
+        conn.execute(
+            "ALTER TABLE users ADD COLUMN exec_role_id INTEGER REFERENCES roles(id) ON DELETE SET NULL"
+        )

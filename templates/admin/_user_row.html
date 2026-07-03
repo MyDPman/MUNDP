@@ -1,6 +1,6 @@
 {% from "_macros.html" import country_picker %}
 <li class="user-card" data-user-id="{{ u.id }}" data-role="{{ u.role }}"
-    data-search="{{ (u.username ~ ' ' ~ u.display_name ~ ' ' ~ (u.participant_name or '') ~ ' ' ~ (u.delegation or '') ~ ' ' ~ (u.committee or '') ~ ' ' ~ u.role) | lower }}">
+    data-search="{{ (u.username ~ ' ' ~ u.display_name ~ ' ' ~ (u.participant_name or '') ~ ' ' ~ (u.delegation or '') ~ ' ' ~ (u.committee or '') ~ ' ' ~ (u.exec_role_name or '') ~ ' ' ~ u.role) | lower }}">
     <div class="user-card-main">
         <div class="user-identity">
             <div class="user-names">
@@ -11,6 +11,7 @@
         </div>
         <div class="user-meta">
             {% if u.committee %}<span class="committee-tag">{{ u.committee }}</span>{% endif %}
+            {% if u.exec_role_name %}<span class="committee-tag">{{ u.exec_role_name }}</span>{% endif %}
         </div>
         <div class="user-meta">
             {% if u.delegation %}
@@ -24,6 +25,9 @@
         <div class="user-card-actions">
             {% if u.role == 'delegate' %}
             <button type="submit" form="assign-form-{{ u.id }}" class="primary user-save">Save</button>
+            {% endif %}
+            {% if u.role == 'exec_gc' %}
+            <button type="submit" form="exec-role-form-{{ u.id }}" class="primary user-save">Save</button>
             {% endif %}
             <button type="button" class="user-edit-toggle">Edit</button>
             {% if u.id != current_user.id %}
@@ -71,6 +75,21 @@
                 </a>
             </div>
         </div>
+        {% endif %}
+
+        {% if u.role == 'exec_gc' %}
+        <form method="post" action="{{ url_for('admin_assign_exec_role', user_id=u.id) }}"
+              class="user-editor-block exec-role-form" id="exec-role-form-{{ u.id }}" data-no-loading>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="user-editor-label">Role</div>
+            <div class="user-editor-controls">
+                <select name="exec_role_id">
+                    {% for r in roles %}
+                        <option value="{{ r.id }}" {% if u.exec_role_id == r.id %}selected{% endif %}>{{ r.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
         {% endif %}
 
         <form method="post" action="{{ url_for('admin_reset_password', user_id=u.id) }}"

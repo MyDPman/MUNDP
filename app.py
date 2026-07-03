@@ -38,7 +38,7 @@ VALID_ROLES = ("admin", "chair", "delegate", "advisor", "exec_gc")
 EXEC_GC_ALLOWED_PREFIXES = (
     "/schedule", "/tally", "/help", "/settings",
     "/static/", "/api/badges", "/logout", "/login", "/impersonate/stop",
-    "/summit", "/my-committee", "/admin/config",
+    "/summit", "/my-committee", "/admin/config", "/calendar",
 )
 
 # Schools that may have advisors at the conference. Maps full school name
@@ -286,6 +286,12 @@ def _cfg_schedule() -> list:
         {"day": d.get("day", ""), "items": [tuple(it) if len(it) == 2 else (it[0], "") for it in d.get("items", [])]}
         for d in raw
     ]
+
+
+def _get_roles() -> list:
+    """EXEC/GC duty roles, admin-managed via /admin/config."""
+    rows = get_db().execute("SELECT id, name FROM roles ORDER BY name").fetchall()
+    return [dict(r) for r in rows]
 
 
 app = Flask(__name__)
@@ -2370,6 +2376,7 @@ def admin_users():
         delegation = (request.form.get("delegation") or "").strip() or None
         chair_position = (request.form.get("chair_position") or "").strip() or None
         advisor_school = (request.form.get("advisor_school") or "").strip() or None
+        exec_role_id = request.form.get("exec_role_id", type=int)
 
         # Only delegates may have a country assigned. Drop any incoming value
         # for other roles so admins can't slip one in via the wire.
@@ -2378,6 +2385,9 @@ def admin_users():
         # Committee only applies to delegate / chair.
         if role not in ("delegate", "chair"):
             committee = None
+        # Duty role only applies to exec_gc.
+        if role != "exec_gc":
+            exec_role_id = None
 
         def _fail(msg, code=400):
             if _wants_json():
@@ -2454,8 +2464,14 @@ def admin_users():
         elif role == "exec_gc":
             # EXEC/GC users are named from the participant name entered by the admin
             # (latin-alphabet slug, e.g. "can-dagtekin").
-            username = f"exec-{participant_name}"
-            display_name = f"EXEC/GC - {participant_name}"
+            role_ids = {r["id"] for r in _get_roles()}
+            if not role_ids:
+                err_resp = _fail("No roles configured yet — add one in Config first.")
+            elif exec_role_id not in role_ids:
+                err_resp = _fail("Pick a role for this EXEC/GC member.")
+            else:
+                username = f"exec-{participant_name}"
+                display_name = f"EXEC/GC - {participant_name}"
 
         # Reject duplicate usernames up front with a clear message.
         if err_resp is None and db.execute(
@@ -2484,19 +2500,21 @@ def admin_users():
                 cur = db.execute(
                     """
                     INSERT INTO users (username, display_name, participant_name,
-                                       password_hash, role, committee, delegation)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                                       password_hash, role, committee, delegation, exec_role_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (username, display_name, stored_participant,
-                     hash_password(password), role, committee, delegation),
+                     hash_password(password), role, committee, delegation, exec_role_id),
                 )
                 db.commit()
                 new_id = cur.lastrowid
                 if _wants_json():
                     row = db.execute(
-                        """SELECT id, username, display_name, participant_name,
-                                  role, committee, delegation, created_at
-                           FROM users WHERE id = ?""",
+                        """SELECT u.id, u.username, u.display_name, u.participant_name,
+                                  u.role, u.committee, u.delegation, u.exec_role_id,
+                                  r.name AS exec_role_name, u.created_at
+                           FROM users u LEFT JOIN roles r ON r.id = u.exec_role_id
+                           WHERE u.id = ?""",
                         (new_id,),
                     ).fetchone()
                     return jsonify({
@@ -2509,6 +2527,8 @@ def admin_users():
                             "role": row["role"],
                             "committee": row["committee"],
                             "delegation": row["delegation"],
+                            "exec_role_id": row["exec_role_id"],
+                            "exec_role_name": row["exec_role_name"],
                             "created_at": row["created_at"],
                             "doc_count": 0,
                         },
@@ -2524,9 +2544,11 @@ def admin_users():
     users = db.execute(
         """
         SELECT u.id, u.username, u.display_name, u.participant_name,
-               u.email, u.phone, u.role, u.committee, u.delegation, u.created_at,
+               u.email, u.phone, u.role, u.committee, u.delegation,
+               u.exec_role_id, r.name AS exec_role_name, u.created_at,
                (SELECT COUNT(*) FROM documents d WHERE d.uploader_id = u.id) AS doc_count
         FROM users u
+        LEFT JOIN roles r ON r.id = u.exec_role_id
         ORDER BY u.created_at DESC
         """
     ).fetchall()
@@ -2540,7 +2562,7 @@ def admin_users():
         n_exec += 1
     return render_template("admin/users.html", users=users, committees=_cfg_committees(),
                            country_iso3=COUNTRY_ISO3, schools=_cfg_schools(),
-                           next_admin_n=n_admin, next_exec_n=n_exec)
+                           roles=_get_roles(), next_admin_n=n_admin, next_exec_n=n_exec)
 
 
 @app.route("/admin/users/<int:user_id>/assign", methods=["POST"])
@@ -2567,6 +2589,40 @@ def admin_assign_committee(user_id: int):
             "delegation": delegation,
         })
     flash("Assignment updated.", "success")
+    return redirect(url_for("admin_users"))
+
+
+@app.route("/admin/users/<int:user_id>/exec-role", methods=["POST"])
+@admin_required
+def admin_assign_exec_role(user_id: int):
+    """Reassign an EXEC/GC member's duty role after creation."""
+    db = get_db()
+    user = db.execute("SELECT id, role FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not user or user["role"] != "exec_gc":
+        msg = "That user isn't an EXEC/GC member."
+        if _wants_json():
+            return jsonify({"ok": False, "error": msg}), 400
+        flash(msg, "error")
+        return redirect(url_for("admin_users"))
+
+    exec_role_id = request.form.get("exec_role_id", type=int)
+    role_ids = {r["id"] for r in _get_roles()}
+    if exec_role_id not in role_ids:
+        msg = "Pick a valid role."
+        if _wants_json():
+            return jsonify({"ok": False, "error": msg}), 400
+        flash(msg, "error")
+        return redirect(url_for("admin_users"))
+
+    db.execute("UPDATE users SET exec_role_id = ? WHERE id = ?", (exec_role_id, user_id))
+    db.commit()
+    role_name = next((r["name"] for r in _get_roles() if r["id"] == exec_role_id), "")
+    if _wants_json():
+        return jsonify({
+            "ok": True, "user_id": user_id,
+            "exec_role_id": exec_role_id, "exec_role_name": role_name,
+        })
+    flash("Role updated.", "success")
     return redirect(url_for("admin_users"))
 
 
@@ -2705,7 +2761,24 @@ def admin_config():
                 "participant_name": row["participant_name"] or "",
                 "display_name": row["display_name"],
             }
-    return render_template("admin/config.html", cfg=cfg, roster=roster)
+    roles = _get_roles()
+    role_user_counts = {
+        r["exec_role_id"]: r["n"]
+        for r in db.execute(
+            "SELECT exec_role_id, COUNT(*) AS n FROM users "
+            "WHERE exec_role_id IS NOT NULL GROUP BY exec_role_id"
+        ).fetchall()
+    }
+    role_task_counts = {
+        r["role_id"]: r["n"]
+        for r in db.execute(
+            "SELECT role_id, COUNT(*) AS n FROM exec_tasks GROUP BY role_id"
+        ).fetchall()
+    }
+    return render_template(
+        "admin/config.html", cfg=cfg, roster=roster, roles=roles,
+        role_user_counts=role_user_counts, role_task_counts=role_task_counts,
+    )
 
 
 @app.route("/admin/config/schools", methods=["POST"])
@@ -2832,6 +2905,189 @@ def admin_config_schedule():
     cfg = _load_config(); cfg["schedule"] = schedule; _store_config(cfg)
     flash("Schedule saved.", "success")
     return redirect(url_for("admin_config"))
+
+
+@app.route("/admin/config/roles", methods=["POST"])
+@admin_required
+def admin_config_add_role():
+    """Create a new EXEC/GC duty role (e.g. Treasurer, IT)."""
+    name = (request.form.get("name") or "").strip()
+    if not name:
+        flash("Role name cannot be empty.", "error")
+        return redirect(url_for("admin_config"))
+    db = get_db()
+    try:
+        db.execute("INSERT INTO roles (name) VALUES (?)", (name,))
+        db.commit()
+        flash(f"Added role '{name}'.", "success")
+    except sqlite3.IntegrityError:
+        flash(f"A role named '{name}' already exists.", "error")
+    return redirect(url_for("admin_config"))
+
+
+@app.route("/admin/config/roles/<int:role_id>/delete", methods=["POST"])
+@admin_required
+def admin_config_delete_role(role_id: int):
+    """Delete a role — blocked if any user or task still references it."""
+    db = get_db()
+    role = db.execute("SELECT id, name FROM roles WHERE id = ?", (role_id,)).fetchone()
+    if not role:
+        flash("Role not found.", "error")
+        return redirect(url_for("admin_config"))
+    in_use_users = db.execute(
+        "SELECT COUNT(*) AS n FROM users WHERE exec_role_id = ?", (role_id,)
+    ).fetchone()["n"]
+    in_use_tasks = db.execute(
+        "SELECT COUNT(*) AS n FROM exec_tasks WHERE role_id = ?", (role_id,)
+    ).fetchone()["n"]
+    if in_use_users or in_use_tasks:
+        flash(
+            f"Can't delete '{role['name']}' — still assigned to {in_use_users} user(s) "
+            f"and {in_use_tasks} task(s). Reassign or remove those first.",
+            "error",
+        )
+        return redirect(url_for("admin_config"))
+    db.execute("DELETE FROM roles WHERE id = ?", (role_id,))
+    db.commit()
+    flash(f"Deleted role '{role['name']}'.", "success")
+    return redirect(url_for("admin_config"))
+
+
+# ---------------------------------------------------------------------------
+# EXEC/GC calendar — admin assigns dated tasks to a role; exec_gc members see
+# only their own role's tasks.
+# ---------------------------------------------------------------------------
+@app.route("/calendar", methods=["GET"])
+@roles_required("exec_gc")
+def exec_calendar():
+    db = get_db()
+    is_admin = g.user["role"] == "admin"
+    roles = _get_roles()
+
+    if is_admin:
+        tasks = db.execute(
+            """SELECT t.*, r.name AS role_name FROM exec_tasks t
+               JOIN roles r ON r.id = t.role_id
+               ORDER BY (t.status = 'done'), t.due_date ASC"""
+        ).fetchall()
+    else:
+        my_role_id = g.user.get("exec_role_id")
+        tasks = db.execute(
+            """SELECT t.*, r.name AS role_name FROM exec_tasks t
+               JOIN roles r ON r.id = t.role_id
+               WHERE t.role_id = ?
+               ORDER BY (t.status = 'done'), t.due_date ASC""",
+            (my_role_id,),
+        ).fetchall() if my_role_id else []
+
+    grouped = []
+    if is_admin:
+        by_role = {}
+        for t in tasks:
+            by_role.setdefault(t["role_name"], []).append(t)
+        grouped = [(r["name"], by_role.get(r["name"], [])) for r in roles]
+
+    today = datetime.now(timezone.utc).date().isoformat()
+    return render_template(
+        "calendar.html", tasks=tasks, grouped=grouped, roles=roles,
+        is_admin=is_admin, today=today,
+    )
+
+
+@app.route("/calendar/tasks", methods=["POST"])
+@admin_required
+def exec_calendar_add_task():
+    role_id = request.form.get("role_id", type=int)
+    title = (request.form.get("title") or "").strip()
+    due_date = (request.form.get("due_date") or "").strip()
+    priority = request.form.get("priority") or "normal"
+    notes = (request.form.get("notes") or "").strip() or None
+
+    role_ids = {r["id"] for r in _get_roles()}
+    if role_id not in role_ids:
+        flash("Pick a valid role.", "error")
+    elif not title:
+        flash("Title is required.", "error")
+    elif not due_date:
+        flash("Due date is required.", "error")
+    elif priority not in ("low", "normal", "high"):
+        flash("Invalid priority.", "error")
+    else:
+        db = get_db()
+        db.execute(
+            """INSERT INTO exec_tasks (role_id, title, notes, due_date, priority, created_by)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (role_id, title, notes, due_date, priority, g.user["id"]),
+        )
+        db.commit()
+        flash(f"Added task '{title}'.", "success")
+    return redirect(url_for("exec_calendar"))
+
+
+@app.route("/calendar/tasks/<int:task_id>", methods=["POST"])
+@admin_required
+def exec_calendar_edit_task(task_id: int):
+    db = get_db()
+    task = db.execute("SELECT id FROM exec_tasks WHERE id = ?", (task_id,)).fetchone()
+    if not task:
+        flash("Task not found.", "error")
+        return redirect(url_for("exec_calendar"))
+
+    role_id = request.form.get("role_id", type=int)
+    title = (request.form.get("title") or "").strip()
+    due_date = (request.form.get("due_date") or "").strip()
+    priority = request.form.get("priority") or "normal"
+    notes = (request.form.get("notes") or "").strip() or None
+
+    role_ids = {r["id"] for r in _get_roles()}
+    if role_id not in role_ids:
+        flash("Pick a valid role.", "error")
+    elif not title:
+        flash("Title is required.", "error")
+    elif not due_date:
+        flash("Due date is required.", "error")
+    elif priority not in ("low", "normal", "high"):
+        flash("Invalid priority.", "error")
+    else:
+        db.execute(
+            """UPDATE exec_tasks SET role_id = ?, title = ?, notes = ?,
+                                      due_date = ?, priority = ? WHERE id = ?""",
+            (role_id, title, notes, due_date, priority, task_id),
+        )
+        db.commit()
+        flash("Task updated.", "success")
+    return redirect(url_for("exec_calendar"))
+
+
+@app.route("/calendar/tasks/<int:task_id>/delete", methods=["POST"])
+@admin_required
+def exec_calendar_delete_task(task_id: int):
+    db = get_db()
+    db.execute("DELETE FROM exec_tasks WHERE id = ?", (task_id,))
+    db.commit()
+    flash("Task deleted.", "success")
+    return redirect(url_for("exec_calendar"))
+
+
+@app.route("/calendar/tasks/<int:task_id>/complete", methods=["POST"])
+@roles_required("exec_gc")
+def exec_calendar_toggle_complete(task_id: int):
+    db = get_db()
+    task = db.execute("SELECT id, role_id, status FROM exec_tasks WHERE id = ?", (task_id,)).fetchone()
+    if not task:
+        flash("Task not found.", "error")
+        return redirect(url_for("exec_calendar"))
+    if g.user["role"] != "admin" and task["role_id"] != g.user.get("exec_role_id"):
+        abort(403)
+
+    new_status = "open" if task["status"] == "done" else "done"
+    completed_at = datetime.now(timezone.utc).isoformat() if new_status == "done" else None
+    db.execute(
+        "UPDATE exec_tasks SET status = ?, completed_at = ? WHERE id = ?",
+        (new_status, completed_at, task_id),
+    )
+    db.commit()
+    return redirect(url_for("exec_calendar"))
 
 
 # ---------------------------------------------------------------------------

@@ -47,6 +47,15 @@
                 {% endfor %}
             </select>
         </label>
+        <label class="exec-role-field" hidden>
+            Role <span class="muted small">(required)</span>
+            <select name="exec_role_id" id="create-exec-role">
+                <option value="" disabled selected>{% if roles %}Pick a role…{% else %}No roles configured yet{% endif %}</option>
+                {% for r in roles %}
+                    <option value="{{ r.id }}">{{ r.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
         <label class="role-context-field">
             <span id="role-context-label">Delegation <span class="muted small">(required)</span></span>
             <select name="chair_position" id="create-chair-position" hidden>
@@ -118,11 +127,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const schoolSel = document.getElementById("create-advisor-school");
     const committeeField = createForm ? createForm.querySelector(".committee-field") : null;
     const committeeSel = createForm ? createForm.querySelector('select[name="committee"]') : null;
+    const execRoleField = createForm ? createForm.querySelector(".exec-role-field") : null;
+    const execRoleSel = document.getElementById("create-exec-role");
     const nameFields = createForm ? createForm.querySelectorAll(".manual-name-field") : [];
     const participantField = createForm ? createForm.querySelector(".participant-name-field") : null;
     const participantInput = createForm ? createForm.querySelector('input[name="participant_name"]') : null;
     const participantLabelText = document.getElementById("participant-label-text");
     const SCHOOLS = {{ schools|tojson }};
+    const ROLES = {{ roles|tojson }};
     let nextAdminN = {{ next_admin_n|tojson }};
     const usernameInput = createForm ? createForm.querySelector('input[name="username"]') : null;
     const displayInput = createForm ? createForm.querySelector('input[name="display_name"]') : null;
@@ -207,6 +219,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // Committee field is needed only for delegate + chair.
         if (committeeField) committeeField.hidden = !(isDelegate || isChair);
         if (committeeSel && !(isDelegate || isChair)) committeeSel.value = "";
+
+        // Duty role field is needed only for exec_gc.
+        if (execRoleField) execRoleField.hidden = !isExecGc;
+        if (execRoleSel) {
+            if (isExecGc) execRoleSel.setAttribute("required", "");
+            else { execRoleSel.removeAttribute("required"); execRoleSel.value = ""; }
+        }
 
         // The single context field transforms based on role:
         //   delegate → Country picker  | chair    → Position select
@@ -318,6 +337,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const committeeBadge = u.committee
             ? ` <span class="committee-tag">${esc(u.committee)}</span>`
             : "";
+        const execRoleBadge = u.exec_role_name
+            ? ` <span class="committee-tag">${esc(u.exec_role_name)}</span>`
+            : "";
+        const execRoleOpts = ROLES.map((r) =>
+            `<option value="${r.id}"${u.exec_role_id === r.id ? " selected" : ""}>${esc(r.name)}</option>`
+        ).join("");
         const delegationCell = u.delegation
             ? `<span class="delegation-cell">
                    <img class="country-flag-inline" alt="" data-country-flag="${esc(u.delegation)}">
@@ -330,7 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
             )).join("");
         const created = window.fmtLocal
             ? window.fmtLocal(u.created_at, "date") : (u.created_at || "").slice(0, 10);
-        const searchText = [u.username, u.display_name, u.participant_name, u.delegation, u.committee, u.role]
+        const searchText = [u.username, u.display_name, u.participant_name, u.delegation, u.committee, u.role, u.exec_role_name]
             .filter(Boolean).join(" ").toLowerCase();
 
         const li = document.createElement("li");
@@ -348,12 +373,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="user-sub muted small">${esc(u.participant_name || "No participant name")}</div>
                 </div>
                 <div class="user-meta">
-                    ${committeeBadge}
+                    ${committeeBadge}${execRoleBadge}
                 </div>
                 <div class="user-meta">${delegationCell}</div>
                 <div class="user-created muted small">${esc(created)}</div>
                 <div class="user-card-actions">
                     ${u.role === "delegate" ? `<button type="submit" form="assign-form-${u.id}" class="primary user-save">Save</button>` : ''}
+                    ${u.role === "exec_gc" ? `<button type="submit" form="exec-role-form-${u.id}" class="primary user-save">Save</button>` : ''}
                     <button type="button" class="user-edit-toggle">Edit</button>
                     ${u.id !== CURRENT_USER_ID ? `
                     <form method="post" action="/admin/users/${u.id}/impersonate" class="inline-form impersonate-form">
@@ -387,6 +413,14 @@ document.addEventListener("DOMContentLoaded", () => {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </form>` : ''}
+                ${u.role === "exec_gc" ? `
+                <form method="post" action="/admin/users/${u.id}/exec-role" class="user-editor-block exec-role-form" id="exec-role-form-${u.id}" data-no-loading>
+                    <input type="hidden" name="csrf_token" value="${esc(csrf)}">
+                    <div class="user-editor-label">Role</div>
+                    <div class="user-editor-controls">
+                        <select name="exec_role_id">${execRoleOpts}</select>
                     </div>
                 </form>` : ''}
                 <form method="post" action="/admin/users/${u.id}/reset" class="user-editor-block"
@@ -534,6 +568,36 @@ document.addEventListener("DOMContentLoaded", () => {
                 applyFilters();
             }
             flash("Assignment updated.", "success");
+            return;
+        }
+
+        // Save an EXEC/GC member's duty role in place.
+        if (form.classList.contains("exec-role-form")) {
+            e.preventDefault();
+            const saveBtn = document.querySelector(`.user-save[form="${form.id}"]`)
+                || form.querySelector('button[type="submit"]');
+            if (saveBtn) saveBtn.disabled = true;
+            const { ok, json } = await postForm(form);
+            if (saveBtn) saveBtn.disabled = false;
+            if (!ok) { flash(json.error || "Could not save role.", "error"); return; }
+
+            const card = form.closest(".user-card");
+            if (card) {
+                const metas = card.querySelectorAll(".user-card-main .user-meta");
+                if (metas[0]) {
+                    metas[0].innerHTML = json.exec_role_name
+                        ? `<span class="committee-tag">${esc(json.exec_role_name)}</span>` : "";
+                }
+                const u = {
+                    username: card.querySelector(".user-username")?.textContent || "",
+                    display: card.querySelector(".user-display")?.textContent || "",
+                    sub: card.querySelector(".user-sub")?.textContent || "",
+                };
+                card.dataset.search = [u.username, u.display, u.sub, json.exec_role_name, card.dataset.role]
+                    .filter(Boolean).join(" ").toLowerCase();
+                applyFilters();
+            }
+            flash("Role updated.", "success");
             return;
         }
     });

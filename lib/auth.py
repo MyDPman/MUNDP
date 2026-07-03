@@ -58,7 +58,7 @@ def load_current_user() -> None:
     row = db.execute(
         """
         SELECT u.id, u.username, u.display_name, u.role,
-               u.committee, u.delegation, s.expires_at
+               u.committee, u.delegation, u.exec_role_id, s.expires_at
         FROM sessions s
         JOIN users u ON u.id = s.user_id
         WHERE s.token = ?
@@ -77,4 +77,5 @@ def load_current_user() -> None:
         "role": row["role"],
         "committee": row["committee"],
         "delegation": row["delegation"],
+        "exec_role_id": row["exec_role_id"],
     }

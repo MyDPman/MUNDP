@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Calendar — MUNDP Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Calendar</h1>
+    {% if not is_admin %}
+    <p class="muted small">Tasks assigned to your role. Ask an admin if something's missing.</p>
+    {% endif %}
+</div>
+
+{% if is_admin %}
+<section class="card">
+    <h2 id="task-form-heading">Add a task</h2>
+    <p class="muted small">Tasks are assigned to a role — everyone holding that role sees it.</p>
+    <form method="post" action="{{ url_for('exec_calendar_add_task') }}" class="form form-grid" id="task-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>
+            Role
+            <select name="role_id" id="task-role" required>
+                <option value="" disabled selected>{% if roles %}Pick a role…{% else %}No roles configured yet{% endif %}</option>
+                {% for r in roles %}
+                    <option value="{{ r.id }}">{{ r.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Title
+            <input type="text" name="title" id="task-title" maxlength="160" required>
+        </label>
+        <label>
+            Due date
+            <input type="date" name="due_date" id="task-due" required>
+        </label>
+        <label>
+            Priority
+            <select name="priority" id="task-priority">
+                <option value="low">Low</option>
+                <option value="normal" selected>Normal</option>
+                <option value="high">High</option>
+            </select>
+        </label>
+        <label class="full-width">
+            Notes <span class="muted small">(optional)</span>
+            <textarea name="notes" id="task-notes" rows="2"></textarea>
+        </label>
+        <div class="form-actions full-width">
+            <button type="submit" class="primary" id="task-submit">Add task</button>
+            <button type="button" id="task-cancel-edit" hidden>Cancel edit</button>
+        </div>
+    </form>
+</section>
+
+{% for role_name, role_tasks in grouped %}
+<section class="card">
+    <h2>{{ role_name }} <span class="muted small">({{ role_tasks|length }})</span></h2>
+    {% if role_tasks %}
+    <div class="table-scroll">
+    <table class="data-table" id="task-table">
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Due</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for t in role_tasks %}
+            <tr data-task-id="{{ t.id }}" data-role-id="{{ t.role_id }}" data-title="{{ t.title }}"
+                data-due="{{ t.due_date }}" data-priority="{{ t.priority }}" data-notes="{{ t.notes or '' }}">
+                <td>
+                    <strong>{{ t.title }}</strong>
+                    {% if t.notes %}<div class="muted small">{{ t.notes }}</div>{% endif %}
+                </td>
+                <td>
+                    {{ t.due_date }}
+                    {% if t.status == 'open' and t.due_date < today %}<span class="status-badge status-failed">Overdue</span>{% endif %}
+                </td>
+                <td><span class="status-badge priority-{{ t.priority }}">{{ t.priority | capitalize }}</span></td>
+                <td><span class="status-badge status-{{ t.status }}">{{ 'Done' if t.status == 'done' else 'Open' }}</span></td>
+                <td class="actions">
+                    <form method="post" action="{{ url_for('exec_calendar_toggle_complete', task_id=t.id) }}" class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit">{{ 'Reopen' if t.status == 'done' else 'Mark done' }}</button>
+                    </form>
+                    <button type="button" class="task-edit-btn">Edit</button>
+                    <form method="post" action="{{ url_for('exec_calendar_delete_task', task_id=t.id) }}" class="inline"
+                          onsubmit="return confirm('Delete task \'{{ t.title }}\'?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted small empty-committee">No tasks for this role yet.</p>
+    {% endif %}
+</section>
+{% endfor %}
+
+{% else %}
+<section class="card">
+    <h2>Your tasks <span class="muted small">({{ tasks|length }})</span></h2>
+    {% if not current_user.exec_role_id %}
+    <p class="muted small empty-committee">You haven't been assigned a role yet — ask an admin.</p>
+    {% elif tasks %}
+    <div class="table-scroll">
+    <table class="data-table" id="task-table">
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Due</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for t in tasks %}
+            <tr>
+                <td>
+                    <strong>{{ t.title }}</strong>
+                    {% if t.notes %}<div class="muted small">{{ t.notes }}</div>{% endif %}
+                </td>
+                <td>
+                    {{ t.due_date }}
+                    {% if t.status == 'open' and t.due_date < today %}<span class="status-badge status-failed">Overdue</span>{% endif %}
+                </td>
+                <td><span class="status-badge priority-{{ t.priority }}">{{ t.priority | capitalize }}</span></td>
+                <td><span class="status-badge status-{{ t.status }}">{{ 'Done' if t.status == 'done' else 'Open' }}</span></td>
+                <td class="actions">
+                    <form method="post" action="{{ url_for('exec_calendar_toggle_complete', task_id=t.id) }}" class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit">{{ 'Reopen' if t.status == 'done' else 'Mark done' }}</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted small empty-committee">Nothing assigned right now.</p>
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if is_admin %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("task-form");
+    const roleSel = document.getElementById("task-role");
+    const titleInput = document.getElementById("task-title");
+    const dueInput = document.getElementById("task-due");
+    const prioritySel = document.getElementById("task-priority");
+    const notesInput = document.getElementById("task-notes");
+    const submitBtn = document.getElementById("task-submit");
+    const cancelBtn = document.getElementById("task-cancel-edit");
+    const heading = document.getElementById("task-form-heading");
+    const createAction = form.action;
+
+    function enterEditMode(row) {
+        form.action = `/calendar/tasks/${row.dataset.taskId}`;
+        roleSel.value = row.dataset.roleId;
+        titleInput.value = row.dataset.title;
+        dueInput.value = row.dataset.due;
+        prioritySel.value = row.dataset.priority;
+        notesInput.value = row.dataset.notes;
+        submitBtn.textContent = "Save changes";
+        heading.textContent = "Edit task";
+        cancelBtn.hidden = false;
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function exitEditMode() {
+        form.action = createAction;
+        form.reset();
+        submitBtn.textContent = "Add task";
+        heading.textContent = "Add a task";
+        cancelBtn.hidden = true;
+    }
+
+    document.querySelectorAll(".task-edit-btn").forEach((btn) => {
+        btn.addEventListener("click", () => enterEditMode(btn.closest("tr")));
+    });
+    cancelBtn.addEventListener("click", exitEditMode);
+});
+</script>
+{% endif %}
+{% endblock %}

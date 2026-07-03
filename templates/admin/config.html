@@ -92,6 +92,52 @@
     </template>
 </section>
 
+<!-- ============================== Roles ================================= -->
+<section class="card">
+    <h2>EXEC/GC roles</h2>
+    <p class="muted small">Duty roles (e.g. Treasurer, IT) assigned to EXEC/GC members when they're created. Tasks on the <a href="{{ url_for('exec_calendar') }}">Calendar</a> page are assigned to a role.</p>
+    {% if roles %}
+    <table class="data-table cfg-table">
+        <thead>
+            <tr>
+                <th>Role</th>
+                <th>Members</th>
+                <th>Tasks</th>
+                <th class="cfg-actions"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in roles %}
+            <tr>
+                <td>{{ r.name }}</td>
+                <td class="muted small">{{ role_user_counts.get(r.id, 0) }}</td>
+                <td class="muted small">{{ role_task_counts.get(r.id, 0) }}</td>
+                <td class="cfg-actions">
+                    <form method="post" action="{{ url_for('admin_config_delete_role', role_id=r.id) }}" class="inline"
+                          onsubmit="return confirm('Delete role \'{{ r.name }}\'?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="danger cfg-remove">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="muted small empty-committee">No roles yet — add one below.</p>
+    {% endif %}
+    <form method="post" action="{{ url_for('admin_config_add_role') }}" class="form form-grid">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>
+            New role name
+            <input type="text" name="name" maxlength="80" placeholder="Treasurer" required>
+        </label>
+        <div class="form-actions">
+            <button type="submit" class="primary">Add role</button>
+        </div>
+    </form>
+</section>
+
 <!-- ========================= Chairs roster ============================== -->
 <section class="card">
     <h2>Chairs roster</h2>

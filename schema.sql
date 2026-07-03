@@ -1,3 +1,9 @@
+CREATE TABLE IF NOT EXISTS roles (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL UNIQUE,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS users (
     id                       INTEGER PRIMARY KEY AUTOINCREMENT,
     username                 TEXT NOT NULL UNIQUE,
@@ -9,12 +15,27 @@ CREATE TABLE IF NOT EXISTS users (
     role                     TEXT NOT NULL CHECK (role IN ('admin', 'chair', 'delegate', 'advisor')),
     committee                TEXT,
     delegation               TEXT,
+    exec_role_id             INTEGER REFERENCES roles(id) ON DELETE SET NULL,
     notes_last_seen_at       TEXT,
     amendments_last_seen_at  TEXT,
     resolutions_last_seen_at TEXT,
     outside_since            TEXT,
     created_at               TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS exec_tasks (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    role_id      INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    title        TEXT NOT NULL,
+    notes        TEXT,
+    due_date     TEXT NOT NULL,
+    priority     TEXT NOT NULL DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high')),
+    status       TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'done')),
+    created_by   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    completed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_exec_tasks_role ON exec_tasks(role_id, due_date);
 
 CREATE TABLE IF NOT EXISTS documents (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,

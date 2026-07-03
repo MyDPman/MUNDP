@@ -65,6 +65,10 @@
            href="{{ url_for('my_committee') }}">
             <span>Committees</span>
         </a>
+        <a class="nav-item {% if request.endpoint == 'exec_calendar' %}active{% endif %}"
+           href="{{ url_for('exec_calendar') }}">
+            <span>Calendar</span>
+        </a>
         <a class="nav-item {% if request.endpoint == 'admin_config' %}active{% endif %}"
            href="{{ url_for('admin_config') }}">
             <span>Config</span>
@@ -110,6 +114,10 @@
         <a class="nav-item {% if request.endpoint and request.endpoint.startswith('admin_config') %}active{% endif %}"
            href="{{ url_for('admin_config') }}">
             <span>Configurations</span>
+        </a>
+        <a class="nav-item {% if request.endpoint == 'exec_calendar' %}active{% endif %}"
+           href="{{ url_for('exec_calendar') }}">
+            <span>Calendar</span>
         </a>
         {% endif %}
     </nav>
