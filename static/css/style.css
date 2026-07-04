@@ -5487,3 +5487,19 @@ button, .button,
 
     #task-table tbody .status-badge { padding: 3px 9px; font-size: 11px; }
 }
+
+/* ==============================================================
+   Button text: white on every dark-filled button, always.
+   Earlier rules (e.g. `.data-table td *` and card `color: unset`)
+   were darkening button labels inside tables/cards — turning navy
+   buttons like "Mark done" into unreadable dark-on-dark. This final
+   pass forces white label text on all buttons, EXCEPT the handful
+   that intentionally sit on a light/transparent background and set
+   their own dark text (text-style links, dashboard tabs, inactive
+   filter pills, resting vote buttons, the country picker trigger).
+   Their active/hover states set white themselves where needed.
+   ============================================================== */
+button:not(.link-button):not(.comment-delete):not(.dash-tab-btn):not(.filter-pill):not(.vote-btn):not(.country-picker-button),
+.button:not(.link-button):not(.comment-delete):not(.dash-tab-btn):not(.filter-pill):not(.vote-btn):not(.country-picker-button) {
+    color: #ffffff;
+}
