@@ -2193,21 +2193,30 @@ def view_document(doc_id: int):
 def delete_document(doc_id: int):
     db = get_db()
     row = db.execute(
-        "SELECT stored_name, uploader_id FROM documents WHERE id = ?",
+        "SELECT stored_name, uploader_id, committee FROM documents WHERE id = ?",
         (doc_id,),
     ).fetchone()
     if not row:
         abort(404)
-    if g.user["role"] != "admin" and row["uploader_id"] != g.user["id"]:
+    is_own_committee_chair = (
+        g.user["role"] == "chair" and row["committee"] == g.user.get("committee")
+    )
+    if (
+        g.user["role"] != "admin"
+        and row["uploader_id"] != g.user["id"]
+        and not is_own_committee_chair
+    ):
         abort(403)
-    # Remove DB row first (cascades to comments); then the file. If the file
-    # delete fails (e.g. already gone), we don't roll back the DB.
+    # Remove DB row first (cascades to comments); then the file, if any —
+    # Google-Doc resolutions have no stored PDF. If the file delete fails
+    # (e.g. already gone), we don't roll back the DB.
     db.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
     db.commit()
-    try:
-        os.remove(os.path.join(UPLOAD_DIR, row["stored_name"]))
-    except FileNotFoundError:
-        pass
+    if row["stored_name"]:
+        try:
+            os.remove(os.path.join(UPLOAD_DIR, row["stored_name"]))
+        except FileNotFoundError:
+            pass
     flash("Document deleted.", "success")
     return redirect(url_for("dashboard"))
 
