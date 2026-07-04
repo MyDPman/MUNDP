@@ -3923,6 +3923,7 @@ select, .form select, .inline-form select,
    at the baseline — not the stretched full-height block a form-grid gave. */
 .cfg-add-role-form {
     display: flex;
+    flex-direction: row;   /* override .form's column direction */
     align-items: flex-end;
     gap: 12px;
     margin-top: 4px;
