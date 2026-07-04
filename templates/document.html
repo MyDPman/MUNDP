@@ -7,12 +7,18 @@
 <div class="page-header">
     <div>
         {% set status_label = {'pending': 'To be debated', 'debated': 'Debated', 'passed': 'Passed', 'failed': 'Failed'}[doc.status] %}
+        {% set is_concluded = doc.status in ('passed', 'failed', 'debated') %}
         <h1>
             {{ doc.title }}
-            {% if doc.committee %}<span class="committee-tag">{{ doc.committee }}</span>{% endif %}
-            {% if not doc.approved %}<span class="status-badge status-awaiting">Awaiting approval</span>{% endif %}
-            {% if doc.approved %}<span class="status-badge status-{{ doc.status }}">{{ status_label }}</span>{% endif %}
-            {% if doc.in_debate %}<span class="status-badge status-in-debate">In Debate</span>{% endif %}
+            {% if not doc.approved %}
+            <span class="status-badge status-awaiting">Awaiting approval</span>
+            {% elif is_concluded %}
+            <span class="status-badge status-{{ doc.status }}">{{ status_label }}</span>
+            {% elif doc.in_debate %}
+            <span class="status-badge status-in-debate">In Debate</span>
+            {% else %}
+            <span class="status-badge status-{{ doc.status }}">{{ status_label }}</span>
+            {% endif %}
             {% if doc.is_summit %}<span class="status-badge status-summit">International Summit</span>{% endif %}
         </h1>
         {% if doc.agenda_item %}

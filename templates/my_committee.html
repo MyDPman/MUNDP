@@ -5,16 +5,18 @@
 {% if not committee %}
 <div class="page-header"><h1>{{ 'Committees' if current_user.role == 'exec_gc' else 'My Committee' }}</h1></div>
 {% if current_user.role == 'exec_gc' and all_committees %}
-<div class="card">
-    <p class="muted small" style="margin-bottom:14px">Select a committee to view its info.</p>
-    <ul class="mc-plain-list" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px">
+<section class="card">
+    <h2>Committees</h2>
+    <div class="table-scroll">
+    <table class="data-table">
+        <tbody>
         {% for c in all_committees %}
-        <li>
-            <a href="{{ url_for('my_committee') }}?c={{ c | urlencode }}" class="button" style="display:block;text-align:left;">{{ c }}</a>
-        </li>
+        <tr><td><a href="{{ url_for('my_committee') }}?c={{ c | urlencode }}"><strong>{{ c }}</strong></a></td></tr>
         {% endfor %}
-    </ul>
-</div>
+        </tbody>
+    </table>
+    </div>
+</section>
 {% else %}
 <div class="empty-state">
     <p>You haven't been assigned to a committee yet.</p>
@@ -27,9 +29,7 @@
     <div>
         <h1>{{ committee }}</h1>
         {% if current_user.delegation %}
-        <p class="muted small" style="margin:4px 0 0">
-            Representing <strong>{{ current_user.delegation }}</strong>
-        </p>
+        <p class="muted small">Representing <strong>{{ current_user.delegation }}</strong></p>
         {% endif %}
     </div>
     {% if current_user.role == 'exec_gc' %}
@@ -39,61 +39,68 @@
     {% endif %}
 </div>
 
-<div class="mc-info-grid">
-    <section class="card">
-        <div class="mc-label">Chairboard</div>
-        <ul class="mc-plain-list">
-            <li class="mc-person-row">
-                <span class="mc-person-role">President</span>
-                <span class="mc-person-name">{{ info.president or '—' }}</span>
-            </li>
+<section class="card">
+    <h2>Chairboard</h2>
+    <div class="table-scroll">
+    <table class="data-table">
+        <tbody>
+            <tr>
+                <td class="muted small">President</td>
+                <td><strong>{{ info.president or '—' }}</strong></td>
+            </tr>
             {% for dp in info.deputy_presidents %}
-            <li class="mc-person-row mc-person-secondary">
-                <span class="mc-person-role">Deputy President</span>
-                <span class="mc-person-name">{{ dp or '—' }}</span>
-            </li>
+            <tr>
+                <td class="muted small">Deputy President</td>
+                <td>{{ dp or '—' }}</td>
+            </tr>
             {% endfor %}
-        </ul>
-    </section>
+        </tbody>
+    </table>
+    </div>
+</section>
 
-    <section class="card">
-        <div class="mc-label">Agenda Items</div>
-        <ol class="mc-agenda-plain">
-            {% for item in info.agenda_items %}
-            <li>{{ item or '—' }}</li>
-            {% endfor %}
-        </ol>
-    </section>
-</div>
+<section class="card">
+    <h2>Agenda Items</h2>
+    <div class="table-scroll">
+    <table class="data-table">
+        <tbody>
+        {% for item in info.agenda_items %}
+            <tr>
+                <td class="muted small">{{ loop.index }}.</td>
+                <td>{{ item or '—' }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</section>
 
 {% set total_res = (awaiting|length) + (pending|length) + (debated|length) %}
-{% if total_res > 0 or pending is defined %}
-<section class="card" style="padding: 0; overflow: hidden;">
-    <div class="mc-section-top">
-        <span class="mc-section-title">Resolutions</span>
-        <span class="muted small">{{ total_res }} total</span>
-    </div>
 
-    {% if awaiting %}
-    <div class="mc-res-group-label mc-res-group-warn">Awaiting approval ({{ awaiting|length }})</div>
-    <table class="data-table mc-res-table">
+{% if awaiting %}
+<section class="card">
+    <h2>Awaiting approval <span class="muted small">({{ awaiting|length }})</span></h2>
+    <div class="table-scroll">
+    <table class="data-table">
         <tbody>
         {% for d in awaiting %}
         <tr>
             <td><a href="{{ url_for('view_document', doc_id=d.id) }}"><strong>{{ d.title }}</strong></a></td>
             <td class="muted small">{{ d.uploader_name }}</td>
-            <td class="muted small">{{ d.created_at | local_date }}</td>
-            <td><span class="status-badge status-awaiting">Awaiting</span></td>
             <td class="td-action"><a href="{{ url_for('view_document', doc_id=d.id) }}">Open →</a></td>
         </tr>
         {% endfor %}
         </tbody>
     </table>
-    {% endif %}
+    </div>
+</section>
+{% endif %}
 
-    {% if pending %}
-    <div class="mc-res-group-label">To be debated ({{ pending|length }})</div>
-    <table class="data-table mc-res-table">
+{% if pending %}
+<section class="card">
+    <h2>To be debated <span class="muted small">({{ pending|length }})</span></h2>
+    <div class="table-scroll">
+    <table class="data-table">
         <tbody>
         {% for d in pending %}
         {% set can_view = current_user.role in ('admin', 'chair') or
@@ -107,7 +114,6 @@
                 {% endif %}
             </td>
             <td class="muted small">{{ d.uploader_name }}</td>
-            <td class="muted small">{{ d.created_at | local_date }}</td>
             <td>
                 {% if d.in_debate %}
                 <span class="status-badge status-in-debate">In Debate</span>
@@ -124,19 +130,20 @@
         {% endfor %}
         </tbody>
     </table>
-    {% elif not awaiting and not debated %}
-    <p class="mc-empty-res">No resolutions yet.</p>
-    {% endif %}
+    </div>
+</section>
+{% endif %}
 
-    {% if debated %}
-    <div class="mc-res-group-label mc-res-group-done">Debated ({{ debated|length }})</div>
-    <table class="data-table mc-res-table">
+{% if debated %}
+<section class="card">
+    <h2>Debated <span class="muted small">({{ debated|length }})</span></h2>
+    <div class="table-scroll">
+    <table class="data-table">
         <tbody>
         {% for d in debated %}
         <tr class="mc-row-debated">
             <td><a href="{{ url_for('view_document', doc_id=d.id) }}"><strong>{{ d.title }}</strong></a></td>
             <td class="muted small">{{ d.uploader_name }}</td>
-            <td class="muted small">{{ d.created_at | local_date }}</td>
             <td>
                 {% if d.status == 'passed' %}<span class="status-badge status-passed">Passed</span>
                 {% elif d.status == 'failed' %}<span class="status-badge status-failed">Failed</span>
@@ -147,17 +154,22 @@
         {% endfor %}
         </tbody>
     </table>
-    {% endif %}
+    </div>
+</section>
+{% endif %}
+
+{% if total_res == 0 %}
+<section class="card">
+    <h2>Resolutions</h2>
+    <p class="muted small empty-committee">No resolutions yet.</p>
 </section>
 {% endif %}
 
 {% if committee_members %}
-<section class="card" style="padding: 0; overflow: hidden;">
-    <div class="mc-section-top">
-        <span class="mc-section-title">Delegations</span>
-        <span class="muted small">{{ committee_members|length }}</span>
-    </div>
-    <table class="data-table mc-res-table">
+<section class="card">
+    <h2>Delegations <span class="muted small">({{ committee_members|length }})</span></h2>
+    <div class="table-scroll">
+    <table class="data-table">
         <thead>
             <tr>
                 <th>Country</th>
@@ -201,16 +213,15 @@
         {% endfor %}
         </tbody>
     </table>
+    </div>
 </section>
 {% endif %}
 
 {% if current_user.role in ('admin', 'exec_gc') and committee_tally %}
-<section class="card" style="padding: 0; overflow: hidden;">
-    <div class="mc-section-top">
-        <span class="mc-section-title">Tally</span>
-        <span class="muted small">by points</span>
-    </div>
-    <table class="data-table mc-res-table">
+<section class="card">
+    <h2>Tally <span class="muted small">by points</span></h2>
+    <div class="table-scroll">
+    <table class="data-table">
         <thead>
             <tr>
                 <th>Delegation</th>
@@ -237,16 +248,14 @@
         {% endfor %}
         </tbody>
     </table>
+    </div>
 </section>
 {% endif %}
 
 {% if current_user.role in ('chair', 'admin') and notes_in_committee %}
-<section class="card" style="padding: 0; overflow: hidden;">
-    <div class="mc-section-top">
-        <span class="mc-section-title">Notes</span>
-        <span class="muted small">{{ notes_in_committee|length }}</span>
-    </div>
-    <ul class="notes-list" style="padding: 16px 20px; margin: 0;">
+<section class="card">
+    <h2>Notes <span class="muted small">({{ notes_in_committee|length }})</span></h2>
+    <ul class="notes-list">
         {% for n in notes_in_committee %}
         <li class="note-item">
             <div class="note-header">
