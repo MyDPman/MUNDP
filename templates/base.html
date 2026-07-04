@@ -69,28 +69,27 @@
            href="{{ url_for('exec_calendar') }}">
             <span>Calendar</span>
         </a>
-        <a class="nav-item {% if request.endpoint == 'admin_config' %}active{% endif %}"
-           href="{{ url_for('admin_config') }}">
-            <span>Config</span>
-        </a>
         {% endif %}
+        {% if current_user.role != 'exec_gc' %}
         <a class="nav-item {% if request.endpoint == 'notes' %}active{% endif %}"
            href="{{ url_for('notes') }}">
             <span>Note Passing</span>
             {% if badges.notes %}<span class="nav-badge">{{ badges.notes }}</span>{% endif %}
         </a>
+        {% endif %}
         {% if current_user.role in ('admin', 'chair', 'advisor', 'exec_gc') %}
         <a class="nav-item {% if request.endpoint == 'tally' %}active{% endif %}"
            href="{{ url_for('tally') }}">
             <span>Tally</span>
         </a>
         {% endif %}
-        {% if current_user.role != 'advisor' %}
+        {% if current_user.role not in ('advisor', 'exec_gc') %}
         <a class="nav-item {% if request.endpoint == 'upload' %}active{% endif %}"
            href="{{ url_for('upload') }}">
             <span>Submission</span>
         </a>
         {% endif %}
+        {% if current_user.role != 'exec_gc' %}
         <a class="nav-item {% if request.endpoint == 'schedule' %}active{% endif %}"
            href="{{ url_for('schedule') }}">
             <span>Schedule</span>
@@ -102,6 +101,7 @@
            href="{{ url_for('help_page') }}">
             <span>Help</span>
         </a>
+        {% endif %}
         <a class="nav-item {% if request.endpoint and request.endpoint.startswith('settings') %}active{% endif %}"
            href="{{ url_for('settings') }}">
             <span>Settings</span>

@@ -3,19 +3,7 @@
 {% block content %}
 <div class="page-header">
     <h1>Configurations</h1>
-    {% if current_user.role == 'exec_gc' %}
-    <div class="header-actions">
-        <span class="muted small">Read-only view</span>
-    </div>
-    {% endif %}
 </div>
-{% if current_user.role == 'exec_gc' %}
-<style>
-    .card form input, .card form select, .card form textarea { pointer-events: none; background: #f5f6fa; }
-    .form-actions { display: none !important; }
-    .cfg-remove, .cfg-add { display: none !important; }
-</style>
-{% endif %}
 
 <!-- ============================== Schools ============================== -->
 <section class="card">

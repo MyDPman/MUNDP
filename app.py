@@ -36,9 +36,9 @@ VALID_ROLES = ("admin", "chair", "delegate", "advisor", "exec_gc")
 
 # Pages EXEC/GC users may visit. Anything else returns 403.
 EXEC_GC_ALLOWED_PREFIXES = (
-    "/schedule", "/tally", "/help", "/settings",
+    "/tally", "/settings",
     "/static/", "/api/badges", "/logout", "/login", "/impersonate/stop",
-    "/summit", "/my-committee", "/admin/config", "/calendar",
+    "/summit", "/my-committee", "/calendar",
 )
 
 # Schools that may have advisors at the conference. Maps full school name
@@ -292,6 +292,18 @@ def _get_roles() -> list:
     """EXEC/GC duty roles, admin-managed via /admin/config."""
     rows = get_db().execute("SELECT id, name FROM roles ORDER BY name").fetchall()
     return [dict(r) for r in rows]
+
+
+def _is_task_manager(user: dict) -> bool:
+    """Admins and EXEC/GC members holding the DSG duty role can assign
+    calendar tasks to any role. Other EXEC/GC members can only view/complete
+    tasks assigned to their own role."""
+    if user["role"] == "admin":
+        return True
+    exec_role_id = user.get("exec_role_id")
+    if not exec_role_id:
+        return False
+    return any(r["id"] == exec_role_id and r["name"] == "DSG" for r in _get_roles())
 
 
 app = Flask(__name__)
@@ -2733,7 +2745,7 @@ def admin_delete_user(user_id: int):
 # Admin: dynamic configurations page
 # ---------------------------------------------------------------------------
 @app.route("/admin/config", methods=["GET"])
-@roles_required("exec_gc")
+@admin_required
 def admin_config():
     cfg = _load_config()
     # Group existing chair users by committee + position for the roster view.
@@ -2961,10 +2973,10 @@ def admin_config_delete_role(role_id: int):
 @roles_required("exec_gc")
 def exec_calendar():
     db = get_db()
-    is_admin = g.user["role"] == "admin"
+    can_manage = _is_task_manager(g.user)
     roles = _get_roles()
 
-    if is_admin:
+    if can_manage:
         tasks = db.execute(
             """SELECT t.*, r.name AS role_name FROM exec_tasks t
                JOIN roles r ON r.id = t.role_id
@@ -2981,7 +2993,7 @@ def exec_calendar():
         ).fetchall() if my_role_id else []
 
     grouped = []
-    if is_admin:
+    if can_manage:
         by_role = {}
         for t in tasks:
             by_role.setdefault(t["role_name"], []).append(t)
@@ -2990,13 +3002,15 @@ def exec_calendar():
     today = datetime.now(timezone.utc).date().isoformat()
     return render_template(
         "calendar.html", tasks=tasks, grouped=grouped, roles=roles,
-        is_admin=is_admin, today=today,
+        is_admin=can_manage, today=today,
     )
 
 
 @app.route("/calendar/tasks", methods=["POST"])
-@admin_required
+@roles_required("exec_gc")
 def exec_calendar_add_task():
+    if not _is_task_manager(g.user):
+        abort(403)
     role_id = request.form.get("role_id", type=int)
     title = (request.form.get("title") or "").strip()
     due_date = (request.form.get("due_date") or "").strip()
@@ -3025,8 +3039,10 @@ def exec_calendar_add_task():
 
 
 @app.route("/calendar/tasks/<int:task_id>", methods=["POST"])
-@admin_required
+@roles_required("exec_gc")
 def exec_calendar_edit_task(task_id: int):
+    if not _is_task_manager(g.user):
+        abort(403)
     db = get_db()
     task = db.execute("SELECT id FROM exec_tasks WHERE id = ?", (task_id,)).fetchone()
     if not task:
@@ -3060,8 +3076,10 @@ def exec_calendar_edit_task(task_id: int):
 
 
 @app.route("/calendar/tasks/<int:task_id>/delete", methods=["POST"])
-@admin_required
+@roles_required("exec_gc")
 def exec_calendar_delete_task(task_id: int):
+    if not _is_task_manager(g.user):
+        abort(403)
     db = get_db()
     db.execute("DELETE FROM exec_tasks WHERE id = ?", (task_id,))
     db.commit()
@@ -3077,7 +3095,7 @@ def exec_calendar_toggle_complete(task_id: int):
     if not task:
         flash("Task not found.", "error")
         return redirect(url_for("exec_calendar"))
-    if g.user["role"] != "admin" and task["role_id"] != g.user.get("exec_role_id"):
+    if not _is_task_manager(g.user) and task["role_id"] != g.user.get("exec_role_id"):
         abort(403)
 
     new_status = "open" if task["status"] == "done" else "done"
