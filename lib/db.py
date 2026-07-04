@@ -298,13 +298,14 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "upload_permission_until" not in user_cols_now:
         conn.execute("ALTER TABLE users ADD COLUMN upload_permission_until TEXT")
 
-    # Extend the users.role CHECK to allow 'exec_gc' if it doesn't already.
-    # Same rebuild pattern as the 'advisor' migration above.
+    # Extend the users.role CHECK to allow 'exec_gc' and 'dsg' if it doesn't
+    # already. Same rebuild pattern as the 'advisor' migration above. Keyed on
+    # 'dsg' so DBs that already gained 'exec_gc' still pick up 'dsg'.
     row = conn.execute(
         "SELECT sql FROM sqlite_master WHERE type='table' AND name='users'"
     ).fetchone()
     users_sql_now = (row["sql"] if row else "") or ""
-    if "'exec_gc'" not in users_sql_now:
+    if "'dsg'" not in users_sql_now:
         cols_now = [r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
         all_cols = [
             "id", "username", "display_name", "password_hash", "role",
@@ -324,7 +325,7 @@ def _migrate(conn: sqlite3.Connection) -> None:
                 email                    TEXT,
                 phone                    TEXT,
                 password_hash            TEXT NOT NULL,
-                role                     TEXT NOT NULL CHECK (role IN ('admin', 'chair', 'delegate', 'advisor', 'exec_gc')),
+                role                     TEXT NOT NULL CHECK (role IN ('admin', 'chair', 'delegate', 'advisor', 'exec_gc', 'dsg')),
                 committee                TEXT,
                 delegation               TEXT,
                 exec_role_id             INTEGER REFERENCES roles(id) ON DELETE SET NULL,

@@ -126,7 +126,7 @@
 {% endif %}
 
 {# ---------- EXEC/GC ---------- #}
-{% if current_user.role == 'exec_gc' or current_user.role == 'admin' %}
+{% if current_user.role in ('exec_gc', 'dsg') or current_user.role == 'admin' %}
 <section class="card help-section">
     <h2>For EXEC/GC</h2>
 

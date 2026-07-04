@@ -54,13 +54,13 @@
            href="{{ url_for('summit') }}">
             <span>International Summit</span>
         </a>
-        {% if current_user.committee and current_user.role not in ('advisor', 'exec_gc') %}
+        {% if current_user.committee and current_user.role not in ('advisor', 'exec_gc', 'dsg') %}
         <a class="nav-item {% if request.endpoint == 'my_committee' %}active{% endif %}"
            href="{{ url_for('my_committee') }}">
             <span>My Committee</span>
         </a>
         {% endif %}
-        {% if current_user.role == 'exec_gc' %}
+        {% if current_user.role in ('exec_gc', 'dsg') %}
         <a class="nav-item {% if request.endpoint == 'my_committee' %}active{% endif %}"
            href="{{ url_for('my_committee') }}">
             <span>Committees</span>
@@ -70,26 +70,26 @@
             <span>Calendar</span>
         </a>
         {% endif %}
-        {% if current_user.role != 'exec_gc' %}
+        {% if current_user.role not in ('exec_gc', 'dsg') %}
         <a class="nav-item {% if request.endpoint == 'notes' %}active{% endif %}"
            href="{{ url_for('notes') }}">
             <span>Note Passing</span>
             {% if badges.notes %}<span class="nav-badge">{{ badges.notes }}</span>{% endif %}
         </a>
         {% endif %}
-        {% if current_user.role in ('admin', 'chair', 'advisor', 'exec_gc') %}
+        {% if current_user.role in ('admin', 'chair', 'advisor', 'exec_gc', 'dsg') %}
         <a class="nav-item {% if request.endpoint == 'tally' %}active{% endif %}"
            href="{{ url_for('tally') }}">
             <span>Tally</span>
         </a>
         {% endif %}
-        {% if current_user.role not in ('advisor', 'exec_gc') %}
+        {% if current_user.role not in ('advisor', 'exec_gc', 'dsg') %}
         <a class="nav-item {% if request.endpoint == 'upload' %}active{% endif %}"
            href="{{ url_for('upload') }}">
             <span>Submission</span>
         </a>
         {% endif %}
-        {% if current_user.role != 'exec_gc' %}
+        {% if current_user.role not in ('exec_gc', 'dsg') %}
         <a class="nav-item {% if request.endpoint == 'schedule' %}active{% endif %}"
            href="{{ url_for('schedule') }}">
             <span>Schedule</span>

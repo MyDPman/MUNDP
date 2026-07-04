@@ -3,8 +3,8 @@
 {% block content %}
 
 {% if not committee %}
-<div class="page-header"><h1>{{ 'Committees' if current_user.role == 'exec_gc' else 'My Committee' }}</h1></div>
-{% if current_user.role == 'exec_gc' and all_committees %}
+<div class="page-header"><h1>{{ 'Committees' if current_user.role in ('exec_gc', 'dsg') else 'My Committee' }}</h1></div>
+{% if current_user.role in ('exec_gc', 'dsg') and all_committees %}
 <section class="card">
     <h2>Committees</h2>
     <div class="table-scroll">
@@ -32,7 +32,7 @@
         <p class="muted small">Representing <strong>{{ current_user.delegation }}</strong></p>
         {% endif %}
     </div>
-    {% if current_user.role == 'exec_gc' %}
+    {% if current_user.role in ('exec_gc', 'dsg') %}
     <div class="header-actions">
         <a href="{{ url_for('my_committee') }}" class="button">← All Committees</a>
     </div>
@@ -217,7 +217,7 @@
 </section>
 {% endif %}
 
-{% if current_user.role in ('admin', 'exec_gc') and committee_tally %}
+{% if current_user.role in ('admin', 'exec_gc', 'dsg') and committee_tally %}
 <section class="card">
     <h2>Tally <span class="muted small">by points</span></h2>
     <div class="table-scroll">

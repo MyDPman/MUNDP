@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     email                    TEXT,
     phone                    TEXT,
     password_hash            TEXT NOT NULL,
-    role                     TEXT NOT NULL CHECK (role IN ('admin', 'chair', 'delegate', 'advisor')),
+    role                     TEXT NOT NULL CHECK (role IN ('admin', 'chair', 'delegate', 'advisor', 'exec_gc', 'dsg')),
     committee                TEXT,
     delegation               TEXT,
     exec_role_id             INTEGER REFERENCES roles(id) ON DELETE SET NULL,

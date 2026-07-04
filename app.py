@@ -32,7 +32,12 @@ MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", "50"))
 
 # Committees for the International Summit section.
 _DEF_COMS = ["UNIDO", "UNHCR", "OHCHR", "UNDPPA", "UNESCO"]
-VALID_ROLES = ("admin", "chair", "delegate", "advisor", "exec_gc")
+VALID_ROLES = ("admin", "chair", "delegate", "advisor", "exec_gc", "dsg")
+
+# DSG is a top-level role that behaves exactly like EXEC/GC (same page
+# access, same calendar) but is also a calendar task manager. Everywhere we
+# gate access "like EXEC/GC", we mean this set.
+EXEC_GC_ROLES = ("exec_gc", "dsg")
 
 # Pages EXEC/GC users may visit. Anything else returns 403.
 EXEC_GC_ALLOWED_PREFIXES = (
@@ -295,10 +300,10 @@ def _get_roles() -> list:
 
 
 def _is_task_manager(user: dict) -> bool:
-    """Admins and EXEC/GC members holding the DSG duty role can assign
-    calendar tasks to any role. Other EXEC/GC members can only view/complete
-    tasks assigned to their own role."""
-    if user["role"] == "admin":
+    """Admins, DSG users, and EXEC/GC members holding the DSG duty role can
+    assign calendar tasks to any role. Other EXEC/GC members can only
+    view/complete tasks assigned to their own role."""
+    if user["role"] in ("admin", "dsg"):
         return True
     exec_role_id = user.get("exec_role_id")
     if not exec_role_id:
@@ -322,10 +327,11 @@ def before_request():
     load_current_user()
     if request.endpoint != "setup":
         verify_csrf()
-    # EXEC/GC users are restricted to a small set of pages — everything else
-    # 403s. The redirect from "/" to "/schedule" is handled in index().
+    # EXEC/GC (and DSG) users are restricted to a small set of pages —
+    # everything else 403s. The redirect from "/" to "/schedule" is handled
+    # in index().
     user = getattr(g, "user", None)
-    if user and user.get("role") == "exec_gc":
+    if user and user.get("role") in EXEC_GC_ROLES:
         path = request.path or "/"
         if path != "/" and not any(path.startswith(p) for p in EXEC_GC_ALLOWED_PREFIXES):
             abort(403)
@@ -757,13 +763,13 @@ def amendments_overview():
 # Tally Tracker — chair/admin only
 # ---------------------------------------------------------------------------
 @app.route("/tally", methods=["GET", "POST"])
-@roles_required("chair", "advisor", "exec_gc")
+@roles_required("chair", "advisor", "exec_gc", "dsg")
 def tally():
     db = get_db()
     user = g.user
 
-    # EXEC/GC: see whatever the chair view would render, but read-only.
-    if user["role"] == "exec_gc" and request.method == "POST":
+    # EXEC/GC + DSG: see whatever the chair view would render, but read-only.
+    if user["role"] in EXEC_GC_ROLES and request.method == "POST":
         abort(403)
 
     # Advisor: render a separate read-only view organised by (country, committee).
@@ -1145,8 +1151,8 @@ def delete_tally(entry_id: int):
 @app.route("/my-committee")
 @login_required
 def my_committee():
-    # exec_gc can browse any committee via ?c= query param
-    if g.user["role"] == "exec_gc":
+    # exec_gc / dsg can browse any committee via ?c= query param
+    if g.user["role"] in EXEC_GC_ROLES:
         from flask import request as _req
         committee = (_req.args.get("c") or "").strip()
         if not committee or committee not in _cfg_committees():
@@ -1206,9 +1212,9 @@ def my_committee():
             (committee,),
         ).fetchall()
 
-    # Tally summary for admin and exec_gc
+    # Tally summary for admin and exec_gc / dsg
     committee_tally = []
-    if g.user["role"] in ("admin", "exec_gc"):
+    if g.user["role"] in ("admin", *EXEC_GC_ROLES):
         tally_delegations = set()
         for r in db.execute(
             "SELECT DISTINCT delegation FROM users WHERE committee = ? AND role = 'delegate'",
@@ -2493,6 +2499,11 @@ def admin_users():
             else:
                 username = f"exec-{participant_name}"
                 display_name = f"EXEC/GC - {participant_name}"
+        elif role == "dsg":
+            # DSG users are named like EXEC/GC members but don't hold a duty
+            # role — they manage tasks for every role rather than one.
+            username = f"dsg-{participant_name}"
+            display_name = f"DSG - {participant_name}"
 
         # Reject duplicate usernames up front with a clear message.
         if err_resp is None and db.execute(
@@ -2979,7 +2990,7 @@ def admin_config_delete_role(role_id: int):
 # only their own role's tasks.
 # ---------------------------------------------------------------------------
 @app.route("/calendar", methods=["GET"])
-@roles_required("exec_gc")
+@roles_required("exec_gc", "dsg")
 def exec_calendar():
     db = get_db()
     can_manage = _is_task_manager(g.user)
@@ -3016,7 +3027,7 @@ def exec_calendar():
 
 
 @app.route("/calendar/tasks", methods=["POST"])
-@roles_required("exec_gc")
+@roles_required("exec_gc", "dsg")
 def exec_calendar_add_task():
     if not _is_task_manager(g.user):
         abort(403)
@@ -3048,7 +3059,7 @@ def exec_calendar_add_task():
 
 
 @app.route("/calendar/tasks/<int:task_id>", methods=["POST"])
-@roles_required("exec_gc")
+@roles_required("exec_gc", "dsg")
 def exec_calendar_edit_task(task_id: int):
     if not _is_task_manager(g.user):
         abort(403)
@@ -3085,7 +3096,7 @@ def exec_calendar_edit_task(task_id: int):
 
 
 @app.route("/calendar/tasks/<int:task_id>/delete", methods=["POST"])
-@roles_required("exec_gc")
+@roles_required("exec_gc", "dsg")
 def exec_calendar_delete_task(task_id: int):
     if not _is_task_manager(g.user):
         abort(403)
@@ -3097,7 +3108,7 @@ def exec_calendar_delete_task(task_id: int):
 
 
 @app.route("/calendar/tasks/<int:task_id>/complete", methods=["POST"])
-@roles_required("exec_gc")
+@roles_required("exec_gc", "dsg")
 def exec_calendar_toggle_complete(task_id: int):
     db = get_db()
     task = db.execute("SELECT id, role_id, status FROM exec_tasks WHERE id = ?", (task_id,)).fetchone()
