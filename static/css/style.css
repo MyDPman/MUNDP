@@ -3179,12 +3179,20 @@ select.select-readonly {
     gap: 8px;
     justify-self: end;
 }
-.user-edit-toggle {
-    background: #f3f4f9;
-    border: 1px solid #d4d8e3;
-    color: #07054d;
+/* Edit / Sign in as / Delete (and Save) all render at one uniform size,
+   even the ones wrapped in an inline-form (which otherwise shrinks them). */
+.user-card-actions button,
+.user-card-actions .inline-form button {
+    padding: 7px 14px;
+    font-size: 13px;
+    line-height: 1.2;
 }
-.user-edit-toggle:hover { background: #e9ebf3; border-color: #b9c0d2; }
+.user-edit-toggle {
+    background: var(--brand-deep);
+    border: 1px solid var(--brand-deep);
+    color: #ffffff;
+}
+.user-edit-toggle:hover { background: #15125e; border-color: #15125e; color: #ffffff; }
 
 /* Expandable editor panel */
 .user-editor {
@@ -3910,6 +3918,26 @@ select, .form select, .inline-form select,
     margin-right: auto;
 }
 .cfg-add:hover { background: #15125e; border-color: #15125e; }
+
+/* "Add role" form: a labelled input beside a normal-size button, aligned
+   at the baseline — not the stretched full-height block a form-grid gave. */
+.cfg-add-role-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-top: 4px;
+}
+.cfg-add-role-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 0 1 340px;
+}
+.cfg-add-role-form button { flex: 0 0 auto; }
+@media (max-width: 520px) {
+    .cfg-add-role-form { flex-direction: column; align-items: stretch; }
+    .cfg-add-role-form label { flex: 1 1 auto; }
+}
 
 /* Chairs roster */
 .cfg-roster-committee + .cfg-roster-committee { margin-top: 16px; }
