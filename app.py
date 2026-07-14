@@ -607,7 +607,15 @@ def login():
         # The User Agreement must be accepted before any sign-in is processed.
         if not request.form.get("agree"):
             flash("You must accept the User Agreement to sign in.", "error")
-            return render_template("login.html"), 400
+            # Keep the typed username so an auto-submitting password manager
+            # doesn't bounce the user back to a fully blank form.
+            return (
+                render_template(
+                    "login.html",
+                    username=(request.form.get("username") or "").strip(),
+                ),
+                400,
+            )
 
         username = (request.form.get("username") or "").strip().lower()
         password = request.form.get("password") or ""

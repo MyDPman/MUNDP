@@ -7,7 +7,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label>
             Username
-            <input type="text" name="username" autocomplete="username" required autofocus>
+            <input type="text" name="username" autocomplete="username" required autofocus value="{{ username or '' }}">
         </label>
         <label>
             Password
@@ -41,10 +41,36 @@
     // The Sign in button doesn't exist until the User Agreement is accepted.
     const check = document.getElementById("agree-check");
     const btn = document.getElementById("signin-btn");
-    if (!check || !btn) return;
+    const form = document.getElementById("login-form");
+    if (!check || !btn || !form) return;
     const sync = () => { btn.hidden = !check.checked; };
     check.addEventListener("change", sync);
     sync();
+
+    // Password managers auto-submit after autofill. Block any submit
+    // until the agreement is ticked so the filled credentials survive.
+    const refuse = () => {
+        const agreement = check.closest(".user-agreement");
+        if (agreement) {
+            agreement.classList.add("agreement-needed");
+            agreement.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+        check.focus();
+    };
+    form.addEventListener("submit", (e) => {
+        if (check.checked) return;
+        e.preventDefault();
+        e.stopPropagation();
+        refuse();
+    });
+    // form.submit() skips the submit event, and some password managers
+    // use exactly that — shadow it so the gate applies there too.
+    const nativeSubmit = form.submit.bind(form);
+    form.submit = () => { check.checked ? nativeSubmit() : refuse(); };
+    check.addEventListener("change", () => {
+        const agreement = check.closest(".user-agreement");
+        if (agreement && check.checked) agreement.classList.remove("agreement-needed");
+    });
 })();
 </script>
 {% endblock %}

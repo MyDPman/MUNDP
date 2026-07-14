@@ -3823,6 +3823,13 @@ select, .form select, .inline-form select,
     accent-color: var(--pp-accent, #2f50e6);
     cursor: pointer;
 }
+/* Highlight when a submit was blocked because the agreement isn't ticked
+   (e.g. a password manager auto-submitting right after autofill). */
+.user-agreement.agreement-needed {
+    border-color: #d64545;
+    box-shadow: 0 0 0 3px rgba(214, 69, 69, 0.15);
+}
+.user-agreement.agreement-needed .agreement-check.inline { color: #b93838; }
 /* The Sign in button must be truly gone until the agreement is accepted —
    override the button display rules that otherwise beat the [hidden] attr. */
 #signin-btn[hidden] { display: none !important; }
