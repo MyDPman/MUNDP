@@ -370,6 +370,18 @@ def _local_time_only(value):
     return _local_time(value, "%H:%M")
 
 
+@app.template_global()
+def asset_url(filename: str) -> str:
+    """Static URL with an mtime cache-buster so redesigns reach cached
+    browsers immediately instead of after the static max-age expires."""
+    path = os.path.join(app.static_folder, filename)
+    try:
+        version = int(os.stat(path).st_mtime)
+    except OSError:
+        version = 0
+    return f"{url_for('static', filename=filename)}?v={version}"
+
+
 @app.context_processor
 def inject_user():
     impersonator = None

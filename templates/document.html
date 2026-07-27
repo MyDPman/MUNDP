@@ -306,7 +306,7 @@
 </script>
 {% endblock %}
 {% block scripts %}
-<script type="module" src="{{ url_for('static', filename='js/viewer.js') }}"></script>
+<script type="module" src="{{ asset_url('js/viewer.js') }}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[data-country-flag]").forEach((img) => {

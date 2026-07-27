@@ -7,7 +7,15 @@ venv/
 .env.local
 data/*.db
 data/*.db-journal
+data/*.db-shm
+data/*.db-wal
+data/*.backup-*
 uploads/
 !uploads/.gitkeep
 .DS_Store
 *.log
+.mundp.pid
+
+# Raw source photos (154MB). The app serves the web-sized copies in
+# static/img/collage/ — keep the originals out of git history.
+/Collage/

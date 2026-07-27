@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}MUNDP Portal{% endblock %}</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/mydp_world.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset_url('css/style.css') }}">
     <script>
     // Conference time helper — formats UTC strings in Türkiye time (GMT+3).
     window.fmtLocal = function (iso, style) {
@@ -28,8 +28,8 @@
         return d.toLocaleString("en-GB", opts);
     };
     </script>
-    <script defer src="{{ url_for('static', filename='js/countries.js') }}"></script>
-    <script defer src="{{ url_for('static', filename='js/country-picker.js') }}"></script>
+    <script defer src="{{ asset_url('js/countries.js') }}"></script>
+    <script defer src="{{ asset_url('js/country-picker.js') }}"></script>
     {% block head %}{% endblock %}
 </head>
 <body class="{% if current_user %}has-sidebar{% else %}auth{% endif %}">

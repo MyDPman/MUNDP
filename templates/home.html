@@ -2,6 +2,7 @@
 {% block title %}Home — MUNDP Portal{% endblock %}
 
 {% block head %}
+<link rel="stylesheet" href="{{ asset_url('css/intro.css') }}">
 <style>
 /* ── Hero ────────────────────────────────────────────────────── */
 .home-hero {
@@ -79,7 +80,12 @@
 {% endblock %}
 
 {% block content %}
-<div class="home-hero">
+{% set intro_manual = true %}
+{% include "_intro.html" %}
+
+<div class="ambient-collage" id="ambient-collage" aria-hidden="true"></div>
+
+<div class="home-hero" id="main-content">
     <img class="home-hero-logo"
          src="{{ url_for('static', filename='img/mydp_world_fix.png') }}"
          alt="MyDP">
@@ -87,5 +93,14 @@
     <p class="home-hero-sub">MUNDP Digital Interface</p>
     <div class="home-hero-line"></div>
     <p class="home-hero-greeting">Hello, <strong>{{ current_user.display_name }}</strong></p>
+    <button type="button" class="button home-intro-btn" id="intro-replay">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+        Intro
+    </button>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script defer src="{{ asset_url('js/intro.js') }}"></script>
+<script defer src="{{ asset_url('js/ambient-collage.js') }}"></script>
 {% endblock %}

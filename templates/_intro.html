@@ -1,0 +1,119 @@
+{# Shared MUNDP 2027 intro overlay.
+   Included by login.html (autoplays once per browser session) and by
+   home.html with `intro_manual = true` (hidden until the "Intro" button
+   opens it — data-autoplay="off" tells intro.js never to self-open, and
+   .intro-overlay--manual keeps the static fallback out of the page flow). #}
+<div class="intro-overlay{% if intro_manual %} intro-overlay--manual{% endif %}"
+     id="intro-overlay"
+     {% if intro_manual %}data-autoplay="off"{% endif %}
+     aria-hidden="true">
+    <div class="intro-scroll" id="intro-scroll">
+        <div class="intro-experience" id="intro-experience">
+            <div class="intro-stage">
+                <div class="intro-backdrop"></div>
+                <div class="intro-collage" id="intro-collage"></div>
+                <div class="intro-blob intro-blob--a"></div>
+                <div class="intro-blob intro-blob--b"></div>
+                <div class="intro-blob intro-blob--c"></div>
+                <div class="intro-blob intro-blob--d"></div>
+                <div class="intro-scrim"></div>
+                <div class="intro-grain"></div>
+
+                <script type="application/json" id="intro-collage-data">[
+                    {%- for i in range(1, 25) -%}
+                    "{{ url_for('static', filename='img/collage/c%02d.jpg' % i) }}"{% if not loop.last %},{% endif %}
+                    {%- endfor -%}
+                ]</script>
+
+                <div class="intro-mark">
+                    <img src="{{ url_for('static', filename='img/MyDP_Logo_Fixed.png') }}" alt="MyDP">
+                </div>
+
+                <a class="intro-skip" href="#main-content">Skip intro</a>
+
+                <div class="intro-beats">
+                    <div class="intro-beat">
+                        <p class="intro-eyebrow">MUNDP 2027 · The Koç School, Istanbul</p>
+                        <h2 class="intro-heading">Welcome to MUNDP 2027</h2>
+                        <p class="intro-sub">Twenty-seven years of Commitment to Development — now with a brand new site to match.</p>
+                    </div>
+
+                    <div class="intro-beat">
+                        <p class="intro-eyebrow">The New MUNDP</p>
+                        <h2 class="intro-heading">Everything, redesigned.</h2>
+                        <p class="intro-sub">From the homepage to the registration form, every corner of the site has been rebuilt — refined, refreshed, and ready for a new era.</p>
+                    </div>
+
+                    <div class="intro-beat">
+                        <p class="intro-eyebrow">What's New · Design</p>
+                        <h2 class="intro-heading">A new look, a new feel.</h2>
+                        <p class="intro-sub">A cleaner interface, calmer layouts, and typography that finally matches the occasion.</p>
+                    </div>
+
+                    <div class="intro-beat">
+                        <p class="intro-eyebrow">What's New · Registration</p>
+                        <h2 class="intro-heading">Registration, reimagined.</h2>
+                        <p class="intro-sub">Applying as a school, officer, or delegate now takes minutes, with clear steps and instant confirmation.</p>
+                    </div>
+
+                    <div class="intro-beat">
+                        <p class="intro-eyebrow">What's New · Feel</p>
+                        <h2 class="intro-heading">Smoother, from the first tap.</h2>
+                        <p class="intro-sub">Every scroll, tap, and transition considered — so the site feels as sharp as the conference itself.</p>
+                        <div class="intro-feature intro-feature--stats">
+                            <span class="intro-chip">Buttery-smooth scrolling</span>
+                            <span class="intro-chip">Instant page transitions</span>
+                            <span class="intro-chip">Built for every screen</span>
+                        </div>
+                    </div>
+
+                    <div class="intro-beat">
+                        <p class="intro-eyebrow">And There's More</p>
+                        <h2 class="intro-heading">That's not all.</h2>
+                        <p class="intro-sub">Dozens of small refinements, all adding up.</p>
+                        <div class="intro-feature intro-feature--highlights">
+                            <span class="intro-chip">Liquid-glass navigation</span>
+                            <span class="intro-chip">Redesigned committees</span>
+                            <span class="intro-chip">Refined typography</span>
+                            <span class="intro-chip">Smoother page transitions</span>
+                            <span class="intro-chip">Cleaner schedule &amp; forms</span>
+                            <span class="intro-chip">Faster, calmer layouts</span>
+                        </div>
+                    </div>
+
+                    <div class="intro-beat">
+                        <p class="intro-eyebrow">MUNDP 2027 · Looking Ahead</p>
+                        <h2 class="intro-heading">Setting the ground for digital conferences.</h2>
+                        <p class="intro-sub">This year marks a new chapter for MUNDP — one where the conference embraces a fully digital-first experience, laying the foundation for how Model UN conferences are run for years to come.</p>
+                    </div>
+
+                    <div class="intro-beat">
+                        <p class="intro-eyebrow">Ready?</p>
+                        <h2 class="intro-heading">This is MUNDP 2027.</h2>
+                        <p class="intro-sub">Explore committees, the theme, the venue, and everything else — all just below.</p>
+                        <div class="intro-links">
+                            <span class="intro-chip">Committees</span>
+                            <span class="intro-chip">Theme</span>
+                            <span class="intro-chip">Venue</span>
+                        </div>
+                        <a class="intro-cta" href="#main-content">Enter the site</a>
+                        <p class="intro-credit">Brought to you by DPS27, crafted diligently by Baristas.</p>
+                    </div>
+                </div>
+
+                <div class="intro-progress">
+                    <span class="intro-dot"></span>
+                    <span class="intro-dot"></span>
+                    <span class="intro-dot"></span>
+                    <span class="intro-dot"></span>
+                    <span class="intro-dot"></span>
+                    <span class="intro-dot"></span>
+                    <span class="intro-dot"></span>
+                    <span class="intro-dot"></span>
+                </div>
+
+                <div class="intro-scrollcue"><span></span>Scroll</div>
+            </div>
+        </div>
+    </div>
+</div>

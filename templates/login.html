@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Sign in — MUNDP Portal{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ asset_url('css/intro.css') }}">
+{% endblock %}
 {% block content %}
+{% include "_intro.html" %}
+
+<div class="ambient-collage" id="ambient-collage" aria-hidden="true"></div>
+
+<section id="main-content" class="login-landing">
 <div class="auth-card">
     <h1>Sign in</h1>
     <form method="post" class="form" id="login-form">
@@ -34,6 +42,7 @@
         <img src="{{ url_for('static', filename='img/MyDP_Logo_Blue.png') }}" alt="MyDP logo">
     </div>
 </div>
+</section>
 {% endblock %}
 {% block scripts %}
 <script>
@@ -73,4 +82,6 @@
     });
 })();
 </script>
+<script defer src="{{ asset_url('js/intro.js') }}"></script>
+<script defer src="{{ asset_url('js/ambient-collage.js') }}"></script>
 {% endblock %}
