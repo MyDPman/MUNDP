@@ -15,7 +15,8 @@ from werkzeug.utils import secure_filename
 
 from lib.auth import (
     SESSION_COOKIE, create_session, delete_session, generate_login_code,
-    hash_password, load_current_user, verify_login_code, verify_password,
+    hash_password, load_current_user, normalize_login_code, verify_login_code,
+    verify_password,
 )
 from lib.countries import COUNTRY_ISO3, iso3 as country_iso3
 from lib.csrf import get_csrf_token, verify_csrf
@@ -610,12 +611,30 @@ def index():
     return redirect(url_for("login"))
 
 
+def _login_success(user_id: int):
+    """Create a session and redirect, shared by both sign-in modes."""
+    token = create_session(user_id)
+    next_url = request.args.get("next") or url_for("dashboard")
+    # Only allow relative redirects to prevent open-redirect via ?next=
+    if not next_url.startswith("/") or next_url.startswith("//"):
+        next_url = url_for("dashboard")
+    resp = redirect(next_url)
+    resp.set_cookie(
+        SESSION_COOKIE, token,
+        httponly=True, samesite="Lax",
+        max_age=7 * 24 * 3600,
+    )
+    return resp
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if getattr(g, "user", None):
         return redirect(url_for("dashboard"))
 
     if request.method == "POST":
+        mode = "code" if request.form.get("mode") == "code" else "password"
+
         # The User Agreement must be accepted before any sign-in is processed.
         if not request.form.get("agree"):
             flash("You must accept the User Agreement to sign in.", "error")
@@ -625,13 +644,44 @@ def login():
                 render_template(
                     "login.html",
                     username=(request.form.get("username") or "").strip(),
+                    mode=mode,
                 ),
                 400,
             )
 
+        ip = request.remote_addr or "unknown"
+        db = get_db()
+
+        if mode == "code":
+            # Code-only sign-in: the permanent 12-character code identifies
+            # the user on its own — no username needed.
+            code = normalize_login_code(request.form.get("login_code") or "")
+            rate_key = f"code:{code}"
+
+            wait = check_login_rate_limit(rate_key, ip)
+            if wait is not None:
+                minutes = (wait + 59) // 60
+                flash(
+                    f"Too many failed attempts. Try again in {minutes} minute"
+                    f"{'s' if minutes != 1 else ''}.",
+                    "error",
+                )
+                return render_template("login.html", mode=mode), 429
+
+            row = None
+            if code:
+                row = db.execute(
+                    "SELECT id FROM users WHERE login_code = ?", (code,)
+                ).fetchone()
+            if row:
+                record_login_attempt(rate_key, ip, success=True)
+                return _login_success(row["id"])
+            record_login_attempt(rate_key, ip, success=False)
+            flash("Invalid login code.", "error")
+            return render_template("login.html", mode=mode)
+
         username = (request.form.get("username") or "").strip().lower()
         password = request.form.get("password") or ""
-        ip = request.remote_addr or "unknown"
 
         wait = check_login_rate_limit(username, ip)
         if wait is not None:
@@ -641,31 +691,19 @@ def login():
                 f"{'s' if minutes != 1 else ''}.",
                 "error",
             )
-            return render_template("login.html"), 429
+            return render_template("login.html", mode=mode), 429
 
-        db = get_db()
         row = db.execute(
             "SELECT id, password_hash, login_code FROM users WHERE username = ?",
             (username,),
         ).fetchone()
-        # The permanent 12-character login code works in place of the password.
+        # The login code also works in place of the password here.
         if row and (
             verify_password(password, row["password_hash"])
             or verify_login_code(password, row["login_code"])
         ):
             record_login_attempt(username, ip, success=True)
-            token = create_session(row["id"])
-            next_url = request.args.get("next") or url_for("dashboard")
-            # Only allow relative redirects to prevent open-redirect via ?next=
-            if not next_url.startswith("/") or next_url.startswith("//"):
-                next_url = url_for("dashboard")
-            resp = redirect(next_url)
-            resp.set_cookie(
-                SESSION_COOKIE, token,
-                httponly=True, samesite="Lax",
-                max_age=7 * 24 * 3600,
-            )
-            return resp
+            return _login_success(row["id"])
         record_login_attempt(username, ip, success=False)
         flash("Invalid username or password.", "error")
 

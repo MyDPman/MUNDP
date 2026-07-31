@@ -2609,6 +2609,14 @@ select option { color: var(--ink); background-color: #fff; }
     color: var(--brand);
 }
 .auth-card label { color: var(--brand); }
+.auth-card .login-mode-toggle { margin: 14px 0 10px; }
+.auth-card [data-mode-panel] { display: flex; flex-direction: column; gap: 15px; }
+.auth-card [data-mode-panel][hidden] { display: none; }
+.auth-card #login-code-input {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-family: var(--mono, ui-monospace, monospace);
+}
 .auth-card .form button.primary {
     width: 100%;
     padding: 12px;

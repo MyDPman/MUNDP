@@ -11,16 +11,32 @@
 <section id="main-content" class="login-landing">
 <div class="auth-card">
     <h1>Sign in</h1>
+    <div class="filter-pills login-mode-toggle" role="tablist" aria-label="Sign-in method">
+        <button type="button" class="filter-pill" data-mode="password" role="tab">Username &amp; password</button>
+        <button type="button" class="filter-pill" data-mode="code" role="tab">Login code</button>
+    </div>
     <form method="post" class="form" id="login-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label>
-            Username
-            <input type="text" name="username" autocomplete="username" required autofocus value="{{ username or '' }}">
-        </label>
-        <label>
-            Password or login code
-            <input type="password" name="password" autocomplete="current-password" required>
-        </label>
+        <input type="hidden" name="mode" id="login-mode" value="{{ mode or 'password' }}">
+        <div data-mode-panel="password">
+            <label>
+                Username
+                <input type="text" name="username" autocomplete="username" value="{{ username or '' }}">
+            </label>
+            <label>
+                Password
+                <input type="password" name="password" autocomplete="current-password">
+            </label>
+        </div>
+        <div data-mode-panel="code" hidden>
+            <label>
+                Login code
+                <input type="text" name="login_code" id="login-code-input" autocomplete="off"
+                       autocapitalize="characters" spellcheck="false" maxlength="20"
+                       placeholder="e.g. AB12CD34EF56">
+            </label>
+            <p class="muted small">Enter the 12-character code you were given — no username needed.</p>
+        </div>
 
         <section class="user-agreement" aria-label="User Agreement">
             <h2 class="agreement-title">User Agreement</h2>
@@ -46,6 +62,40 @@
 {% endblock %}
 {% block scripts %}
 <script>
+(function () {
+    // Two sign-in modes: username & password, or the 12-character login code
+    // on its own. The pills swap the visible panel; hidden fields lose
+    // `required` so the browser doesn't block submission on them.
+    const form = document.getElementById("login-form");
+    const modeInput = document.getElementById("login-mode");
+    const pills = document.querySelectorAll(".login-mode-toggle .filter-pill");
+    const panels = form ? form.querySelectorAll("[data-mode-panel]") : [];
+
+    function setMode(mode, focus) {
+        if (!modeInput) return;
+        modeInput.value = mode;
+        pills.forEach((p) => {
+            const active = p.dataset.mode === mode;
+            p.classList.toggle("active", active);
+            p.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        panels.forEach((panel) => {
+            const active = panel.dataset.modePanel === mode;
+            panel.hidden = !active;
+            panel.querySelectorAll("input").forEach((inp) => {
+                inp.required = active;
+            });
+        });
+        if (focus) {
+            const first = form.querySelector(`[data-mode-panel="${mode}"] input`);
+            if (first) first.focus();
+        }
+    }
+
+    pills.forEach((p) => p.addEventListener("click", () => setMode(p.dataset.mode, true)));
+    setMode(modeInput ? modeInput.value : "password", false);
+})();
+
 (function () {
     // The Sign in button doesn't exist until the User Agreement is accepted.
     const check = document.getElementById("agree-check");
