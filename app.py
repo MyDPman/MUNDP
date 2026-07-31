@@ -14,8 +14,8 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from lib.auth import (
-    SESSION_COOKIE, create_session, delete_session, hash_password,
-    load_current_user, verify_password,
+    SESSION_COOKIE, create_session, delete_session, generate_login_code,
+    hash_password, load_current_user, verify_login_code, verify_password,
 )
 from lib.countries import COUNTRY_ISO3, iso3 as country_iso3
 from lib.csrf import get_csrf_token, verify_csrf
@@ -583,8 +583,8 @@ def setup():
         else:
             try:
                 db.execute(
-                    "INSERT INTO users (username, display_name, password_hash, role) VALUES (?, ?, ?, 'admin')",
-                    (username, display_name, hash_password(password)),
+                    "INSERT INTO users (username, display_name, password_hash, role, login_code) VALUES (?, ?, ?, 'admin', ?)",
+                    (username, display_name, hash_password(password), generate_login_code()),
                 )
                 db.commit()
                 return redirect(url_for("login"))
@@ -645,10 +645,14 @@ def login():
 
         db = get_db()
         row = db.execute(
-            "SELECT id, password_hash FROM users WHERE username = ?",
+            "SELECT id, password_hash, login_code FROM users WHERE username = ?",
             (username,),
         ).fetchone()
-        if row and verify_password(password, row["password_hash"]):
+        # The permanent 12-character login code works in place of the password.
+        if row and (
+            verify_password(password, row["password_hash"])
+            or verify_login_code(password, row["login_code"])
+        ):
             record_login_attempt(username, ip, success=True)
             token = create_session(row["id"])
             next_url = request.args.get("next") or url_for("dashboard")
@@ -2548,15 +2552,24 @@ def admin_users():
         if err_resp is None:
             # Admin doesn't take a typed participant name; fall back to display name.
             stored_participant = participant_name or display_name
+            # Assign the permanent login code, regenerating on the (vanishingly
+            # unlikely) collision with an existing user's code.
+            login_code = generate_login_code()
+            while db.execute(
+                "SELECT 1 FROM users WHERE login_code = ?", (login_code,)
+            ).fetchone():
+                login_code = generate_login_code()
             try:
                 cur = db.execute(
                     """
                     INSERT INTO users (username, display_name, participant_name,
-                                       password_hash, role, committee, delegation, exec_role_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                       password_hash, role, committee, delegation,
+                                       exec_role_id, login_code)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (username, display_name, stored_participant,
-                     hash_password(password), role, committee, delegation, exec_role_id),
+                     hash_password(password), role, committee, delegation,
+                     exec_role_id, login_code),
                 )
                 db.commit()
                 new_id = cur.lastrowid
@@ -2564,7 +2577,7 @@ def admin_users():
                     row = db.execute(
                         """SELECT u.id, u.username, u.display_name, u.participant_name,
                                   u.role, u.committee, u.delegation, u.exec_role_id,
-                                  r.name AS exec_role_name, u.created_at
+                                  r.name AS exec_role_name, u.login_code, u.created_at
                            FROM users u LEFT JOIN roles r ON r.id = u.exec_role_id
                            WHERE u.id = ?""",
                         (new_id,),
@@ -2581,11 +2594,12 @@ def admin_users():
                             "delegation": row["delegation"],
                             "exec_role_id": row["exec_role_id"],
                             "exec_role_name": row["exec_role_name"],
+                            "login_code": row["login_code"],
                             "created_at": row["created_at"],
                             "doc_count": 0,
                         },
                     })
-                flash(f"Created user '{username}'.", "success")
+                flash(f"Created user '{username}' — login code {login_code}.", "success")
                 return redirect(url_for("admin_users"))
             except Exception as exc:
                 err_resp = _fail(f"Could not create user: {exc}")
@@ -2597,7 +2611,7 @@ def admin_users():
         """
         SELECT u.id, u.username, u.display_name, u.participant_name,
                u.email, u.phone, u.role, u.committee, u.delegation,
-               u.exec_role_id, r.name AS exec_role_name, u.created_at,
+               u.exec_role_id, r.name AS exec_role_name, u.login_code, u.created_at,
                (SELECT COUNT(*) FROM documents d WHERE d.uploader_id = u.id) AS doc_count
         FROM users u
         LEFT JOIN roles r ON r.id = u.exec_role_id

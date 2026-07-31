@@ -12,7 +12,7 @@ import json
 import sqlite3
 import sys
 
-from lib.auth import hash_password
+from lib.auth import generate_login_code, hash_password
 from lib.db import DB_PATH, init_db
 
 PASSWORD = "Demo@1234"
@@ -255,9 +255,9 @@ def main() -> int:
         uname, dname = c["president"]
         try:
             conn.execute(
-                "INSERT INTO users (username, display_name, password_hash, role, committee) "
-                "VALUES (?, ?, ?, 'chair', ?)",
-                (uname, dname, pw, code),
+                "INSERT INTO users (username, display_name, password_hash, role, committee, login_code) "
+                "VALUES (?, ?, ?, 'chair', ?, ?)",
+                (uname, dname, pw, code, generate_login_code()),
             )
             uid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
             user_ids[uname] = uid
@@ -271,9 +271,9 @@ def main() -> int:
         uname, dname = c["deputy"]
         try:
             conn.execute(
-                "INSERT INTO users (username, display_name, password_hash, role, committee) "
-                "VALUES (?, ?, ?, 'chair', ?)",
-                (uname, dname, pw, code),
+                "INSERT INTO users (username, display_name, password_hash, role, committee, login_code) "
+                "VALUES (?, ?, ?, 'chair', ?, ?)",
+                (uname, dname, pw, code, generate_login_code()),
             )
             uid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
             user_ids[uname] = uid
@@ -288,9 +288,9 @@ def main() -> int:
             display = f"{delegation} ({code})"
             try:
                 conn.execute(
-                    "INSERT INTO users (username, display_name, password_hash, role, committee, delegation) "
-                    "VALUES (?, ?, ?, 'delegate', ?, ?)",
-                    (uname, display, pw, code, delegation),
+                    "INSERT INTO users (username, display_name, password_hash, role, committee, delegation, login_code) "
+                    "VALUES (?, ?, ?, 'delegate', ?, ?, ?)",
+                    (uname, display, pw, code, delegation, generate_login_code()),
                 )
                 uid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
                 user_ids[uname] = uid

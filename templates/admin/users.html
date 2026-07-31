@@ -382,6 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <code class="user-username">${esc(u.username)}</code>
                     </div>
                     <div class="user-sub muted small">${esc(u.participant_name || "No participant name")}</div>
+                    ${u.login_code ? `<div class="user-sub muted small">Login code: <code class="user-username">${esc(u.login_code)}</code></div>` : ''}
                 </div>
                 <div class="user-meta">
                     ${committeeBadge}${execRoleBadge}

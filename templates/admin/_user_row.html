@@ -8,6 +8,9 @@
                 <code class="user-username">{{ u.username }}</code>
             </div>
             <div class="user-sub muted small">{{ u.participant_name or 'No participant name' }}</div>
+            {% if u.login_code %}
+            <div class="user-sub muted small">Login code: <code class="user-username">{{ u.login_code }}</code></div>
+            {% endif %}
         </div>
         <div class="user-meta">
             {% if u.committee %}<span class="committee-tag">{{ u.committee }}</span>{% endif %}

@@ -16,12 +16,17 @@ CREATE TABLE IF NOT EXISTS users (
     committee                TEXT,
     delegation               TEXT,
     exec_role_id             INTEGER REFERENCES roles(id) ON DELETE SET NULL,
+    login_code               TEXT UNIQUE,
     notes_last_seen_at       TEXT,
     amendments_last_seen_at  TEXT,
     resolutions_last_seen_at TEXT,
     outside_since            TEXT,
     created_at               TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Login codes are assigned once at creation and are permanent. The trigger
+-- enforcing immutability is created in lib/db.py:_migrate so it runs AFTER
+-- the column has been ensured on pre-existing databases.
 
 CREATE TABLE IF NOT EXISTS exec_tasks (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -8,7 +8,7 @@ import getpass
 import sqlite3
 import sys
 
-from lib.auth import hash_password
+from lib.auth import generate_login_code, hash_password
 from lib.db import DB_PATH, init_db
 
 
@@ -41,20 +41,21 @@ def main() -> int:
         print("Passwords do not match.")
         return 1
 
+    login_code = generate_login_code()
     try:
         conn.execute(
             """
-            INSERT INTO users (username, display_name, password_hash, role)
-            VALUES (?, ?, ?, 'admin')
+            INSERT INTO users (username, display_name, password_hash, role, login_code)
+            VALUES (?, ?, ?, 'admin', ?)
             """,
-            (username, display_name, hash_password(password)),
+            (username, display_name, hash_password(password), login_code),
         )
         conn.commit()
     except sqlite3.IntegrityError:
         print(f"User '{username}' already exists.")
         return 1
 
-    print(f"\nAdmin '{username}' created. Start the app and sign in.")
+    print(f"\nAdmin '{username}' created (login code: {login_code}). Start the app and sign in.")
     return 0
 
 

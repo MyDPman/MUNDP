@@ -1,4 +1,5 @@
 import secrets
+import string
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -8,6 +9,28 @@ from .db import get_db
 
 SESSION_COOKIE = "mundp_session"
 SESSION_LIFETIME_DAYS = 7
+
+LOGIN_CODE_LENGTH = 12
+LOGIN_CODE_ALPHABET = string.ascii_uppercase + string.digits
+
+
+def generate_login_code() -> str:
+    """Random 12-character code of capital letters and digits (always both)."""
+    while True:
+        code = "".join(secrets.choice(LOGIN_CODE_ALPHABET) for _ in range(LOGIN_CODE_LENGTH))
+        if any(c.isalpha() for c in code) and any(c.isdigit() for c in code):
+            return code
+
+
+def normalize_login_code(raw: str) -> str:
+    """Uppercase and strip spaces/dashes so typed codes compare cleanly."""
+    return "".join((raw or "").split()).replace("-", "").upper()
+
+
+def verify_login_code(raw: str, stored) -> bool:
+    if not stored:
+        return False
+    return secrets.compare_digest(normalize_login_code(raw), stored)
 
 
 def hash_password(plain: str) -> str:

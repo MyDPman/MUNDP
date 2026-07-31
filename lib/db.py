@@ -362,3 +362,39 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute(
             "ALTER TABLE users ADD COLUMN exec_role_id INTEGER REFERENCES roles(id) ON DELETE SET NULL"
         )
+
+    # 8. Permanent login codes: every user gets a unique 12-character code
+    #    (capital letters + digits) assigned at creation, usable as an
+    #    alternate sign-in credential. Backfill users that predate the column,
+    #    then lock the value down with an immutability trigger.
+    user_cols_now3 = [r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "login_code" not in user_cols_now3:
+        conn.execute("ALTER TABLE users ADD COLUMN login_code TEXT")
+    conn.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_login_code ON users(login_code)"
+    )
+    missing = conn.execute("SELECT id FROM users WHERE login_code IS NULL").fetchall()
+    if missing:
+        from .auth import generate_login_code  # deferred: auth imports this module
+
+        taken = {
+            r["login_code"]
+            for r in conn.execute(
+                "SELECT login_code FROM users WHERE login_code IS NOT NULL"
+            ).fetchall()
+        }
+        for r in missing:
+            code = generate_login_code()
+            while code in taken:
+                code = generate_login_code()
+            taken.add(code)
+            conn.execute("UPDATE users SET login_code = ? WHERE id = ?", (code, r["id"]))
+    conn.execute("""
+        CREATE TRIGGER IF NOT EXISTS users_login_code_immutable
+        BEFORE UPDATE OF login_code ON users
+        FOR EACH ROW
+        WHEN OLD.login_code IS NOT NULL AND NEW.login_code IS NOT OLD.login_code
+        BEGIN
+            SELECT RAISE(ABORT, 'login_code cannot be changed');
+        END
+    """)
