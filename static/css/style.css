@@ -87,7 +87,7 @@
     --brand-deep:   var(--brand);
     --brand-deep-rgb: var(--brand-rgb);
     --card:         var(--surface);
-    --sidebar:      #08064a;
+    --sidebar:      #07054d;
     --border:       var(--line);
     --hairline:     var(--line-soft);
     --text:         var(--ink);
@@ -269,10 +269,7 @@ code {
     padding: 20px 14px 16px;
     z-index: 10;
     color: rgba(255, 255, 255, 0.88);
-    background:
-        radial-gradient(120% 46% at 0% 0%, rgba(3, 86, 240, 0.24) 0%, transparent 62%),
-        radial-gradient(90% 34% at 100% 100%, rgba(3, 86, 240, 0.10) 0%, transparent 60%),
-        linear-gradient(180deg, #0b0857 0%, #060440 100%);
+    background: var(--sidebar);
     border-right: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: 14px 0 44px -22px rgba(4, 2, 40, 0.55);
 }
@@ -328,7 +325,7 @@ code {
     transform: translateX(2px);
 }
 .nav-item.active {
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.07));
+    background: rgba(255, 255, 255, 0.12);
     color: #fff;
     font-weight: 600;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
@@ -342,8 +339,7 @@ code {
     width: 3.5px;
     height: 16px;
     border-radius: 4px;
-    background: linear-gradient(180deg, #4d8dff, var(--accent));
-    box-shadow: 0 0 10px rgba(3, 86, 240, 0.65);
+    background: #ffffff;
 }
 .nav-icon { display: none; }
 
@@ -390,10 +386,10 @@ code {
     width: 100%;
     text-align: center;
     padding: 8px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.8);
+    border-radius: var(--radius-pill);
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
     font: inherit;
     font-size: 13px;
     font-weight: 600;
@@ -402,15 +398,15 @@ code {
                 border-color 0.18s var(--ease);
 }
 .sidebar-signout:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.28);
-    color: #fff;
+    background: #ffffff;
+    border-color: #ffffff;
+    color: var(--brand);
 }
 .sidebar-imp-return {
     width: 100%;
     text-align: center;
     padding: 8px 12px;
-    border-radius: 10px;
+    border-radius: var(--radius-pill);
     background: rgba(255, 196, 0, 0.14);
     border: 1px solid rgba(255, 196, 0, 0.38);
     color: #ffd86b;
@@ -514,34 +510,35 @@ code {
 /* ==========================================================================
    07 · Buttons
    ========================================================================== */
+/* Flat pill buttons — solid logo navy fill, white bold label; the outline
+   variant is the same pill with a navy border on white. No gradients. */
 button, .button {
     display: inline-block;
-    padding: 9px 17px;
-    border-radius: var(--r-ctrl);
-    border: 1px solid var(--brand-600);
-    background: linear-gradient(180deg, #201d84 0%, #0e0b58 100%);
+    padding: 10px 22px;
+    border-radius: var(--radius-pill);
+    border: 2px solid var(--brand);
+    background: var(--brand);
     color: #ffffff;
     font: inherit;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.25;
     text-decoration: none;
     cursor: pointer;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), var(--shadow-sm);
+    box-shadow: none;
     transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease),
-                background-color 0.2s ease, filter 0.2s ease;
+                background-color 0.2s ease, border-color 0.2s ease,
+                color 0.2s ease;
 }
 button:hover, .button:hover {
-    filter: brightness(1.14);
+    background: var(--brand-600);
+    border-color: var(--brand-600);
     transform: translateY(-1px);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16),
-                0 12px 24px -10px rgba(10, 8, 80, 0.5);
     color: #fff;
     text-decoration: none;
 }
 button:active, .button:active {
     transform: translateY(0) scale(0.985);
-    filter: brightness(0.98);
     transition-duration: 0.08s;
 }
 button:disabled, .button:disabled {
@@ -549,25 +546,39 @@ button:disabled, .button:disabled {
     cursor: not-allowed;
     transform: none;
     filter: none;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
 }
 
 button.primary, .primary.button {
-    border-color: var(--accent-strong);
-    background: linear-gradient(180deg, #2e6bff 0%, #0a47dd 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22),
-                0 6px 16px -6px rgba(3, 86, 240, 0.55);
+    border-color: var(--brand);
+    background: var(--brand);
+    box-shadow: none;
 }
 button.primary:hover, .primary.button:hover {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24),
-                0 14px 28px -10px rgba(3, 86, 240, 0.6);
+    background: var(--brand-600);
+    border-color: var(--brand-600);
+}
+
+/* Outline pill — navy border + navy label on white */
+button.outline, .outline.button {
+    background: #ffffff;
+    border-color: var(--brand);
+    color: var(--brand);
+}
+button.outline:hover, .outline.button:hover {
+    background: var(--surface-tint);
+    border-color: var(--brand);
+    color: var(--brand);
 }
 
 button.danger, .danger.button {
-    border-color: #b42323;
-    background: linear-gradient(180deg, #e04343 0%, #c02626 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18),
-                0 6px 16px -8px rgba(217, 44, 44, 0.5);
+    border-color: var(--danger);
+    background: var(--danger);
+    box-shadow: none;
+}
+button.danger:hover, .danger.button:hover {
+    background: var(--danger-deep);
+    border-color: var(--danger-deep);
 }
 
 .link-button,
@@ -595,8 +606,8 @@ button.danger, .danger.button {
 
 /* Guarantee: white label text on every filled button, except the controls
    that intentionally sit on light backgrounds and set their own colors. */
-button:not(.link-button):not(.comment-delete):not(.dash-tab-btn):not(.filter-pill):not(.vote-btn):not(.country-picker-button):not(.comment-page-badge),
-.button:not(.link-button):not(.comment-delete):not(.dash-tab-btn):not(.filter-pill):not(.vote-btn):not(.country-picker-button):not(.comment-page-badge) {
+button:not(.link-button):not(.comment-delete):not(.dash-tab-btn):not(.filter-pill):not(.vote-btn):not(.country-picker-button):not(.comment-page-badge):not(.outline):not(.sidebar-signout),
+.button:not(.link-button):not(.comment-delete):not(.dash-tab-btn):not(.filter-pill):not(.vote-btn):not(.country-picker-button):not(.comment-page-badge):not(.outline):not(.sidebar-signout) {
     color: #ffffff;
 }
 
@@ -1186,28 +1197,28 @@ select option { color: var(--ink); background-color: #fff; }
 .filter-pill {
     padding: 7px 16px;
     border-radius: var(--radius-pill);
-    border: 1px solid #d7dbe9;
+    border: 2px solid var(--brand);
     background: var(--surface);
     color: var(--brand);
     font: inherit;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
     transition: background-color 0.16s ease, color 0.16s ease,
                 border-color 0.16s ease, transform 0.16s var(--ease),
                 box-shadow 0.16s var(--ease);
 }
 .filter-pill:hover {
     background: var(--surface-tint);
-    border-color: #b9c0d6;
+    border-color: var(--brand);
     transform: translateY(-1px);
 }
 .filter-pill.active {
     background: var(--brand);
     color: #fff;
     border-color: var(--brand);
-    box-shadow: 0 6px 16px -6px rgba(var(--brand-rgb), 0.45);
+    box-shadow: none;
 }
 
 .dashboard-toolbar {
@@ -1638,21 +1649,21 @@ select option { color: var(--ink); background-color: #fff; }
 .status-btn {
     padding: 8px 16px;
     border-radius: var(--radius-pill);
-    border: 1px solid var(--brand-600);
-    background: linear-gradient(180deg, #201d84 0%, #0e0b58 100%);
+    border: 2px solid var(--brand);
+    background: var(--brand);
     color: #fff;
     font: inherit;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 13px;
     cursor: pointer;
 }
 .status-btn[disabled], .status-btn.active { cursor: default; opacity: 1; }
-.status-btn-passed { border-color: #0c6b31; background: linear-gradient(180deg, #17a04c 0%, #0e7a37 100%); }
-.status-btn-failed { border-color: #a11a22; background: linear-gradient(180deg, #dd3d3d 0%, #b32222 100%); }
-.status-btn-debated,
-.status-btn-summit-on { border-color: var(--accent-strong); background: linear-gradient(180deg, #2e6bff 0%, #0a47dd 100%); }
-.status-btn-summit { border-color: var(--brand); background: linear-gradient(180deg, #201d84 0%, #0e0b58 100%); }
-.status-btn-pending { border-color: #96450a; background: linear-gradient(180deg, #cf7c1b 0%, #a85708 100%); }
+.status-btn-passed,  .status-btn-passed:hover  { border-color: #0f8a3d; background: #0f8a3d; }
+.status-btn-failed,  .status-btn-failed:hover  { border-color: var(--danger); background: var(--danger); }
+.status-btn-debated, .status-btn-debated:hover,
+.status-btn-summit-on, .status-btn-summit-on:hover { border-color: var(--accent); background: var(--accent); }
+.status-btn-summit,  .status-btn-summit:hover  { border-color: var(--brand); background: var(--brand); }
+.status-btn-pending, .status-btn-pending:hover { border-color: #b45309; background: #b45309; }
 
 /* Voting */
 .voting-card {
@@ -1741,31 +1752,31 @@ select option { color: var(--ink); background-color: #fff; }
 .vote-btn {
     padding: 10px 22px;
     border-radius: var(--radius-pill);
-    border: 1px solid #d7dbe9;
+    border: 2px solid var(--brand);
     background: var(--surface);
     color: var(--brand);
     font: inherit;
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
 }
 .vote-btn:hover { background: var(--surface-tint); color: var(--brand); }
-.vote-btn-for  { border-color: rgba(15, 138, 61, 0.4); color: var(--success-deep); }
+.vote-btn-for  { border-color: #0f8a3d; color: var(--success-deep); }
 .vote-btn-for:hover { background: #0f8a3d; color: #fff; border-color: #0f8a3d; }
 .vote-btn-for.active {
-    background: linear-gradient(180deg, #17a04c, #0e7a37);
+    background: #0f8a3d;
     color: #fff;
-    border-color: #0c6b31;
-    box-shadow: 0 6px 18px -6px rgba(15, 138, 61, 0.55);
+    border-color: #0f8a3d;
+    box-shadow: none;
 }
-.vote-btn-against { border-color: rgba(217, 44, 44, 0.4); color: var(--danger-deep); }
-.vote-btn-against:hover { background: #c02626; color: #fff; border-color: #c02626; }
+.vote-btn-against { border-color: var(--danger); color: var(--danger-deep); }
+.vote-btn-against:hover { background: var(--danger-deep); color: #fff; border-color: var(--danger-deep); }
 .vote-btn-against.active {
-    background: linear-gradient(180deg, #dd3d3d, #b32222);
+    background: var(--danger);
     color: #fff;
-    border-color: #a11a22;
-    box-shadow: 0 6px 18px -6px rgba(217, 44, 44, 0.5);
+    border-color: var(--danger);
+    box-shadow: none;
 }
 
 .voting-controls {
@@ -2440,10 +2451,15 @@ select option { color: var(--ink); background-color: #fff; }
 .cfg-table .cfg-actions { width: 1%; white-space: nowrap; }
 .cfg-actions .cfg-remove,
 .cfg-committee-row .cfg-remove {
-    border-color: #a11a22;
-    background: linear-gradient(180deg, #dd3d3d 0%, #b32222 100%);
+    border-color: var(--danger);
+    background: var(--danger);
     padding: 6px 12px;
     font-size: 12.5px;
+}
+.cfg-actions .cfg-remove:hover,
+.cfg-committee-row .cfg-remove:hover {
+    border-color: var(--danger-deep);
+    background: var(--danger-deep);
 }
 
 .cfg-committee-list {
@@ -2621,7 +2637,7 @@ select option { color: var(--ink); background-color: #fff; }
     width: 100%;
     padding: 12px;
     font-size: 14px;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-pill);
 }
 .auth-logo {
     margin-top: 28px;
@@ -2822,9 +2838,7 @@ select option { color: var(--ink); background-color: #fff; }
         padding: 0;
         overflow: visible;
         z-index: 200;
-        background:
-            radial-gradient(140% 180% at 0% 0%, rgba(3, 86, 240, 0.25) 0%, transparent 55%),
-            linear-gradient(180deg, #0a084c, #06043a);
+        background: var(--sidebar);
         /* No blur here: a backdrop-filter would make this bar the containing
            block for its fixed children (drawer, footer, overlay), pinning
            them to the bar instead of the viewport. */
@@ -2903,9 +2917,7 @@ select option { color: var(--ink); background-color: #fff; }
         max-width: 84vw;
         height: calc(100vh - var(--topbar-h));
         height: calc(100dvh - var(--topbar-h));
-        background:
-            radial-gradient(120% 30% at 0% 0%, rgba(3, 86, 240, 0.2) 0%, transparent 60%),
-            linear-gradient(180deg, #0a0850 0%, #060440 100%);
+        background: var(--sidebar);
         flex-direction: column;
         flex: none;
         padding: 12px 10px 108px;
@@ -2940,7 +2952,7 @@ select option { color: var(--ink); background-color: #fff; }
         width: 282px;
         max-width: 84vw;
         z-index: 200;
-        background: #060440;
+        background: var(--sidebar);
         border-top: 1px solid rgba(255, 255, 255, 0.12);
         padding: 12px 14px;
         flex-direction: column;
