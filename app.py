@@ -697,10 +697,11 @@ def login():
             "SELECT id, password_hash, login_code FROM users WHERE username = ?",
             (username,),
         ).fetchone()
-        # The login code also works in place of the password here.
+        # The login code also works in place of the password here; check it
+        # first so code entries skip the expensive bcrypt verification.
         if row and (
-            verify_password(password, row["password_hash"])
-            or verify_login_code(password, row["login_code"])
+            verify_login_code(password, row["login_code"])
+            or verify_password(password, row["password_hash"])
         ):
             record_login_attempt(username, ip, success=True)
             return _login_success(row["id"])
