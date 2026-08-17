@@ -71,10 +71,14 @@ body {
     color: var(--ink);
 }
 
-/* flat ground, white cards — no texture layer. Pages with their own
+/* the homepage's wave pattern, whispered onto the panel-grey ground —
+   veiled almost entirely so it reads as paper grain, never decoration.
+   Fixed layer, so scrolling never repaints it. Pages with their own
    full-bleed hero layers (sign-in, homescreen) cover this entirely. */
 body::before {
-    background: none;
+    background:
+        linear-gradient(rgba(246, 247, 249, 0.90), rgba(246, 247, 249, 0.90)),
+        url(../img/quilt-tile-v2.svg) repeat left top / 640px 360px;
 }
 
 ::selection {
@@ -194,16 +198,17 @@ a[href^="mailto:"]:hover {
 
 .brand-logo { display: none; }
 
+/* wordmark: "My" at regular weight, "DP" light */
 .brand-text {
     display: block;
-    font-size: 26px;
-    font-weight: 600;
-    line-height: 1.25;
-    letter-spacing: -0.02em;
+    font-size: 28px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
     color: #fff;
 }
 
-.brand-line { display: block; }
+.brand-my { font-weight: 400; }
+.brand-dp { font-weight: 300; }
 
 .nav-section {
     margin: 20px 12px 8px;
@@ -574,11 +579,9 @@ select:focus,
     .sidebar-brand { padding: 0 0 0 16px; }
 
     .brand-text {
-        font-size: 18px;
+        font-size: 20px;
         line-height: 1.15;
     }
-
-    .brand-line { display: inline; }
 
     .nav-hamburger span {
         background: rgba(255, 255, 255, 0.92);
