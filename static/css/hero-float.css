@@ -1,0 +1,163 @@
+/* Floating collage hero — modelundp.org's drifting photo helix, ported
+   verbatim for the MyDP sign-in page. hero-float.js scatters the
+   conference photos (static/img/collage/c01–c24) across a slowly turning
+   3D cloud; each card also wanders on its own, so the field reads as
+   photos floating around at random. Deep navy ground, cool blue tint on
+   every photo, the auth card overlaid via .hero-float-scrim.
+   All values are copied from the website's hero-float.css; the only
+   adaptation is the fixed full-viewport host on body.auth (the site's
+   host is an absolute layer inside its hero section). */
+
+/* the sign-in page itself sits on the hero's navy so nothing white can
+   flash behind the cloud */
+body.auth {
+    background-color: #041231;
+}
+
+body.auth .hero-float {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+}
+
+body.auth .hero-float-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+}
+
+/* the auth card rises above the cloud + scrim */
+body.auth .login-landing {
+    position: relative;
+    z-index: 2;
+}
+
+body.auth .flash-area {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-float {
+    overflow: hidden;
+    background:
+        radial-gradient(120% 95% at 18% 8%, rgba(23, 78, 196, 0.4), transparent 58%),
+        radial-gradient(95% 85% at 84% 90%, rgba(3, 86, 240, 0.32), transparent 55%),
+        radial-gradient(60% 55% at 55% 45%, rgba(35, 96, 220, 0.16), transparent 70%),
+        linear-gradient(158deg, #082052 0%, #051540 46%, #020b26 100%);
+    opacity: 0;
+    transition: opacity 1.1s ease;
+}
+
+.hero-float.is-live {
+    opacity: 1;
+}
+
+/* Two very soft light blobs breathing behind the photos, for depth. */
+.hero-float::before,
+.hero-float::after {
+    content: "";
+    position: absolute;
+    width: 46vmax;
+    height: 46vmax;
+    border-radius: 50%;
+    filter: blur(70px);
+    pointer-events: none;
+}
+
+.hero-float::before {
+    left: -12vmax;
+    top: -14vmax;
+    background: radial-gradient(circle, rgba(43, 108, 235, 0.34), transparent 65%);
+    animation: hero-float-blob-a 26s ease-in-out infinite alternate;
+}
+
+.hero-float::after {
+    right: -14vmax;
+    bottom: -16vmax;
+    background: radial-gradient(circle, rgba(2, 62, 180, 0.38), transparent 65%);
+    animation: hero-float-blob-b 32s ease-in-out infinite alternate;
+}
+
+@keyframes hero-float-blob-a {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(9vmax, 7vmax, 0) scale(1.18); }
+}
+
+@keyframes hero-float-blob-b {
+    from { transform: translate3d(0, 0, 0) scale(1.12); }
+    to   { transform: translate3d(-8vmax, -6vmax, 0) scale(0.95); }
+}
+
+.hero-float-card {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 5px;
+    /* one light shadow — with 100+ tiles, stacked heavy shadows are the
+       single biggest paint cost and visually just mud at this size */
+    box-shadow: 0 6px 18px rgba(1, 7, 24, 0.35);
+    will-change: transform;
+    backface-visibility: hidden;
+    contain: layout style paint;
+}
+
+/* Depth fade: cards stay fully opaque (translucent cards ghosted whatever
+   sat behind them); distance is faded by veiling far cards toward the navy
+   ground with this solid overlay, opacity driven per-frame by hero-float.js. */
+.hero-float-fog {
+    position: absolute;
+    inset: 0;
+    background: #0a1c48;
+    pointer-events: none;
+    /* composited — its opacity changes every frame and must not repaint the card */
+    will-change: opacity;
+}
+
+.hero-float-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    /* slightly darker than before — compensates for dropping the multiply tint */
+    filter: saturate(0.78) contrast(1.06) brightness(0.92);
+}
+
+/* The slight blue tint — a plain translucent navy film plus a faint top
+   sheen. Deliberately NOT mix-blend-mode: a blend mode composites against
+   whatever card happens to be underneath, so overlapping photos shift
+   color and pop as they cross; normal alpha keeps every card stable. */
+.hero-float-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(180deg, rgba(120, 165, 255, 0.1), rgba(120, 165, 255, 0) 40%),
+        linear-gradient(200deg, rgba(23, 62, 156, 0.34), rgba(4, 16, 52, 0.48));
+    pointer-events: none;
+}
+
+.hero-float-scrim {
+    pointer-events: none;
+    background:
+        radial-gradient(75% 65% at 50% 52%, rgba(2, 9, 30, 0.14), transparent 70%),
+        linear-gradient(180deg, rgba(2, 9, 30, 0.58) 0%, rgba(2, 9, 30, 0.3) 42%, rgba(2, 9, 30, 0.66) 100%);
+}
+
+/* ---------- sign-in card on the navy hero ---------- */
+/* the white glass card floats over the cloud like the site's light
+   dropdowns over its dark heroes — deeper drop so it reads as elevation */
+body.auth .auth-card {
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.12),
+        0 24px 48px -12px rgba(2, 9, 30, 0.5),
+        0 64px 128px -24px rgba(2, 9, 30, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-float::before,
+    .hero-float::after {
+        animation: none;
+    }
+}

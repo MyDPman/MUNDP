@@ -23,10 +23,10 @@
     --accent-deep: #0a1f4d;          /* MUNDP brand navy (darker) */
 
     /* MyDP token remap → site values */
-    --brand: #0a1f4d;                /* navy headers/labels now site navy */
+    --brand: #041231;                /* the site hero's dark navy */
     --brand-600: #0356f0;            /* filled controls resolve to accent */
     --brand-500: #0345c4;
-    --brand-rgb: 10, 31, 77;
+    --brand-rgb: 4, 18, 49;
     --accent-strong: #0345c4;
     --accent-soft: rgba(3, 86, 240, 0.10);
     --accent-ring: rgba(3, 86, 240, 0.12);   /* site focus ring alpha */
