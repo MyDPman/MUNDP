@@ -181,24 +181,31 @@ a[href^="mailto:"]:hover {
 /* ---------- sidebar: solid panel navy, white active pill ---------- */
 .sidebar {
     color: rgba(255, 255, 255, 0.75);
-    background: var(--brand);
+    /* barely-there vertical depth: a touch lighter at the top, settling
+       into the panel navy — reads as material, not decoration */
+    background: linear-gradient(180deg, #0d2558 0%, var(--brand) 34%, #081a41 100%);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     border-right: none;
     box-shadow: none;
 }
 
+/* white focus rings on the navy, so keyboard users can see them */
+.sidebar :focus-visible {
+    outline-color: #fff;
+}
+
 .sidebar-brand {
     border-bottom: none;
     color: #fff;
-    padding: 10px 12px 26px;
+    padding: 10px 14px 24px;
 }
 
 .sidebar-brand:hover { color: #fff; }
 
 .brand-logo { display: none; }
 
-/* wordmark: "My" at regular weight, "DP" light */
+/* wordmark: "My" at regular weight, "DP" light, a blue full stop */
 .brand-text {
     display: block;
     font-size: 28px;
@@ -209,6 +216,17 @@ a[href^="mailto:"]:hover {
 
 .brand-my { font-weight: 400; }
 .brand-dp { font-weight: 300; }
+.brand-dot { font-weight: 400; color: #5b8cff; }
+
+.brand-sub {
+    display: block;
+    margin-top: 6px;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.38);
+}
 
 .nav-section {
     margin: 20px 12px 8px;
@@ -252,6 +270,8 @@ a[href^="mailto:"]:hover {
     color: rgba(255, 255, 255, 0.9);
     box-shadow: none;
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    min-width: 22px;
 }
 
 .nav-item.active .nav-badge {
@@ -260,7 +280,7 @@ a[href^="mailto:"]:hover {
 }
 
 .sidebar-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 .sidebar-footer .user-card {
@@ -268,10 +288,34 @@ a[href^="mailto:"]:hover {
     border: none;
     border-radius: 10px;
     padding: 6px 12px;
+    gap: 3px;
 }
 
 .user-name {
     color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+/* quiet presence dot before the signed-in name */
+.user-name::before {
+    content: "";
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #34c759;
+}
+
+.user-role {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.48);
+    letter-spacing: 0.01em;
+    padding-left: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* footer actions read as plain links, like the panel's utility row */
@@ -582,6 +626,8 @@ select:focus,
         font-size: 20px;
         line-height: 1.15;
     }
+
+    .brand-sub { display: none; }
 
     .nav-hamburger span {
         background: rgba(255, 255, 255, 0.92);

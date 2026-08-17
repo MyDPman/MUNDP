@@ -38,7 +38,8 @@
 {% if current_user %}
 <aside class="sidebar">
     <a class="sidebar-brand" href="{{ url_for('index') }}">
-        <span class="brand-text"><span class="brand-my">My</span><span class="brand-dp">DP</span></span>
+        <span class="brand-text"><span class="brand-my">My</span><span class="brand-dp">DP</span><span class="brand-dot">.</span></span>
+        <span class="brand-sub">MUNDP Digital Portal</span>
     </a>
     <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
         <span></span><span></span><span></span>
@@ -129,6 +130,7 @@
     <div class="sidebar-footer">
         <div class="user-card">
             <div class="user-name">{{ current_user.display_name }}</div>
+            <div class="user-role">{{ current_user.role|replace('_', ' ')|title }}{% if current_user.committee %} · {{ current_user.committee }}{% endif %}</div>
         </div>
         {% if impersonator %}
         <form method="post" action="{{ url_for('impersonate_stop') }}">
