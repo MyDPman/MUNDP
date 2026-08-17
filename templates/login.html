@@ -2,12 +2,12 @@
 {% block title %}Sign in — MUNDP Portal{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ asset_url('css/intro.css') }}">
-<link rel="stylesheet" href="{{ asset_url('css/hero-float.css') }}">
+<link rel="stylesheet" href="{{ asset_url('css/hero-quilt.css') }}">
 {% endblock %}
 {% block content %}
 {% include "_intro.html" %}
 
-<div class="hero-float" id="hero-float" aria-hidden="true"
+<div class="hero-spiral" id="hero-spiral" aria-hidden="true"
      data-img-base="{{ url_for('static', filename='img/collage/') }}"></div>
 <div class="hero-float-scrim" aria-hidden="true"></div>
 
@@ -136,5 +136,5 @@
 })();
 </script>
 <script defer src="{{ asset_url('js/intro.js') }}"></script>
-<script defer src="{{ asset_url('js/hero-float.js') }}"></script>
+<script defer src="{{ asset_url('js/hero-spiral.js') }}"></script>
 {% endblock %}

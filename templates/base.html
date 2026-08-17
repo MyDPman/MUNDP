@@ -33,7 +33,7 @@
     <script defer src="{{ asset_url('js/country-picker.js') }}"></script>
     {% block head %}{% endblock %}
 </head>
-<body class="{% if current_user %}has-sidebar{% else %}auth{% endif %}">
+<body class="{% if current_user %}has-sidebar{% else %}auth{% endif %}{% block bodyclass %}{% endblock %}">
 
 {% if current_user %}
 <aside class="sidebar">
