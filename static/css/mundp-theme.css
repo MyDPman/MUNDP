@@ -98,15 +98,7 @@ html {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* gentle page entrance (site enhancements.css) */
-body {
-    animation: mundp-page-in 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-
-@keyframes mundp-page-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
+/* no page-entrance theatrics: pages render instantly */
 
 /* ---------- typography: site display voice ---------- */
 h1, h2, h3, h4 {
@@ -205,16 +197,6 @@ a[href^="mailto:"]:hover {
     }
 }
 
-/* navbar drops in on load (site theme.css) */
-.sidebar {
-    animation: mundp-nav-in 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.1s both;
-}
-
-@keyframes mundp-nav-in {
-    from { opacity: 0; transform: translateX(-14px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-
 .sidebar-brand {
     border-bottom: 1px solid var(--hairline-soft);
     color: var(--ink);
@@ -222,26 +204,18 @@ a[href^="mailto:"]:hover {
 
 .sidebar-brand:hover { color: var(--ink); }
 
-.brand-logo {
-    transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.sidebar-brand:hover .brand-logo {
-    transform: scale(1.03) rotate(-1deg);
-}
-
 .nav-item {
     color: var(--ink);
     font-weight: 500;
     letter-spacing: -0.01em;
-    transition: color 0.25s ease, background-color 0.25s ease,
-                transform 0.25s ease;
+    transition: color 0.15s ease, background-color 0.15s ease;
+    transform: none;
 }
 
 .nav-item:hover {
     background: rgba(0, 0, 0, 0.03);
-    color: var(--accent);
-    transform: translateX(2px);
+    color: var(--ink);
+    transform: none;
 }
 
 .nav-item.active {
@@ -322,13 +296,10 @@ button.primary, .primary.button {
     color: #fff;
     font-weight: 500;
     letter-spacing: -0.01em;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
-    transition:
-        transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
-        box-shadow 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
-        background-color 0.28s ease,
-        color 0.28s ease,
-        border-color 0.28s ease;
+    box-shadow: none;
+    transform: none;
+    transition: background-color 0.15s ease, color 0.15s ease,
+                border-color 0.15s ease;
 }
 
 button:hover, .button:hover,
@@ -336,16 +307,15 @@ button.primary:hover, .primary.button:hover {
     background: #0a1f4d;
     border-color: transparent;
     color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.22);
+    transform: none;
+    box-shadow: none;
 }
 
 button:active, .button:active,
 button.primary:active, .primary.button:active {
     background: #020b26;
-    transform: translateY(0) scale(0.985);
-    box-shadow: 0 4px 10px -6px rgba(0, 0, 0, 0.20);
-    transition-duration: 0.12s;
+    transform: none;
+    box-shadow: none;
 }
 
 button.outline, .outline.button {
@@ -360,7 +330,7 @@ button.outline:hover, .outline.button:hover {
     border-color: var(--ink);
     color: var(--ink);
     background: rgba(0, 0, 0, 0.03);
-    box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.22);
+    box-shadow: none;
 }
 
 button.outline:active, .outline.button:active {
@@ -370,7 +340,7 @@ button.outline:active, .outline.button:active {
 button.danger, .danger.button {
     background: var(--danger);
     border: none;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    box-shadow: none;
 }
 
 button.danger:hover, .danger.button:hover {
@@ -473,23 +443,20 @@ select:focus,
 }
 
 /* ---------- cards & surfaces: site collection-item treatment ---------- */
+/* cards hold still: one quiet resting shadow, no hover choreography */
 .card {
     background-color: var(--bg);
     border: 1px solid var(--hairline-soft);
     border-radius: 16px;
-    box-shadow: none;
-    transition:
-        transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
-        border-color 0.35s ease,
-        box-shadow 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+    box-shadow: var(--shadow-sm);
+    transition: none;
+    transform: none;
 }
 
 .card:hover {
-    border-color: var(--hairline);
-    box-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.04),
-        0 8px 16px -4px rgba(0, 0, 0, 0.06),
-        0 28px 56px -16px rgba(0, 0, 0, 0.14);
+    border-color: var(--hairline-soft);
+    box-shadow: var(--shadow-sm);
+    transform: none;
 }
 
 .card h2 { color: var(--ink); }
@@ -571,37 +538,7 @@ select:focus,
     filter: saturate(0.78) contrast(1.06) brightness(0.98);
 }
 
-/* ---------- soft cross-fade between pages (site theme.css) ---------- */
-@view-transition {
-    navigation: auto;
-}
-
-/* the fixed sidebar carries its own identity across the transition so it
-   holds still instead of cross-fading with the rest of the page — reads
-   as persistent app chrome rather than a flat page swap */
-.sidebar {
-    view-transition-name: mundp-nav;
-}
-
-::view-transition-group(mundp-nav) {
-    animation-duration: 0.3s;
-}
-
-::view-transition-old(root) {
-    animation: mundp-vt-out 0.36s cubic-bezier(0.4, 0, 1, 1) both;
-}
-
-::view-transition-new(root) {
-    animation: mundp-vt-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes mundp-vt-out {
-    to { opacity: 0; transform: scale(0.985) translateY(-8px); filter: blur(3px); }
-}
-
-@keyframes mundp-vt-in {
-    from { opacity: 0; transform: scale(1.015) translateY(14px); filter: blur(5px); }
-}
+/* no page-swap choreography: navigation is instant, chrome stays put */
 
 /* ---------- responsive: the ≤820 top bar + drawer go light ----------
    The base layout keeps backdrop-filter OFF the top bar (it would become
@@ -645,16 +582,8 @@ select:focus,
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
 
-    body, .sidebar { animation: none; }
-
-    button, .button, .card, .nav-item, .brand-logo {
+    button, .button, .card, .nav-item {
         transition: none;
-    }
-
-    ::view-transition-group(*),
-    ::view-transition-old(*),
-    ::view-transition-new(*) {
-        animation: none !important;
     }
 }
 
@@ -801,4 +730,25 @@ select:focus,
         margin-bottom: 22px;
         padding-bottom: 16px;
     }
+}
+
+/* ==========================================================================
+   Motion restraint — decorative animation removed portal-wide.
+   Interfaces this serious hold still: content renders in place, chrome
+   never slides in, nothing pulses for attention. Functional feedback
+   (loading spinner, invalid-form shake, popover open) is kept.
+   ========================================================================== */
+.main-inner > *,
+.main-inner > *:nth-child(n),
+.sidebar-brand,
+.sidebar-nav .nav-item,
+.sidebar-nav .nav-item:nth-child(n) {
+    animation: none;
+}
+
+/* live-status dots hold steady instead of pulsing */
+.status-in-debate::before,
+.voting-pill-open::before,
+.status-badge::before {
+    animation: none !important;
 }
