@@ -310,7 +310,7 @@ a[href^="mailto:"]:hover {
    from theme.css + enhancements.css. */
 button, .button,
 button.primary, .primary.button {
-    background: var(--accent);
+    background: var(--brand);
     border: none;
     border-radius: 12px;
     color: #fff;
@@ -327,7 +327,7 @@ button.primary, .primary.button {
 
 button:hover, .button:hover,
 button.primary:hover, .primary.button:hover {
-    background: #0345c4;
+    background: #0a1f4d;
     border-color: transparent;
     color: #fff;
     transform: translateY(-2px);
@@ -336,7 +336,7 @@ button.primary:hover, .primary.button:hover {
 
 button:active, .button:active,
 button.primary:active, .primary.button:active {
-    background: #033ba6;
+    background: #020b26;
     transform: translateY(0) scale(0.985);
     box-shadow: 0 4px 10px -6px rgba(0, 0, 0, 0.20);
     transition-duration: 0.12s;

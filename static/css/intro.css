@@ -1,68 +1,47 @@
-/* MyDP — sign-in page "welcome" intro.
-   A full-screen, scroll-driven welcome sequence that plays once per browser
-   session on the (unauthenticated) login page, then reveals the real sign-in
-   form underneath. Structurally and mechanically adapted from the MUNDP
-   marketing site's homepage intro (blob/grain backdrop, glass skip pill,
-   progress dots, scroll cue, feature-peek mock cards, chip rows) — rewritten
-   with original MyDP copy, no photo collage (no licensed conference
-   photography to tile) and no reference-site imagery.
+/* MUNDP 2027 — homepage welcome experience.
+   A full-screen, scroll-linked animation that opens automatically the
+   first time the homepage is opened fresh each browser session — a real
+   lightbox experience, not embedded page content — and markets everything
+   that changed in the rebuild before releasing into the normal homepage
+   underneath. Navigating back to the homepage again later in the same
+   session (e.g. the nav logo / "Home") goes straight through, uninterrupted
+   — see .mundp-intro-seen below. A "Bored?" button lets visitors replay it
+   on demand at any time. Motion is driven by intro.js with a lerped
+   (trailing) progress value for a silky, Apple-product-page feel rather
+   than a 1:1 scroll bind.
 
    Structure: .intro-overlay (the lightbox) > .intro-scroll (its own
    scrollable viewport — scrolling THIS, not the page, drives the story) >
    .intro-experience (tall inner content) > .intro-stage (pinned via
-   position: sticky inside .intro-scroll once JS-enhanced).
+   position: sticky inside .intro-scroll).
 
-   Progressive enhancement / fail-safe design:
-   Unlike the reference site (which ships a synchronous no-js/js class
-   toggle on <html> before first paint), this port has no such toggle — our
-   intro.js only runs at DOMContentLoaded. So instead of applying the tall
-   700vh / sticky-pinned / fixed-lightbox treatment unconditionally and
-   clawing it back with a `.no-js` override (which would leave a genuinely
-   JS-less visitor stuck scrolling a 700vh page with no way back), every
-   "enhanced" rule in this file is gated *on* the presence of the `.intro-js`
-   class that intro.js adds to `.intro-overlay` / `.intro-experience`. The
-   un-gated, default rules ARE the safe fallback: a normal-height, in-flow
-   welcome panel showing beat one only, with the real page (#main-content)
-   directly below it — reachable by an ordinary scroll, no scroll-jacking,
-   no JS required. This is the load-bearing bit: the sign-in form must never
-   depend on this file's JS companion running.
-
+   Progressive enhancement: without JS, .intro-overlay/.intro-scroll stay in
+   normal document flow (see base rules below) so the intro just renders as
+   an ordinary tall section at the top of the page, with real anchor links
+   to skip past it — nothing here is load-bearing for reaching the site.
    Additive + self-contained: safe to delete this file, intro.js, and the
-   markup block in login.html to fully remove the whole feature. */
+   markup block in index.html to fully remove the whole feature. */
 
-/* ---------- overlay shell ---------- */
-/* Default: perfectly ordinary in-flow content. Only promoted to a true
-   full-screen lightbox once intro.js adds .intro-js (see note above) —
-   copied verbatim from the reference's own progressive-enhancement rule. */
 .intro-overlay {
   position: static;
-  --intro-accent: #0356f0;      /* MUNDP interactive blue */
-  --intro-navy: #0a1f4d;        /* MUNDP brand navy */
-  --intro-navy-deep: #07054d;   /* matches the portal's existing --brand-deep */
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-               "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-.intro-overlay.intro-js {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: var(--intro-navy-deep);
-  transition: opacity 0.5s ease, visibility 0s linear 0s;
-}
-
-.intro-overlay.intro-js.is-closed {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.5s ease, visibility 0s linear 0.5s;
-}
-
-/* ---------- scroll viewport ---------- */
 .intro-scroll {
   position: static;
   overflow: visible;
   height: auto;
+}
+
+/* JS-enhanced mode: promote to a true full-screen lightbox with its own
+   internal scroll container, independent of the page's real scroll
+   position (which stays at 0 the whole time, revealed the instant this
+   closes). */
+.intro-overlay.intro-js {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #050e26;
+  transition: opacity 0.5s ease, visibility 0s linear 0s;
 }
 
 .intro-overlay.intro-js .intro-scroll {
@@ -74,104 +53,44 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* ---------- experience + stage ---------- */
-/* Default: auto height, ordinary document flow — this is the fallback. */
-.intro-experience {
-  position: relative;
-  height: auto;
-  background: var(--intro-navy-deep, #07054d);
+.intro-overlay.intro-js.is-closed {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s ease, visibility 0s linear 0.5s;
 }
 
-/* Enhanced: a tall scroll range the sticky stage can play against
-   (8 beats — matches the reference's own ~920vh journey length). */
-.intro-experience.intro-js {
+.intro-experience {
+  position: relative;
   height: 920vh;
+  background: #050e26;
 }
 
 .intro-stage {
-  position: static;
-  height: auto;
-  padding: 6.5rem 1.5rem 4.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  isolation: isolate;
-  overflow: hidden;
-}
-
-.intro-experience.intro-js .intro-stage {
   position: sticky;
   top: 0;
   height: 100svh;
-  padding: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
 }
 
 /* ---------- backdrop ---------- */
 .intro-backdrop {
   position: absolute;
   inset: 0;
-  z-index: 0;
-  background: radial-gradient(120% 120% at 50% 0%, #12296b 0%, var(--intro-navy, #0a1f4d) 55%, var(--intro-navy-deep, #07054d) 100%);
-}
-
-/* ---------- photo collage ---------- */
-/* Every supplied conference photo, tiled into vertical reels of randomly
-   cropped tiles at low opacity over the blue backdrop. Each reel is taller
-   than the viewport and rolls past — alternating direction reel to reel,
-   like adjacent strips of film — driven purely by --intro-progress, the
-   same custom property the blobs already react to. Built at runtime by
-   intro.js (see buildCollage there for the even-distribution / minimal-
-   repetition dealing logic); this file only supplies the look. */
-.intro-collage {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  align-items: flex-start;
-  gap: 2px;
-  opacity: 0.32;
-  overflow: hidden;
-}
-
-.intro-collage-reel {
-  position: relative;
-  flex: 1 1 0%;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  will-change: transform;
-  transform: translate3d(0, calc(var(--intro-reel-base, 0px) + var(--intro-progress, 0) * var(--intro-reel-shift, 0px)), 0);
-}
-
-.intro-collage-reel img {
-  width: 100%;
-  height: var(--intro-tile-h, 210px);
-  flex: none;
-  object-fit: cover;
-  display: block;
-  filter: saturate(0.85) contrast(1.05);
-}
-
-/* dark scrim: keeps beat text legible over the photo collage — sits above
-   the photos/blobs, below the grain and the real content layer */
-.intro-scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  background:
-    linear-gradient(to bottom, rgba(6, 10, 24, 0.06) 0%, rgba(6, 10, 24, 0.32) 45%, rgba(6, 10, 24, 0.72) 100%),
-    radial-gradient(70% 60% at 50% 45%, rgba(6, 10, 27, 0.38) 0%, rgba(6, 10, 27, 0.62) 100%);
+  background: radial-gradient(120% 120% at 50% 0%, #0b1c45 0%, #050e26 55%, #02060f 100%);
 }
 
 /* liquid-glass blobs: drift ambiently forever (independent of scroll) while
-   continuously shifting hue against overall journey progress. Recolored to
-   the MyDP blue/navy family only (no purple/cyan) to match the target
-   palette. mix-blend-mode: screen gives the soft additive "liquid glass"
-   glow. */
+   continuously shifting hue against the overall journey progress — one
+   continuous colour glide rather than a slideshow of fixed murals, so it
+   scales cleanly to any number of beats. mix-blend-mode: screen gives the
+   soft additive glow typical of "liquid glass" surfaces. */
 .intro-blob {
   position: absolute;
-  z-index: 2;
   border-radius: 50%;
   mix-blend-mode: screen;
   will-change: transform, filter;
@@ -182,7 +101,7 @@
   left: -12%;
   width: 62vmax;
   height: 62vmax;
-  background: radial-gradient(circle at 30% 30%, rgba(3, 86, 240, 0.6), transparent 70%);
+  background: radial-gradient(circle at 30% 30%, rgba(3, 86, 240, 0.5), transparent 70%);
   filter: blur(70px) hue-rotate(calc(var(--intro-progress, 0) * 30deg));
   animation: intro-drift-a 26s ease-in-out infinite;
 }
@@ -192,7 +111,7 @@
   right: -16%;
   width: 70vmax;
   height: 70vmax;
-  background: radial-gradient(circle at 60% 60%, rgba(47, 111, 255, 0.46), transparent 70%);
+  background: radial-gradient(circle at 60% 60%, rgba(122, 92, 255, 0.4), transparent 70%);
   filter: blur(80px) hue-rotate(calc(var(--intro-progress, 0) * -35deg));
   animation: intro-drift-b 32s ease-in-out infinite;
 }
@@ -202,7 +121,7 @@
   left: 38%;
   width: 48vmax;
   height: 48vmax;
-  background: radial-gradient(circle at 50% 50%, rgba(3, 140, 240, 0.4), transparent 70%);
+  background: radial-gradient(circle at 50% 50%, rgba(3, 197, 240, 0.34), transparent 70%);
   filter: blur(60px) hue-rotate(calc(var(--intro-progress, 0) * 40deg));
   animation: intro-drift-c 22s ease-in-out infinite;
 }
@@ -212,7 +131,7 @@
   left: -6%;
   width: 44vmax;
   height: 44vmax;
-  background: radial-gradient(circle at 40% 60%, rgba(60, 90, 200, 0.3), transparent 70%);
+  background: radial-gradient(circle at 40% 60%, rgba(80, 110, 220, 0.26), transparent 70%);
   filter: blur(65px) hue-rotate(calc(var(--intro-progress, 0) * -25deg));
   animation: intro-drift-d 29s ease-in-out infinite;
 }
@@ -237,6 +156,42 @@
   50%      { transform: translate(7%, -5%) scale(1.06); }
 }
 
+/* photo collage: every conference photo supplied, tiled into vertical
+   reels of randomly cropped tiles at low opacity over the blue backdrop.
+   Each reel (built by intro.js) is taller than the viewport and rolls
+   past — alternating direction reel to reel, like adjacent strips of
+   film — driven purely by --intro-progress, the same custom property
+   everything else in the backdrop already reacts to. */
+.intro-collage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  opacity: 0.26;
+  overflow: hidden;
+}
+
+.intro-collage-reel {
+  position: relative;
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  will-change: transform;
+  transform: translate3d(0, calc(var(--intro-reel-base, 0px) + var(--intro-progress, 0) * var(--intro-reel-shift, 0px)), 0);
+}
+
+.intro-collage-reel img {
+  width: 100%;
+  height: var(--intro-tile-h, 190px);
+  flex: none;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.85) contrast(1.05);
+  transform: scale(var(--intro-tile-scale, 1));
+}
+
 .intro-backdrop::before {
   content: "";
   position: absolute;
@@ -254,42 +209,25 @@
   background: linear-gradient(to bottom, rgba(6, 10, 24, 0) 60%, rgba(6, 10, 24, 0.65) 100%);
 }
 
-/* subtle film grain for depth — cheap inline SVG noise, screened on top at
-   low opacity so it reads as texture rather than visible speckling. No
-   external request: this is a data: URI, same convention as the rest of
-   this repo's local-only assets. */
+/* subtle film grain for depth — cheap SVG noise, screened on top at low
+   opacity so it reads as texture rather than visible speckling */
 .intro-grain {
   position: absolute;
   inset: 0;
-  z-index: 4;
   opacity: 0.05;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ---------- brand mark ---------- */
-/* Default: a calm, static, in-flow mark above the welcome text. */
 .intro-mark {
-  position: static;
-  z-index: 5;
-  width: 96px;
-  margin: 0 auto 2rem;
-  opacity: 1;
-  transition: opacity 0.4s ease;
-}
-
-.intro-experience.intro-js .intro-mark {
   position: absolute;
   top: 8.5rem;
   left: 50%;
   width: 128px;
-  margin: 0;
   transform: translateX(-50%);
+  opacity: 1;
   will-change: transform, opacity;
-}
-
-.intro-mark.is-hidden {
-  opacity: 0;
 }
 
 .intro-mark img {
@@ -300,14 +238,15 @@
 }
 
 /* ---------- skip control ---------- */
-/* Hidden by default: with no JS there's no scroll-jacking to skip — the
-   welcome panel is just ordinary content ahead of the real page. */
 .intro-skip {
-  display: none;
   position: absolute;
   top: 7rem;
   right: 1.75rem;
-  z-index: 5;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  box-sizing: border-box;
   color: rgba(255, 255, 255, 0.72);
   font-size: 0.85rem;
   font-weight: 500;
@@ -318,67 +257,49 @@
   background: rgba(255, 255, 255, 0.06);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  text-decoration: none;
   transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
-}
-
-.intro-overlay.intro-js .intro-skip {
-  display: inline-flex;
 }
 
 .intro-skip:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.14);
   border-color: rgba(255, 255, 255, 0.4);
-  text-decoration: none;
 }
 
 /* ---------- beats ---------- */
 .intro-beats {
   position: relative;
-  z-index: 5;
   width: 100%;
   max-width: 720px;
-  height: auto;
-  padding: 0 1.5rem;
-}
-
-.intro-experience.intro-js .intro-beats {
   height: min(64vh, 560px);
+  padding: 0 1.75rem;
 }
 
 .intro-beat {
-  position: relative;
-  display: none;
+  position: absolute;
+  inset: 0;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  opacity: 1;
-}
-
-/* default (no-JS-safe) state: first beat visible and static, the rest
-   simply aren't rendered visually — nothing to skip, nothing scroll-jacked */
-.intro-beat:first-child {
-  display: flex;
-}
-
-.intro-experience.intro-js .intro-beat {
-  display: flex;
-  position: absolute;
-  inset: 0;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(16px) scale(0.98);
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
-.intro-experience.intro-js .intro-beat.is-active {
+/* default (pre-JS / no-JS) state: first beat visible and static */
+.intro-beat:first-child {
+  position: relative;
   opacity: 1;
+}
+
+.intro-experience.intro-js .intro-beat {
+  position: absolute;
+}
+
+.intro-beat.is-active {
   pointer-events: auto;
-  transform: translateY(0) scale(1);
 }
 
 .intro-eyebrow {
@@ -392,12 +313,17 @@
 
 .intro-heading {
   color: #fff;
-  font-size: clamp(2.1rem, 6vw, 4rem);
+  font-size: clamp(2.4rem, 6vw, 4.25rem);
   font-weight: 600;
   line-height: 1.05;
   letter-spacing: -0.03em;
   margin: 0 0 1.1rem;
   text-wrap: balance;
+}
+
+/* emphasis word: used sparingly on a single word per beat */
+.intro-shine {
+  color: #fff;
 }
 
 .intro-sub {
@@ -410,22 +336,7 @@
 }
 
 .intro-cta {
-  display: inline-block;
   margin-top: 1.75rem;
-  color: var(--intro-navy-deep, #07054d);
-  font-weight: 700;
-  font-size: 1rem;
-  padding: 0.75rem 1.75rem;
-  border-radius: 999px;
-  background: #ffffff;
-  text-decoration: none;
-  transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.intro-cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px -12px rgba(255, 255, 255, 0.35);
-  text-decoration: none;
 }
 
 .intro-credit {
@@ -435,26 +346,217 @@
   letter-spacing: 0.01em;
 }
 
-/* ---------- feature chip rows ---------- */
-/* plain pill rows only — no invented UI/form mock cards, this is a literal
-   text-for-text recreation of the reference beats, not a reinterpretation */
+/* continuous word-by-word writing: every word is its own span, and its
+   opacity/blur/chromatic fringe is set directly by intro.js on every scroll
+   frame — no CSS transition here, so nothing "pops" at a threshold. The
+   words themselves ARE the scrollbar, in effect: how far you've scrolled
+   through a beat is exactly how much of it has been "written". */
+.intro-word {
+  display: inline-block;
+  transition: none;
+}
+
+/* feature peeks & the closing CTA fade in continuously too (driven by
+   intro.js from the same per-beat progress that writes the words) rather
+   than popping in on a fixed-duration CSS transition — nothing in this
+   experience is triggered by crossing a hard threshold except pointer-
+   events (is-active, below) and the chip bounce (is-revealed, further
+   down), both intentionally binary. */
+.intro-experience.intro-js .intro-feature,
+.intro-experience.intro-js .intro-cta {
+  opacity: 0;
+}
+
+/* ---------- feature peeks ---------- */
 .intro-feature {
   position: relative;
   margin-top: 1.75rem;
 }
 
+/* card-style peeks (ui / forms) get a tiltable inner wrapper — intro.js
+   applies a subtle pointer-reactive rotateX/rotateY to this element on fine
+   pointers, kept separate from .intro-feature so it never fights the
+   entrance transform above. */
+.intro-feature-inner {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+  overflow: hidden;
+}
+
+/* a prismatic, rainbow-tinted sheen sweeps across card-style peeks as they
+   fade in — a "liquid glass" specular highlight, like light refracting
+   through curved glass, driven by the same continuous --sheen custom
+   property intro.js sets on .intro-feature-inner (no keyframe animation:
+   its position is scroll position, not a timer). */
+.intro-feature-inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 14%,
+    rgba(5, 14, 38, 0.45) 34%,
+    rgba(255, 255, 255, 0.75) 50%,
+    rgba(5, 14, 38, 0.45) 66%,
+    transparent 86%
+  );
+  transform: translateX(calc(var(--sheen, -130) * 1%));
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* a slow-rotating halo glows behind each glass card — white easing through
+   navy, like light raking across curved glass, rather than a literal
+   rainbow. The containing block lives one level up so it can extend past
+   the card's own clipped edges. */
+.intro-feature--ui,
+.intro-feature--forms {
+  position: relative;
+  isolation: isolate;
+}
+
+.intro-feature--ui::before,
+.intro-feature--forms::before {
+  content: "";
+  position: absolute;
+  inset: -18px;
+  z-index: -1;
+  border-radius: 26px;
+  background: conic-gradient(
+    from var(--halo-angle, 0deg),
+    #ffffff, #050e26, #ffffff, #050e26, #ffffff
+  );
+  filter: blur(20px);
+  opacity: 0.48;
+  animation: intro-halo-spin 9s linear infinite;
+}
+
+@keyframes intro-halo-spin {
+  to { --halo-angle: 360deg; }
+}
+
+@property --halo-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* — "a new look, a new feel": a small browser-chrome mock of the redesigned UI — */
+.intro-feature--ui .intro-feature-inner {
+  width: 260px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.intro-mock-chrome {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.intro-mock-chrome span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.intro-mock-chrome i {
+  flex: 1;
+  height: 8px;
+  margin-left: 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  font-style: normal;
+}
+
+.intro-mock-body {
+  padding: 14px;
+  text-align: left;
+}
+
+.intro-mock-hero {
+  height: 46px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, rgba(3, 86, 240, 0.55), rgba(150, 110, 255, 0.4));
+}
+
+.intro-mock-line {
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.18);
+  margin-bottom: 7px;
+}
+
+.intro-mock-line--lg { width: 78%; }
+.intro-mock-line--sm { width: 52%; margin-bottom: 0; }
+
+.intro-mock-pill {
+  width: 64px;
+  height: 16px;
+  border-radius: 999px;
+  margin-top: 10px;
+  background: var(--accent, #0356f0);
+}
+
+/* — "registration, reimagined": a small form mock — */
+.intro-feature--forms .intro-feature-inner {
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px;
+}
+
+.intro-mock-field {
+  height: 15px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.intro-mock-field.is-focus {
+  border-color: rgba(120, 170, 255, 0.9);
+  box-shadow: 0 0 0 3px rgba(3, 86, 240, 0.25);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.intro-mock-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.intro-mock-confirm img {
+  width: 15px;
+  height: 15px;
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+}
+
+/* — chip rows: "smoother, from the first tap", "that's not all", and the
+   closing "ready?" peek — plain pill rows, no tilt/sheen (no card surface) — */
 .intro-feature--stats,
 .intro-feature--highlights,
-.intro-links {
+.intro-feature--next {
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
   justify-content: center;
   max-width: 30em;
-}
-
-.intro-links {
-  margin-top: 0.5rem;
 }
 
 .intro-chip {
@@ -468,7 +570,9 @@
   letter-spacing: -0.01em;
 }
 
-/* springier, more staggered cascade for the "good news" chip beats */
+/* the highlight-reel beat gets its own bouncier, more staggered cascade —
+   a springier cubic-bezier than the rest of the copy, since it's meant to
+   feel like a flurry of good news rather than a calm reveal */
 .intro-experience.intro-js .intro-feature--highlights .intro-chip,
 .intro-experience.intro-js .intro-feature--stats .intro-chip {
   opacity: 0;
@@ -478,8 +582,8 @@
     transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.intro-feature--highlights.is-revealed .intro-chip,
-.intro-feature--stats.is-revealed .intro-chip {
+.intro-experience.intro-js .intro-feature--highlights.is-revealed .intro-chip,
+.intro-experience.intro-js .intro-feature--stats.is-revealed .intro-chip {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
@@ -491,21 +595,19 @@
 .intro-feature--highlights.is-revealed .intro-chip:nth-child(3),
 .intro-feature--stats.is-revealed .intro-chip:nth-child(3) { transition-delay: 0.16s; }
 .intro-feature--highlights.is-revealed .intro-chip:nth-child(4) { transition-delay: 0.23s; }
+.intro-feature--highlights.is-revealed .intro-chip:nth-child(5) { transition-delay: 0.30s; }
+.intro-feature--highlights.is-revealed .intro-chip:nth-child(6) { transition-delay: 0.37s; }
 
 /* ---------- progress dots ---------- */
 .intro-progress {
-  display: none;
   position: absolute;
   right: 2rem;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  z-index: 5;
-}
-
-.intro-overlay.intro-js .intro-progress {
-  display: flex;
+  z-index: 3;
 }
 
 .intro-dot {
@@ -524,11 +626,11 @@
 
 /* ---------- scroll cue ---------- */
 .intro-scrollcue {
-  display: none;
   position: absolute;
   left: 50%;
   bottom: 2.5rem;
   transform: translateX(-50%);
+  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.6rem;
@@ -537,16 +639,8 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  z-index: 5;
+  z-index: 3;
   transition: opacity 0.4s ease;
-}
-
-.intro-overlay.intro-js .intro-scrollcue {
-  display: flex;
-}
-
-.intro-scrollcue.is-hidden {
-  opacity: 0;
 }
 
 .intro-scrollcue span {
@@ -565,94 +659,124 @@
 
 /* ---------- small screens ---------- */
 @media (max-width: 640px) {
-  .intro-experience.intro-js .intro-mark { width: 88px; top: 6.5rem; }
-  .intro-experience.intro-js .intro-beats { max-width: 92vw; height: min(70vh, 580px); }
+  .intro-mark { width: 88px; top: 6.5rem; }
+  .intro-beats { max-width: 92vw; height: min(70vh, 580px); }
   .intro-progress { display: none; }
   .intro-skip { top: 5.5rem; right: 1.25rem; }
+  .intro-feature--ui .intro-feature-inner { width: 88vw; max-width: 300px; }
+  .intro-feature--forms .intro-feature-inner { width: 84vw; max-width: 280px; }
   .intro-feature--stats,
   .intro-feature--highlights,
-  .intro-links { max-width: 92vw; }
-  .intro-collage-reel img { height: 150px; }
+  .intro-feature--next { max-width: 92vw; }
 }
 
+/* ---------- no-JS fallback ---------- */
+.no-js .intro-experience {
+  height: auto;
+}
+
+.no-js .intro-stage {
+  position: static;
+  height: auto;
+  padding: 7rem 0 5rem;
+}
+
+.no-js .intro-mark { position: static; margin: 0 auto 2.5rem; transform: none; }
+.no-js .intro-beat { display: none; }
+.no-js .intro-beat:first-child { display: flex; }
+.no-js .intro-progress,
+.no-js .intro-scrollcue,
+.no-js .intro-skip { display: none; }
+.no-js .intro-blob { animation: none; }
+
 /* ---------- already seen this session ---------- */
-/* set on <html> by intro.js whenever sessionStorage remembers the intro
-   already played once this session (or immediately, defensively, at
-   DOMContentLoaded before the heavy engine even considers initializing).
-   The real page underneath renders uninterrupted; the "Bored?" button can
-   still bring the overlay back on demand. */
-.mydp-intro-seen .intro-overlay {
+/* set on <html> by a tiny synchronous script in <head> (before first paint,
+   so there's zero flash) whenever sessionStorage remembers the intro
+   already played once this session — e.g. the user clicked the nav logo /
+   "Home" after browsing elsewhere on the site. The homepage underneath
+   renders immediately, uninterrupted. intro.js still wires up the "Bored?"
+   button so the experience can be replayed on demand; openIntro() clears
+   this class so the overlay can reappear when asked for. */
+.mundp-intro-seen .intro-overlay {
   display: none;
 }
 
-/* ---------- homepage "Intro" trigger ---------- */
-/* Lives in the signed-in homepage hero (home.html). Hidden until intro.js
-   has actually initialized the experience — with no JS or under
-   prefers-reduced-motion there is nothing to open. Base look comes from
-   the portal's .button style in style.css; this only handles the reveal
-   and icon spacing. */
-.home-intro-btn { display: none; }
-.intro-js-ready .home-intro-btn {
+/* ---------- "Bored?" replay trigger ---------- */
+/* lives on the real homepage, underneath the overlay; hidden until JS has
+   actually initialized the experience (nothing to replay otherwise) */
+.intro-replay {
+  display: none;
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 20, 55, 0.82);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 28px -14px rgba(10, 20, 55, 0.55);
+  transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1), background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.intro-js-ready .intro-replay {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 28px;
-  padding: 10px 22px;
-  font-size: 13.5px;
+  justify-content: center;
 }
-.home-intro-btn svg { display: block; }
 
-/* ---------- manual-only overlay (homepage) ---------- */
-/* Without .intro-js promotion the overlay would render as the static
-   in-flow welcome panel (the login page's no-JS fallback). Pages that host
-   the intro purely for on-demand replay keep it out of the flow entirely
-   until the "Intro" button promotes it. */
-.intro-overlay--manual:not(.intro-js) { display: none; }
+.intro-replay:hover {
+  transform: translateY(-2px);
+  background: rgba(3, 86, 240, 0.92);
+  box-shadow: 0 16px 32px -14px rgba(3, 86, 240, 0.55);
+}
+
+.intro-replay:active {
+  transform: translateY(0) scale(0.97);
+}
+
+@media (max-width: 640px) {
+  .intro-replay { right: 1rem; bottom: 1rem; }
+}
 
 /* ---------- reduced motion: skip the journey, keep the welcome ---------- */
-/* Belt-and-suspenders: intro.js already declines to add .intro-js at all
-   when prefers-reduced-motion is set, so the default (safe) rules above
-   apply on their own. This block additionally forces any already-enhanced
-   state back to the static welcome panel, in case the OS setting changes
-   mid-session on a page that already promoted the overlay. */
 @media (prefers-reduced-motion: reduce) {
-  .intro-experience.intro-js {
+  .intro-experience {
     height: auto;
   }
 
-  .intro-experience.intro-js .intro-stage {
+  .intro-stage {
     position: static;
     height: auto;
-    padding: 6.5rem 1.5rem 4.5rem;
+    padding: 7rem 0 5rem;
   }
 
-  .intro-experience.intro-js .intro-mark {
+  .intro-mark {
     position: static;
-    width: 96px;
-    margin: 0 auto 2rem;
+    margin: 0 auto 2.5rem;
     transform: none;
-    opacity: 1 !important;
   }
 
-  .intro-experience.intro-js .intro-beats {
-    height: auto;
-  }
-
-  .intro-experience.intro-js .intro-beat {
+  .intro-beat {
     display: none;
-    position: relative;
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
   }
 
-  .intro-experience.intro-js .intro-beat:first-child {
+  .intro-beat:first-child {
     display: flex;
+    position: relative;
   }
 
-  .intro-overlay.intro-js .intro-progress,
-  .intro-overlay.intro-js .intro-scrollcue,
-  .intro-overlay.intro-js .intro-skip {
+  .intro-progress,
+  .intro-scrollcue {
     display: none;
   }
 
@@ -660,11 +784,61 @@
     animation: none;
   }
 
-  .intro-collage-reel {
-    transform: none !important;
+  .intro-collage {
+    display: none;
+  }
+
+  .intro-feature--ui::before,
+  .intro-feature--forms::before {
+    animation: none;
   }
 
   .intro-backdrop::before {
     transform: none;
   }
+}
+
+/* ---------- home hero section + scrim ----------
+   The homepage's in-flow hero (#main-content) supplies its own ground;
+   .home-hero-scrim darkens the static hero imagery on the pages that
+   layer content over it (theme, committees). */
+#main-content.section-hero {
+  position: relative;
+  overflow: hidden;
+  background-image: none;
+}
+
+#main-content .grid-halves-section {
+  position: relative;
+  z-index: 1;
+}
+
+.home-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 15, 40, 0.6) 0%, rgba(6, 15, 40, 0.42) 45%, rgba(6, 15, 40, 0.78) 100%);
+}
+
+
+/* ---------- MyDP port compat ---------- */
+/* the site's closing CTA is a Webflow .button-secondary.is-white; MyDP has
+   no Webflow button classes, so the same white outline pill is drawn here */
+.intro-cta {
+  display: inline-block;
+  padding: 12px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  background: transparent;
+  color: #fff;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.intro-cta:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #0a1f4d;
+  text-decoration: none;
 }
