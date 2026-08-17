@@ -42,7 +42,7 @@
         {% if doc.description %}<p>{{ doc.description }}</p>{% endif %}
     </div>
     <div class="header-actions">
-        <a href="{{ url_for('dashboard') }}" class="button">← Back</a>
+        <a href="{{ url_for('dashboard') }}" class="button outline">← Back</a>
         {% if current_user.role == 'admin' or current_user.id == doc.uploader_id
               or (current_user.role == 'chair' and current_user.committee == doc.committee) %}
         <form method="post" action="{{ url_for('delete_document', doc_id=doc.id) }}"

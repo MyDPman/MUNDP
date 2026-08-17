@@ -30,7 +30,7 @@
               onsubmit="return confirm('Reset all {{ committee }} tally entries to zero? You can undo this from the Recent resets section.');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="committee" value="{{ committee }}">
-            <button type="submit" class="button">↺ Reset {{ committee }}</button>
+            <button type="submit" class="button outline">↺ Reset {{ committee }}</button>
         </form>
     </header>
 

@@ -178,23 +178,16 @@ a[href^="mailto:"]:hover {
     filter: drop-shadow(0 10px 26px rgba(0, 0, 0, 0.18));
 }
 
-/* ---------- sidebar: the site's light liquid-glass chrome ----------
-   modelundp.org's navbar is translucent white with backdrop blur, ink
-   links that turn accent-blue on hover, and a hairline edge. The MyDP
-   sidebar keeps its layout and behaviour and adopts that exact skin. */
+/* ---------- sidebar: flat white, hairline edge ----------
+   Plain opaque white chrome — no glass, no blur. The most minimal frame
+   for the light editorial pages; the hairline is the only separation. */
 .sidebar {
     color: var(--ink);
-    background: rgba(255, 255, 255, 0.68);
-    -webkit-backdrop-filter: blur(22px) saturate(1.8);
-    backdrop-filter: blur(22px) saturate(1.8);
+    background: #ffffff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     border-right: 1px solid rgba(0, 0, 0, 0.06);
     box-shadow: none;
-}
-
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .sidebar {
-        background: rgba(255, 255, 255, 0.97);
-    }
 }
 
 .sidebar-brand {
@@ -709,9 +702,8 @@ select:focus,
     color: var(--ink-soft);
 }
 
-/* ---------- sidebar: a touch more presence over the fabric ---------- */
+/* ---------- sidebar spacing ---------- */
 .sidebar {
-    background: rgba(255, 255, 255, 0.72);
     padding-top: 22px;
 }
 
@@ -751,4 +743,94 @@ select:focus,
 .voting-pill-open::before,
 .status-badge::before {
     animation: none !important;
+}
+
+/* ==========================================================================
+   Button hierarchy — filled navy is reserved for each page's true primary
+   action. Repeated row-level controls and navigation go quiet.
+   ========================================================================== */
+/* tally row actions: a wall of navy pills becomes quiet outline chips */
+.tally-btn {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    font-weight: 600;
+}
+
+.tally-btn:hover {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: var(--ink);
+    color: var(--ink);
+}
+
+.tally-btn:active {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* ---------- document viewer: neutral, editorial chrome ---------- */
+.pdf-pane, .gdoc-pane, .comments-pane {
+    border-color: var(--hairline-soft);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.pdf-toolbar, .gdoc-toolbar {
+    background: var(--bg-subtle);
+    color: var(--ink);
+    border-bottom: 1px solid var(--hairline-soft);
+}
+
+.pdf-toolbar button {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+.pdf-toolbar button:hover {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: var(--ink);
+    color: var(--ink);
+}
+
+.pdf-container {
+    background: var(--bg-subtle);
+}
+
+#pdf-canvas {
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.18);
+}
+
+/* the base sheet forces white labels onto all filled buttons with a long
+   :not() chain; these quiet controls need their ink back at equal force */
+.tally-btn,
+.tally-btn:hover,
+.pdf-toolbar button,
+.pdf-toolbar button:hover,
+.gdoc-toolbar .button,
+.gdoc-toolbar .button:hover,
+.user-edit-toggle,
+.user-edit-toggle:hover {
+    color: var(--ink) !important;
+}
+
+/* admin user rows: Edit is a repeated row control, not a page action */
+.user-edit-toggle {
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+.user-edit-toggle:hover {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: var(--ink);
+}
+
+/* viewer toolbar links (e.g. "Open in Google Docs") go quiet too */
+.gdoc-toolbar .button {
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+.gdoc-toolbar .button:hover {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: var(--ink);
 }
