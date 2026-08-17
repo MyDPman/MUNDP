@@ -6,6 +6,7 @@
     <title>{% block title %}MUNDP Portal{% endblock %}</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/mydp_world.png') }}">
     <link rel="stylesheet" href="{{ asset_url('css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset_url('css/mundp-theme.css') }}">
     <script>
     // Conference time helper — formats UTC strings in Türkiye time (GMT+3).
     window.fmtLocal = function (iso, style) {
@@ -37,7 +38,7 @@
 {% if current_user %}
 <aside class="sidebar">
     <a class="sidebar-brand" href="{{ url_for('index') }}">
-        <img src="{{ url_for('static', filename='img/MyDP_Logo_Fixed.png') }}" alt="MyDP" class="brand-logo">
+        <img src="{{ url_for('static', filename='img/MyDP_Logo_Blue.png') }}" alt="MyDP" class="brand-logo">
         <span class="brand-text">MyDP</span>
     </a>
     <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
