@@ -53,6 +53,16 @@ body.home-quilt .flash-area {
     opacity: 1;
 }
 
+/* pattern-only variant (homescreen): just the quilted fabric — no
+   photo-mosaic mark, so no JS, no pooled shadow, visible immediately */
+.hero-spiral--pattern {
+    opacity: 1;
+}
+
+.hero-spiral--pattern::before {
+    display: none;
+}
+
 /* a faint cool shadow pooling behind the mark, so the helix reads as an
    object resting against the padded wall */
 .hero-spiral::before {

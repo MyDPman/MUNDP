@@ -85,8 +85,7 @@
 {% set intro_manual = true %}
 {% include "_intro.html" %}
 
-<div class="hero-spiral" id="hero-spiral" aria-hidden="true"
-     data-img-base="{{ url_for('static', filename='img/collage/') }}"></div>
+<div class="hero-spiral hero-spiral--pattern" aria-hidden="true"></div>
 <div class="hero-float-scrim" aria-hidden="true"></div>
 
 <div class="home-hero" id="main-content">
@@ -106,5 +105,4 @@
 
 {% block scripts %}
 <script defer src="{{ asset_url('js/intro.js') }}"></script>
-<script defer src="{{ asset_url('js/hero-spiral.js') }}"></script>
 {% endblock %}
