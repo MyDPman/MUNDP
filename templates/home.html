@@ -81,7 +81,8 @@
     <img class="home-hero-logo"
          src="{{ url_for('static', filename='img/mydp_world_fix.png') }}"
          alt="MyDP">
-    <h1 class="home-hero-title">Welcome to MyDP</h1>
+    <h1 class="home-hero-title" id="home-type"
+        data-phrases='["Step forward and lead the change the world needs.", "Your committee, live at your fingertips.", "Resolutions, amendments and votes — one place.", "The digital floor of MUNDP 2027."]'>Welcome to MyDP</h1>
     <p class="home-hero-sub">MUNDP Digital Interface</p>
     <div class="home-hero-line"></div>
     <p class="home-hero-greeting">Hello, <strong>{{ current_user.display_name }}</strong></p>

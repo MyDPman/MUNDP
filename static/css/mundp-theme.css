@@ -804,13 +804,12 @@ select:focus,
 }
 
 /* ==========================================================================
-   Motion restraint — decorative animation removed portal-wide.
-   Interfaces this serious hold still: content renders in place, chrome
-   never slides in, nothing pulses for attention. Functional feedback
-   (loading spinner, invalid-form shake, popover open) is kept.
+   Motion — one deliberate system.
+   Pages arrive: content rises in with a quick soft stagger (style.css's
+   own entrance cascade, re-enabled), navigation cross-fades cleanly, and
+   headers type themselves out (type-header.js). Chrome holds still: the
+   sidebar never slides in, and nothing pulses for attention.
    ========================================================================== */
-.main-inner > *,
-.main-inner > *:nth-child(n),
 .sidebar-brand,
 .sidebar-nav .nav-item,
 .sidebar-nav .nav-item:nth-child(n) {
@@ -822,6 +821,80 @@ select:focus,
 .voting-pill-open::before,
 .status-badge::before {
     animation: none !important;
+}
+
+/* ---------- page swap: a clean, quick cross-fade — no blur, no scale.
+   The sidebar carries its own identity so the chrome holds perfectly
+   still while the content fades. ---------- */
+@view-transition {
+    navigation: auto;
+}
+
+.sidebar {
+    view-transition-name: mundp-nav;
+}
+
+::view-transition-group(mundp-nav) {
+    animation-duration: 0.01s;
+}
+
+::view-transition-old(root) {
+    animation-duration: 0.16s;
+}
+
+::view-transition-new(root) {
+    animation-duration: 0.26s;
+}
+
+/* ---------- typed headers ---------- */
+.type-caret {
+    display: inline-block;
+    width: 0.085em;
+    height: 0.92em;
+    margin-left: 0.09em;
+    border-radius: 1px;
+    background: var(--accent);
+    vertical-align: -0.06em;
+    animation: type-blink 1.05s steps(1) infinite;
+}
+
+@keyframes type-blink {
+    50% { opacity: 0; }
+}
+
+/* once the title lands, the caret blinks off */
+.type-caret-done {
+    transition: opacity 0.5s ease 0.45s;
+    opacity: 0;
+}
+
+/* badges inside a typed h1 hold back, then settle in after the title */
+.type-extra {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.type-extra.type-extra-in {
+    opacity: 1;
+    transform: none;
+}
+
+/* the homescreen's rotating line keeps one line of height while empty
+   between phrases (site hero-float.css) */
+#home-type {
+    min-height: 1em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .type-caret { display: none; }
+    .type-extra { opacity: 1; transform: none; transition: none; }
+
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
 }
 
 /* ==========================================================================
