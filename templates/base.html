@@ -38,14 +38,14 @@
 {% if current_user %}
 <aside class="sidebar">
     <a class="sidebar-brand" href="{{ url_for('index') }}">
-        <img src="{{ url_for('static', filename='img/MyDP_Logo_Blue.png') }}" alt="MyDP" class="brand-logo">
-        <span class="brand-text">MyDP</span>
+        <span class="brand-text">MyDP <span class="brand-line">Portal</span></span>
     </a>
     <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
         <span></span><span></span><span></span>
     </button>
 
     <nav class="sidebar-nav" aria-label="Primary">
+        <div class="nav-section">Committee</div>
         <a class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}"
            href="{{ url_for('dashboard') }}">
             <span>Resolutions</span>
@@ -91,6 +91,7 @@
         </a>
         {% endif %}
         {% if current_user.role not in ('exec_gc', 'dsg') %}
+        <div class="nav-section">Conference</div>
         <a class="nav-item {% if request.endpoint == 'schedule' %}active{% endif %}"
            href="{{ url_for('schedule') }}">
             <span>Schedule</span>
@@ -103,11 +104,13 @@
             <span>Help</span>
         </a>
         {% endif %}
+        <div class="nav-section">Account</div>
         <a class="nav-item {% if request.endpoint and request.endpoint.startswith('settings') %}active{% endif %}"
            href="{{ url_for('settings') }}">
             <span>Settings</span>
         </a>
         {% if current_user.role == 'admin' %}
+        <div class="nav-section">Admin</div>
         <a class="nav-item {% if request.endpoint == 'admin_users' %}active{% endif %}"
            href="{{ url_for('admin_users') }}">
             <span>Users</span>
