@@ -97,9 +97,9 @@
     --focus-ring:   rgba(7, 5, 77, 0.55);
 
     /* Type */
-    --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Segoe UI", sans-serif;
-    --font-text:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", sans-serif;
-    --font-mono:    ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+    --font-display: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+    --font-text:    system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+    --font-mono:    ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Roboto Mono", monospace;
     --font-label:   var(--font-text);   /* caps labels: tailored, not terminal */
 
     /* Shape — editorial: nearly square */
