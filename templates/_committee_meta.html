@@ -1,0 +1,20 @@
+{# Committee directory: full names, photos and categories, mirrored from
+   modelundp.org/committees. Import as a module:
+   {% import '_committee_meta.html' as cm %} then cm.committee_meta. #}
+{% set committee_meta = {
+    'APQ':    ('Advisory Panel on the Question of Amazon Basin', 'apq.jpg', 'Special'),
+    'CCPCJ':  ('The Commission on Crime Prevention and Criminal Justice', 'ccpcj.jpg', 'Special'),
+    'CELAC':  ('Community of Latin American and Caribbean States', 'celac.webp', 'Special'),
+    'ECOSOC': ('Economic and Social Council', 'ecosoc.webp', 'Special'),
+    'HISTO':  ('Historical Committee', None, 'Special'),
+    'ICJ':    ('The International Court of Justice', 'icj.webp', 'Special'),
+    'OHCHR':  ('Office of the High Commissioner for Human Rights', 'ohchr.webp', 'Development'),
+    'OIF':    ('L’Organisation Internationale de la Francophonie', 'oif.jpg', 'Special'),
+    'UNDPPA': ('United Nations Department of Political and Peacebuilding Affairs', 'undppa.jpg', 'Development'),
+    'UNEP':   ('United Nations Environment Programme', 'unep.jpg', 'Development'),
+    'UNESCO': ('United Nations Educational, Scientific and Cultural Organization', 'unesco.webp', 'Development'),
+    'UNHCR':  ('United Nations High Commissioner for Refugees', 'unhcr.jpg', 'Development'),
+    'UNIDO':  ('United Nations Industrial Development Organisation', 'unido.jpg', 'Development'),
+    'UNODA':  ('United Nations Office for Disarmament Affairs', 'unoda.webp', 'Development'),
+    'UNSC':   ('United Nations Security Council', 'unsc.webp', 'Special'),
+} %}

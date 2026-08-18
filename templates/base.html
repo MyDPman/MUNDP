@@ -64,12 +64,6 @@
                 <span class="tt-dot" aria-hidden="true"></span>
                 <span class="tt-day">Day</span><span class="tt-night">Night</span>
             </button>
-            {% if current_user %}
-            <form method="post" action="{{ url_for('logout') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="masthead-signout">Sign out</button>
-            </form>
-            {% endif %}
         </div>
     </div>
 </header>
@@ -93,11 +87,13 @@
                 <span>My Committee</span>
             </a>
             {% endif %}
-            {% if current_user.role in ('exec_gc', 'dsg') %}
+            {% if current_user.role in ('exec_gc', 'dsg', 'admin') %}
             <a class="nav-item {% if request.endpoint == 'my_committee' %}active{% endif %}"
                href="{{ url_for('my_committee') }}">
                 <span>Committees</span>
             </a>
+            {% endif %}
+            {% if current_user.role in ('exec_gc', 'dsg') %}
             <a class="nav-item {% if request.endpoint == 'exec_calendar' %}active{% endif %}"
                href="{{ url_for('exec_calendar') }}">
                 <span>Calendar</span>
@@ -165,10 +161,6 @@
                     <button type="submit" class="masthead-signout">← Back to {{ impersonator.name }}</button>
                 </form>
                 {% endif %}
-                <form method="post" action="{{ url_for('logout') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="masthead-signout">Sign out</button>
-                </form>
             </div>
         </nav>
         <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
@@ -213,19 +205,6 @@
         {% block content %}{% endblock %}
     </div>
 </main>
-
-<footer class="colophon">
-    <div class="colophon-inner">
-        <span>MyDP — MUNDP Digital Portal</span>
-        <span>
-            {% if external_website_url %}<a href="{{ external_website_url }}" target="_blank" rel="noopener noreferrer">Website</a> ·{% endif %}
-            <a href="{{ url_for('help_page') }}">Help</a> ·
-            <a href="{{ url_for('contact') }}">Contact</a> ·
-            <a href="{{ url_for('credits') }}">Credits</a>
-        </span>
-        <span>Crafted by Baristas</span>
-    </div>
-</footer>
 
 {% block scripts %}{% endblock %}
 <script>

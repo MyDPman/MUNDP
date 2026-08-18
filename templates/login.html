@@ -1,11 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Sign in — MUNDP Portal{% endblock %}
-{% block head %}
-<link rel="stylesheet" href="{{ asset_url('css/intro.css') }}">
-{% endblock %}
+{% block title %}Sign in · MUNDP Portal{% endblock %}
 {% block content %}
-{% include "_intro.html" %}
-
 <section id="main-content" class="login-landing">
 <div class="auth-card">
     <h1>Sign in</h1>
@@ -33,7 +28,7 @@
                        autocapitalize="characters" spellcheck="false" maxlength="20"
                        placeholder="e.g. AB12CD34EF56">
             </label>
-            <p class="muted small">Enter the 12-character code you were given — no username needed.</p>
+            <p class="muted small">Enter the 12-character code you were given. No username needed.</p>
         </div>
 
         <section class="user-agreement" aria-label="User Agreement">
@@ -130,5 +125,4 @@
     });
 })();
 </script>
-<script defer src="{{ asset_url('js/intro.js') }}"></script>
 {% endblock %}

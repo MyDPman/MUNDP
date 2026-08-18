@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Home — MUNDP Portal{% endblock %}
+{% block title %}Home · MUNDP Portal{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ asset_url('css/intro.css') }}">
@@ -14,14 +14,12 @@
         <h1 class="front-hero-title">The <span class="hero-role" id="hero-role">Delegate's</span><br><span class="accent-line">Edition</span></h1>
         <p class="front-hero-standfirst">
             Good day, <strong>{{ current_user.display_name }}</strong>.
-            This is MyDP — resolutions, committees, notes and the summit,
-            typeset for MUNDP 2027.
+            This is MyDP, the digital home of MUNDP 2027. Resolutions,
+            committees, notes and the summit all live here.
         </p>
         <div class="front-hero-actions">
-            <a class="button" href="{{ url_for('dashboard') }}">Open Resolutions →</a>
-            <button type="button" class="button outline home-intro-btn" id="intro-replay">
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
-                Play intro
+            <button type="button" class="button home-intro-btn" id="intro-replay">
+                Open the Tutorial →
             </button>
         </div>
     </div>

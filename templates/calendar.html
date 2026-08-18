@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Calendar — MUNDP Portal{% endblock %}
+{% block title %}Calendar · MUNDP Portal{% endblock %}
 {% block content %}
 <div class="page-header">
     <div>
@@ -15,7 +15,7 @@
     <div class="section-head">
         <h2 id="task-form-heading">Add a task</h2>
     </div>
-    <p class="muted small">Tasks are assigned to a role — everyone holding that role sees it.</p>
+    <p class="muted small">Tasks are assigned to a role, and everyone holding that role sees it.</p>
     <form method="post" action="{{ url_for('exec_calendar_add_task') }}" class="form form-grid" id="task-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label>
@@ -116,7 +116,7 @@
         <span class="tab-count">{{ tasks|length }}</span>
     </div>
     {% if not current_user.exec_role_id %}
-    <p class="muted small empty-committee">You haven't been assigned a role yet — ask an admin.</p>
+    <p class="muted small empty-committee">You haven't been assigned a role yet. Ask an admin.</p>
     {% elif tasks %}
     <div class="table-scroll">
     <table class="data-table" id="task-table">

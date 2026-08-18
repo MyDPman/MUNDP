@@ -1078,7 +1078,7 @@ def tally_reset():
     )
     db.commit()
     flash(
-        f"Reset {committee} tally — {n} entries archived. You can undo this below.",
+        f"Reset {committee} tally. {n} entries archived. You can undo this below.",
         "success",
     )
     return redirect(url_for("tally"))
@@ -1214,8 +1214,8 @@ def delete_tally(entry_id: int):
 @app.route("/my-committee")
 @login_required
 def my_committee():
-    # exec_gc / dsg can browse any committee via ?c= query param
-    if g.user["role"] in EXEC_GC_ROLES:
+    # exec_gc / dsg / admin can browse any committee via ?c= query param
+    if g.user["role"] in EXEC_GC_ROLES or g.user["role"] == "admin":
         from flask import request as _req
         committee = (_req.args.get("c") or "").strip()
         if not committee or committee not in _cfg_committees():
@@ -1470,7 +1470,7 @@ def voting_control(doc_id: int, action: str):
             (doc_id,),
         )
         db.commit()
-        flash("Voting reset — all votes cleared.", "success")
+        flash("Voting reset. All votes cleared.", "success")
     elif action == "lock":
         tally = _vote_tally(db, doc_id)
         new_status = row["voting_status"]
@@ -1491,7 +1491,7 @@ def voting_control(doc_id: int, action: str):
         )
         db.commit()
         flash(
-            f"Vote locked. Tally — For: {tally['for']}, Against: {tally['against']}. "
+            f"Vote locked. For: {tally['for']}, Against: {tally['against']}. "
             f"Resolution marked as {doc_status}.",
             "success",
         )
@@ -2176,7 +2176,7 @@ def upload():
         )
         db.commit()
         if is_delegate:
-            flash("Resolution submitted — awaiting chair approval.", "success")
+            flash("Resolution submitted, awaiting chair approval.", "success")
         else:
             flash("Resolution uploaded.", "success")
         return redirect(url_for("view_document", doc_id=cur.lastrowid))
@@ -2355,7 +2355,7 @@ def comments(doc_id: int):
         ).fetchone()
         if status_row and status_row["status"] in ("passed", "failed"):
             return jsonify({
-                "error": "This resolution is finalized — amendments are closed."
+                "error": "This resolution is finalized and amendments are closed."
             }), 403
         data = request.get_json(silent=True) or {}
         body = (data.get("body") or "").strip()
@@ -2531,7 +2531,7 @@ def admin_users():
             # Advisors are auto-named by school: adv-<code> / "ADV - <CODE>".
             if not advisor_school:
                 if not _cfg_schools():
-                    err_resp = _fail("No schools configured yet — add them in app.py _cfg_schools().")
+                    err_resp = _fail("No schools configured yet. Add them in app.py _cfg_schools().")
                 else:
                     err_resp = _fail("Advisors must be assigned a school.")
             elif advisor_school not in _cfg_schools():
@@ -2556,7 +2556,7 @@ def admin_users():
             # (latin-alphabet slug, e.g. "can-dagtekin").
             role_ids = {r["id"] for r in _get_roles()}
             if not role_ids:
-                err_resp = _fail("No roles configured yet — add one in Config first.")
+                err_resp = _fail("No roles configured yet. Add one in Config first.")
             elif exec_role_id not in role_ids:
                 err_resp = _fail("Pick a role for this EXEC/GC member.")
             else:
@@ -2638,7 +2638,7 @@ def admin_users():
                             "doc_count": 0,
                         },
                     })
-                flash(f"Created user '{username}' — login code {login_code}.", "success")
+                flash(f"Created user '{username}' with login code {login_code}.", "success")
                 return redirect(url_for("admin_users"))
             except Exception as exc:
                 err_resp = _fail(f"Could not create user: {exc}")
@@ -2898,7 +2898,7 @@ def admin_config_schools():
         if not n or not c:
             continue
         if not c.replace("-", "").isalnum():
-            flash(f"Invalid school code '{c}' — letters/digits only.", "error")
+            flash(f"Invalid school code '{c}'. Letters and digits only.", "error")
             return redirect(url_for("admin_config"))
         if n in schools:
             flash(f"Duplicate school name '{n}'.", "error")
@@ -3047,7 +3047,7 @@ def admin_config_delete_role(role_id: int):
     ).fetchone()["n"]
     if in_use_users or in_use_tasks:
         flash(
-            f"Can't delete '{role['name']}' — still assigned to {in_use_users} user(s) "
+            f"Can't delete '{role['name']}'. Still assigned to {in_use_users} user(s) "
             f"and {in_use_tasks} task(s). Reassign or remove those first.",
             "error",
         )

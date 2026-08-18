@@ -20,7 +20,7 @@
    ── 04 Loading overlay
    ── 05 Masthead
    ── 06 Nav rail, drawer, badges
-   ── 07 Layout, page header, colophon
+   ── 07 Layout, page header
    ── 08 Buttons
    ── 09 Forms, inputs, selects
    ── 10 Country picker
@@ -383,8 +383,9 @@ hr {
    ========================================================================== */
 .masthead {
     background: var(--paper);
-    border-bottom: 3px solid var(--rule-strong);
 }
+/* auth pages have no rail — the masthead carries the rule itself */
+body.auth .masthead { border-bottom: 3px solid var(--rule-strong); }
 .masthead-inner {
     max-width: var(--content-w);
     margin: 0 auto;
@@ -497,6 +498,16 @@ hr {
     background: var(--paper);
     border-bottom: 1px solid var(--line);
 }
+/* the masthead rule, drawn by the rail so the active tab can break it */
+.rail::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--rule-strong);
+}
 .rail-inner {
     max-width: var(--content-w);
     margin: 0 auto;
@@ -532,18 +543,19 @@ hr {
     transition: color var(--t-fast) var(--ease);
 }
 .nav-item:hover { color: var(--ink); text-decoration: none; }
+/* the selected tab breaks the rule above it: its notch paints over the line */
 .nav-item::after {
     content: "";
     position: absolute;
-    left: 13px;
-    right: 13px;
-    top: -1px;
+    left: 0;
+    right: 0;
+    top: 0;
     height: 3px;
     background: transparent;
     transition: background var(--t-fast) var(--ease);
 }
 .nav-item.active { color: var(--ink); }
-.nav-item.active::after { background: var(--red); }
+.nav-item.active::after { background: var(--paper); }
 
 .nav-badge {
     display: inline-grid;
@@ -598,7 +610,7 @@ hr {
 
 
 /* ==========================================================================
-   07 · Layout, page header, colophon
+   07 · Layout, page header
    ========================================================================== */
 .main-area { min-height: 62vh; }
 .main-inner {
@@ -653,26 +665,6 @@ body.auth .main-inner {
     color: var(--red);
 }
 
-.colophon {
-    border-top: 3px solid var(--rule-strong);
-    margin-top: 30px;
-}
-.colophon-inner {
-    max-width: var(--content-w);
-    margin: 0 auto;
-    padding: 18px 28px 26px;
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    font-family: var(--font-label);
-    font-size: 0.62rem;
-    letter-spacing: 0.088em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-}
-.colophon a { color: var(--ink-2); text-decoration: none; }
-.colophon a:hover { color: var(--red); }
 
 
 /* ==========================================================================
@@ -1168,6 +1160,7 @@ select:focus { outline: none; border-color: var(--ink); }
     border-radius: 0;
     padding: 0 2px 10px;
     margin-bottom: -2px;
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -1183,7 +1176,7 @@ select:focus { outline: none; border-color: var(--ink); }
 .dash-tab-btn:hover { background: none; color: var(--ink); }
 .dash-tab-btn.active {
     color: var(--ink);
-    border-bottom-color: var(--red);
+    border-bottom-color: var(--paper);
 }
 .dash-tab-panel { display: none; }
 .dash-tab-panel.active { display: block; }
@@ -1681,12 +1674,116 @@ select:focus { outline: none; border-color: var(--ink); }
 /* ==========================================================================
    20 · My committee, notes, tally
    ========================================================================== */
+/* Committees picker (exec view): the modelundp.org committee cards,
+   minus the apply affordances */
+.cm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 28px;
+}
+.cm-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    overflow: hidden;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(16, 12, 10, 0.05),
+                0 10px 26px -14px rgba(16, 12, 10, 0.25);
+    transition: transform var(--t-fast) var(--ease),
+                border-color var(--t-fast) var(--ease);
+}
+a.cm-card:hover { color: inherit; }
+.cm-card:hover .cm-card__link { color: var(--red); }
+.cm-card:hover .cm-card__link svg { transform: translateX(3px); }
+:root[data-theme="dark"] .cm-card {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3),
+                0 10px 26px -14px rgba(0, 0, 0, 0.55);
+}
+.cm-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--ink-3);
+}
+.cm-card__media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+}
+.cm-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.cm-chip {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-family: var(--font-label);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    color: #fff;
+    background: rgba(10, 12, 30, 0.55);
+    backdrop-filter: blur(6px);
+    border-radius: var(--radius-pill);
+    padding: 5px 11px;
+}
+.cm-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 18px 20px 20px;
+    flex: 1;
+}
+.cm-card__name {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 650;
+    margin: 0;
+}
+.cm-card__desc {
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+    margin: 0;
+}
+.cm-card__actions {
+    margin-top: auto;
+    padding-top: 12px;
+}
+.cm-card__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--link);
+    text-decoration: none;
+}
+.cm-card__link svg { transition: transform var(--t-fast) var(--ease); }
+.cm-card__link:hover { color: var(--red); }
+.cm-card__link:hover svg { transform: translateX(3px); }
+
 .my-committee-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
     gap: 18px;
     align-items: start;
 }
+/* the chamber's full name, set light and small under the big abbreviation */
+.committee-fullname {
+    font-size: 0.95rem;
+    font-weight: 300;
+    letter-spacing: 0.01em;
+    color: var(--ink-2);
+    margin: 2px 0 0;
+}
+
 .agenda-line { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
 .agenda-label {
     font-family: var(--font-label);
@@ -2162,6 +2259,7 @@ body.auth { background: var(--paper); }
         top: 0; bottom: 0; left: 0; right: auto;
         width: 3px; height: auto;
     }
+    .nav-item.active::after { background: var(--red); }
     .rail-actions {
         display: flex;
         flex-direction: column;
@@ -2794,7 +2892,7 @@ code, kbd,
    ========================================================================== */
 @media print {
     .masthead-side, .rail, .nav-hamburger, .loading-overlay,
-    .ambient-collage, .colophon, .header-actions, .flash-area { display: none !important; }
+    .ambient-waves, .header-actions, .flash-area { display: none !important; }
     body { background: #fff; color: #000; }
     .main-inner { padding: 0; max-width: none; }
     a { color: #000; text-decoration: none; }

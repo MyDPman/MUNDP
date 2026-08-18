@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Configurations — MUNDP Portal{% endblock %}
+{% block title %}Configurations · MUNDP Portal{% endblock %}
 
 {% block head %}
 <style>
@@ -201,7 +201,7 @@
         </tbody>
     </table>
     {% else %}
-    <p class="muted small empty-committee">No roles on the books yet — add one below.</p>
+    <p class="muted small empty-committee">No roles on the books yet. Add one below.</p>
     {% endif %}
     <form method="post" action="{{ url_for('admin_config_add_role') }}" class="form cfg-add-role-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

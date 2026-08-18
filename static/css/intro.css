@@ -13,8 +13,7 @@
      .is-hidden (mark, scrollcue), .is-revealed (chip rows),
      html.mydp-intro-seen (hide overlay), html.intro-js-ready (reveal the
      homepage replay button), .intro-overlay--manual (never in flow).
-   · custom props set by JS and consumed here: --intro-progress (stage),
-     --intro-tile-h / --intro-reel-base / --intro-reel-shift (collage reels).
+   · custom props set by JS and consumed here: --intro-progress (stage).
 
    All colors come from the portal tokens, so the intro renders in whichever
    edition (day/night) the visitor holds.
@@ -127,41 +126,6 @@
              translateX(calc((var(--intro-progress, 0) - 0.5) * -22vw));
   pointer-events: none;
 }
-
-/* ---------- photo collage: the contact sheet ---------- */
-.intro-collage {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  align-items: flex-start;
-  gap: 2px;
-  opacity: 0.16;
-  overflow: hidden;
-}
-:root[data-theme="dark"] .intro-collage { opacity: 0.12; }
-
-.intro-collage-reel {
-  position: relative;
-  flex: 1 1 0%;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  will-change: transform;
-  transform: translate3d(0, calc(var(--intro-reel-base, 0px) + var(--intro-progress, 0) * var(--intro-reel-shift, 0px)), 0);
-}
-.intro-collage-reel img {
-  width: 100%;
-  height: var(--intro-tile-h, 210px);
-  flex: none;
-  object-fit: cover;
-  display: block;
-  filter: grayscale(1) contrast(1.08);
-}
-
-/* ---------- retired ornaments ---------- */
-/* the liquid-glass blobs of the previous design have left the building */
-.intro-blob { display: none; }
 
 /* ---------- legibility wash ---------- */
 .intro-scrim {
@@ -518,6 +482,5 @@
   .intro-overlay.intro-js .intro-skip { display: none; }
 
   .intro-backdrop::after { transform: translate(-50%, -50%); }
-  .intro-collage-reel { transform: none !important; }
   .intro-scrollcue span { animation: none; }
 }

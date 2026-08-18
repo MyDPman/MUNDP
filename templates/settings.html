@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Settings — MUNDP Portal{% endblock %}
+{% block title %}Settings · MUNDP Portal{% endblock %}
 {% block content %}
 <div class="page-header">
     <div>
@@ -129,6 +129,11 @@
     {% else %}
     <p class="muted small">No other devices are signed in.</p>
     {% endif %}
+    <hr>
+    <form method="post" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="danger">Sign out</button>
+    </form>
 </section>
 {% endblock %}
 

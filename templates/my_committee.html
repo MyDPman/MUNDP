@@ -1,37 +1,40 @@
 {% extends "base.html" %}
-{% block title %}{{ committee or 'My Committee' }} — MUNDP Portal{% endblock %}
+{% block title %}{{ committee or 'My Committee' }} · MUNDP Portal{% endblock %}
 {% block content %}
 
 {% if not committee %}
 <div class="page-header">
     <div>
-        <h1>{{ 'Committees' if current_user.role in ('exec_gc', 'dsg') else 'My Committee' }}</h1>
+        <h1>{{ 'Committees' if current_user.role in ('exec_gc', 'dsg', 'admin') else 'My Committee' }}</h1>
     </div>
 </div>
-{% if current_user.role in ('exec_gc', 'dsg') and all_committees %}
-<section>
-    <div class="section-head">
-        <h2>Committees</h2>
-    </div>
-    <div class="table-scroll">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Committee</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for c in all_committees %}
-        <tr>
-            <td><a href="{{ url_for('my_committee') }}?c={{ c | urlencode }}"><strong>{{ c }}</strong></a></td>
-            <td class="td-action"><a href="{{ url_for('my_committee') }}?c={{ c | urlencode }}">Open →</a></td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    </div>
-</section>
+{% if current_user.role in ('exec_gc', 'dsg', 'admin') and all_committees %}
+{% import '_committee_meta.html' as cm %}
+{% set roster = cm.committee_meta.keys() | list %}
+{% for c in all_committees %}{% if c not in roster %}{% set _ = roster.append(c) %}{% endif %}{% endfor %}
+<div class="cm-grid">
+    {% for c in roster %}
+    {% set meta = cm.committee_meta.get(c) %}
+    <a class="cm-card" href="{{ url_for('my_committee') }}?c={{ c | urlencode }}">
+        {% if meta and meta[1] %}
+        <div class="cm-card__media">
+            <img src="{{ url_for('static', filename='img/committees/' + meta[1]) }}" loading="lazy" alt="{{ c }}">
+            {% if meta[2] %}<span class="cm-chip">{{ meta[2] }}</span>{% endif %}
+        </div>
+        {% endif %}
+        <div class="cm-card__body">
+            <h3 class="cm-card__name">{{ c }}</h3>
+            {% if meta %}<p class="cm-card__desc">{{ meta[0] }}</p>{% endif %}
+            <div class="cm-card__actions">
+                <span class="cm-card__link">
+                    Open committee
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3.5 8H12.5M12.5 8L8.5 4M12.5 8L8.5 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </span>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
 {% else %}
 <div class="empty-state">
     <p>You haven't been assigned to a committee yet.</p>
@@ -42,7 +45,10 @@
 
 <div class="page-header">
     <div>
+        {% import '_committee_meta.html' as cm %}
+        {% set meta = cm.committee_meta.get(committee) %}
         <h1>{{ committee }}</h1>
+        {% if meta %}<p class="committee-fullname">{{ meta[0] }}</p>{% endif %}
         {% if current_user.delegation %}
         <p class="page-meta">Representing <strong>{{ current_user.delegation }}</strong></p>
         {% endif %}
