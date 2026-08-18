@@ -2006,44 +2006,12 @@ def schedule():
 
 
 
-@app.route("/contact", methods=["GET", "POST"])
+@app.route("/contact")
 @login_required
 def contact():
-    if request.method == "POST":
-        name = (request.form.get("name") or "").strip()
-        email = (request.form.get("email") or "").strip()
-        subject = (request.form.get("subject") or "").strip()
-        body = (request.form.get("body") or "").strip()
-
-        if not name or not body:
-            flash("Name and message are required.", "error")
-            return render_template(
-                "contact.html",
-                secretariat_email=_cfg_conference().get("secretariat_email", ""),
-                form={"name": name, "email": email, "subject": subject, "body": body},
-            )
-        if len(body) > 5000:
-            flash("Message too long (max 5000 characters).", "error")
-            return render_template(
-                "contact.html",
-                secretariat_email=_cfg_conference().get("secretariat_email", ""),
-                form={"name": name, "email": email, "subject": subject, "body": body},
-            )
-
-        db = get_db()
-        db.execute(
-            """
-            INSERT INTO messages (name, email, subject, body, sender_id)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (name, email or None, subject or None, body, g.user["id"]),
-        )
-        db.commit()
-        _sec = _cfg_conference().get("secretariat_email", "")
-        flash(f"Your message has been sent to {_sec}.", "success")
-        return redirect(url_for("contact"))
-
-    return render_template("contact.html", secretariat_email=_cfg_conference().get("secretariat_email", ""), form={})
+    # The portal no longer hosts its own contact form; the conference website
+    # carries the official one.
+    return redirect("https://modelundp.org/contact/")
 
 
 # ---------------------------------------------------------------------------
