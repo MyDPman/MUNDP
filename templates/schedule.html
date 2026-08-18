@@ -4,7 +4,7 @@
 <div class="page-header">
     <div>
         <h1>Schedule</h1>
-        <p class="muted">{{ location }}</p>
+        <p class="page-meta">{{ location }}</p>
     </div>
 </div>
 
@@ -14,7 +14,7 @@
     <section class="card schedule-card">
         <header class="committee-header">
             <h2>{{ day.day }}</h2>
-            <span class="muted small">{{ day['items']|length }} sessions</span>
+            <span class="muted small mono">{{ day['items']|length }} sessions</span>
         </header>
         <ul class="schedule-list">
             {% for time, label in day['items'] %}

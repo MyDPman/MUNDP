@@ -3,13 +3,18 @@
 {% block title %}Note Passing — MUNDP Portal{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h1>Note Passing</h1>
+    <div>
+        <h1>Note Passing</h1>
+    </div>
 </div>
 
 {% if current_user.role == 'advisor' %}
     {% if committees %}
     <form method="post" class="card form notes-compose">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="section-head">
+            <h2>Dispatch</h2>
+        </div>
         <div class="notes-compose-header">
             <div class="notes-compose-meta">
                 <div class="section-label">From</div>
@@ -47,6 +52,9 @@
 {% elif current_user.role == 'admin' %}
     <form method="post" class="card form notes-compose">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="section-head">
+            <h2>Dispatch</h2>
+        </div>
         <div class="notes-compose-header">
             <div class="notes-compose-meta">
                 <div class="section-label">From</div>
@@ -94,6 +102,9 @@
         {% set is_chair = current_user.role == 'chair' %}
         <form method="post" class="card form notes-compose">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="section-head">
+                <h2>Dispatch</h2>
+            </div>
             <div class="notes-compose-header">
                 <div class="notes-compose-meta">
                     <div class="section-label">From</div>
@@ -128,7 +139,10 @@
 {% endif %}
 
 <section class="card">
-    <div class="section-label">{{ inbox_label }} <span class="muted small">({{ notes|length }})</span></div>
+    <div class="section-head">
+        <h2>{{ inbox_label }}</h2>
+        <span class="section-tail">On file: {{ notes|length }}</span>
+    </div>
     {% if notes %}
     <ul class="notes-list">
         {% for n in notes %}
@@ -145,7 +159,7 @@
                         <span>{{ n.recipient_delegation }}</span>
                     </span>
                 </span>
-                <span class="muted small">
+                <span class="note-dateline">
                     {% if current_user.role in ('admin', 'chair') %}<span class="committee-tag">{{ n.committee }}</span>{% endif %}
                     {{ n.created_at | local }}
                 </span>
@@ -155,7 +169,7 @@
         {% endfor %}
     </ul>
     {% else %}
-    <p class="muted small empty-committee">No notes yet.</p>
+    <p class="muted small empty-committee">No notes on file — the wire is quiet.</p>
     {% endif %}
 </section>
 {% endblock %}

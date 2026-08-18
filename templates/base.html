@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}MUNDP Portal{% endblock %}</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/mydp_world.png') }}">
+    <script>
+    // Theme stamp — runs before first paint so there is no flash of the
+    // wrong edition. Explicit choice wins; otherwise follow the OS.
+    (function () {
+        var t;
+        try { t = localStorage.getItem("mydp-theme"); } catch (e) { /* ignore */ }
+        if (t !== "light" && t !== "dark") {
+            t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
+                ? "dark" : "light";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+    })();
+    </script>
     <link rel="stylesheet" href="{{ asset_url('css/style.css') }}">
     <script>
     // Conference time helper — formats UTC strings in Türkiye time (GMT+3).
@@ -32,121 +45,145 @@
     <script defer src="{{ asset_url('js/country-picker.js') }}"></script>
     {% block head %}{% endblock %}
 </head>
-<body class="{% if current_user %}has-sidebar{% else %}auth{% endif %}">
+<body class="{% if current_user %}with-rail{% else %}auth{% endif %}">
+
+<header class="masthead">
+    <div class="masthead-inner">
+        <a class="masthead-brand" href="{{ url_for('index') }}">
+            <img src="{{ url_for('static', filename='img/MyDP_Logo_Blue.png') }}" alt="MyDP" class="brand-logo brand-logo-day">
+            <img src="{{ url_for('static', filename='img/MyDP_Logo_Fixed.png') }}" alt="MyDP" class="brand-logo brand-logo-night">
+        </a>
+        <div class="masthead-side">
+            <div class="masthead-meta">
+                <span id="masthead-date"></span>
+                {% if current_user %}
+                <br><span class="masthead-user">{{ current_user.display_name }}</span>
+                {% endif %}
+            </div>
+            <button type="button" class="theme-toggle" title="Switch edition" aria-label="Switch between day and night edition">
+                <span class="tt-dot" aria-hidden="true"></span>
+                <span class="tt-day">Day</span><span class="tt-night">Night</span>
+            </button>
+            {% if current_user %}
+            <form method="post" action="{{ url_for('logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="masthead-signout">Sign out</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</header>
 
 {% if current_user %}
-<aside class="sidebar">
-    <a class="sidebar-brand" href="{{ url_for('index') }}">
-        <img src="{{ url_for('static', filename='img/MyDP_Logo_Fixed.png') }}" alt="MyDP" class="brand-logo">
-        <span class="brand-text">MyDP</span>
-    </a>
-    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
-        <span></span><span></span><span></span>
-    </button>
+<div class="rail">
+    <div class="rail-inner">
+        <nav class="rail-nav" aria-label="Primary">
+            <a class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}"
+               href="{{ url_for('dashboard') }}">
+                <span>Resolutions</span>
+                {% if badges.resolutions %}<span class="nav-badge">{{ badges.resolutions }}</span>{% endif %}
+            </a>
+            <a class="nav-item {% if request.endpoint == 'summit' %}active{% endif %}"
+               href="{{ url_for('summit') }}">
+                <span>Summit</span>
+            </a>
+            {% if current_user.committee and current_user.role not in ('advisor', 'exec_gc', 'dsg') %}
+            <a class="nav-item {% if request.endpoint == 'my_committee' %}active{% endif %}"
+               href="{{ url_for('my_committee') }}">
+                <span>My Committee</span>
+            </a>
+            {% endif %}
+            {% if current_user.role in ('exec_gc', 'dsg') %}
+            <a class="nav-item {% if request.endpoint == 'my_committee' %}active{% endif %}"
+               href="{{ url_for('my_committee') }}">
+                <span>Committees</span>
+            </a>
+            <a class="nav-item {% if request.endpoint == 'exec_calendar' %}active{% endif %}"
+               href="{{ url_for('exec_calendar') }}">
+                <span>Calendar</span>
+            </a>
+            {% endif %}
+            {% if current_user.role not in ('exec_gc', 'dsg') %}
+            <a class="nav-item {% if request.endpoint == 'notes' %}active{% endif %}"
+               href="{{ url_for('notes') }}">
+                <span>Notes</span>
+                {% if badges.notes %}<span class="nav-badge">{{ badges.notes }}</span>{% endif %}
+            </a>
+            {% endif %}
+            {% if current_user.role in ('admin', 'chair', 'advisor', 'exec_gc', 'dsg') %}
+            <a class="nav-item {% if request.endpoint == 'tally' %}active{% endif %}"
+               href="{{ url_for('tally') }}">
+                <span>Tally</span>
+            </a>
+            {% endif %}
+            {% if current_user.role not in ('advisor', 'exec_gc', 'dsg') %}
+            <a class="nav-item {% if request.endpoint == 'upload' %}active{% endif %}"
+               href="{{ url_for('upload') }}">
+                <span>Submission</span>
+            </a>
+            {% endif %}
+            {% if current_user.role not in ('exec_gc', 'dsg') %}
+            <a class="nav-item {% if request.endpoint == 'schedule' %}active{% endif %}"
+               href="{{ url_for('schedule') }}">
+                <span>Schedule</span>
+            </a>
+            <a class="nav-item" href="{{ external_website_url }}" target="_blank" rel="noopener noreferrer">
+                <span>Website</span>
+            </a>
+            <a class="nav-item {% if request.endpoint == 'help_page' %}active{% endif %}"
+               href="{{ url_for('help_page') }}">
+                <span>Help</span>
+            </a>
+            {% endif %}
+            <a class="nav-item {% if request.endpoint and request.endpoint.startswith('settings') %}active{% endif %}"
+               href="{{ url_for('settings') }}">
+                <span>Settings</span>
+            </a>
+            {% if current_user.role == 'admin' %}
+            <a class="nav-item {% if request.endpoint == 'admin_users' %}active{% endif %}"
+               href="{{ url_for('admin_users') }}">
+                <span>Users</span>
+            </a>
+            <a class="nav-item {% if request.endpoint and request.endpoint.startswith('admin_config') %}active{% endif %}"
+               href="{{ url_for('admin_config') }}">
+                <span>Config</span>
+            </a>
+            <a class="nav-item {% if request.endpoint == 'exec_calendar' %}active{% endif %}"
+               href="{{ url_for('exec_calendar') }}">
+                <span>Calendar</span>
+            </a>
+            {% endif %}
 
-    <nav class="sidebar-nav" aria-label="Primary">
-        <a class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}"
-           href="{{ url_for('dashboard') }}">
-            <span>Resolutions</span>
-            {% if badges.resolutions %}<span class="nav-badge">{{ badges.resolutions }}</span>{% endif %}
-        </a>
-        <a class="nav-item {% if request.endpoint == 'summit' %}active{% endif %}"
-           href="{{ url_for('summit') }}">
-            <span>International Summit</span>
-        </a>
-        {% if current_user.committee and current_user.role not in ('advisor', 'exec_gc', 'dsg') %}
-        <a class="nav-item {% if request.endpoint == 'my_committee' %}active{% endif %}"
-           href="{{ url_for('my_committee') }}">
-            <span>My Committee</span>
-        </a>
-        {% endif %}
-        {% if current_user.role in ('exec_gc', 'dsg') %}
-        <a class="nav-item {% if request.endpoint == 'my_committee' %}active{% endif %}"
-           href="{{ url_for('my_committee') }}">
-            <span>Committees</span>
-        </a>
-        <a class="nav-item {% if request.endpoint == 'exec_calendar' %}active{% endif %}"
-           href="{{ url_for('exec_calendar') }}">
-            <span>Calendar</span>
-        </a>
-        {% endif %}
-        {% if current_user.role not in ('exec_gc', 'dsg') %}
-        <a class="nav-item {% if request.endpoint == 'notes' %}active{% endif %}"
-           href="{{ url_for('notes') }}">
-            <span>Note Passing</span>
-            {% if badges.notes %}<span class="nav-badge">{{ badges.notes }}</span>{% endif %}
-        </a>
-        {% endif %}
-        {% if current_user.role in ('admin', 'chair', 'advisor', 'exec_gc', 'dsg') %}
-        <a class="nav-item {% if request.endpoint == 'tally' %}active{% endif %}"
-           href="{{ url_for('tally') }}">
-            <span>Tally</span>
-        </a>
-        {% endif %}
-        {% if current_user.role not in ('advisor', 'exec_gc', 'dsg') %}
-        <a class="nav-item {% if request.endpoint == 'upload' %}active{% endif %}"
-           href="{{ url_for('upload') }}">
-            <span>Submission</span>
-        </a>
-        {% endif %}
-        {% if current_user.role not in ('exec_gc', 'dsg') %}
-        <a class="nav-item {% if request.endpoint == 'schedule' %}active{% endif %}"
-           href="{{ url_for('schedule') }}">
-            <span>Schedule</span>
-        </a>
-        <a class="nav-item" href="{{ external_website_url }}" target="_blank" rel="noopener noreferrer">
-            <span>Website</span>
-        </a>
-        <a class="nav-item {% if request.endpoint == 'help_page' %}active{% endif %}"
-           href="{{ url_for('help_page') }}">
-            <span>Help</span>
-        </a>
-        {% endif %}
-        <a class="nav-item {% if request.endpoint and request.endpoint.startswith('settings') %}active{% endif %}"
-           href="{{ url_for('settings') }}">
-            <span>Settings</span>
-        </a>
-        {% if current_user.role == 'admin' %}
-        <a class="nav-item {% if request.endpoint == 'admin_users' %}active{% endif %}"
-           href="{{ url_for('admin_users') }}">
-            <span>Users</span>
-        </a>
-        <a class="nav-item {% if request.endpoint and request.endpoint.startswith('admin_config') %}active{% endif %}"
-           href="{{ url_for('admin_config') }}">
-            <span>Configurations</span>
-        </a>
-        <a class="nav-item {% if request.endpoint == 'exec_calendar' %}active{% endif %}"
-           href="{{ url_for('exec_calendar') }}">
-            <span>Calendar</span>
-        </a>
-        {% endif %}
-    </nav>
-
-    <div class="sidebar-footer">
-        <div class="user-card">
-            <div class="user-name">{{ current_user.display_name }}</div>
-        </div>
-        {% if impersonator %}
-        <form method="post" action="{{ url_for('impersonate_stop') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="sidebar-imp-return"
-                    title="Return to {{ impersonator.name }}">
-                ← Back to {{ impersonator.name }}
-            </button>
-        </form>
-        {% endif %}
-        <form method="post" action="{{ url_for('logout') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="sidebar-signout">Sign out</button>
-        </form>
+            <div class="rail-actions">
+                <button type="button" class="theme-toggle" aria-label="Switch between day and night edition">
+                    <span class="tt-dot" aria-hidden="true"></span>
+                    <span class="tt-day">Day edition</span><span class="tt-night">Night edition</span>
+                </button>
+                {% if impersonator %}
+                <form method="post" action="{{ url_for('impersonate_stop') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="masthead-signout">← Back to {{ impersonator.name }}</button>
+                </form>
+                {% endif %}
+                <form method="post" action="{{ url_for('logout') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="masthead-signout">Sign out</button>
+                </form>
+            </div>
+        </nav>
+        <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
+            <span></span><span></span><span></span>
+        </button>
     </div>
     <div class="nav-overlay" id="nav-overlay"></div>
-</aside>
+</div>
 {% endif %}
 
 <div class="loading-overlay show" id="loading-overlay" aria-hidden="true">
     <img src="{{ url_for('static', filename='img/mydp_world_fix.png') }}" alt="" class="loading-logo">
 </div>
+
+<div class="ambient-waves" aria-hidden="true"></div>
 
 <main class="main-area">
     <div class="main-inner">
@@ -177,15 +214,53 @@
     </div>
 </main>
 
+<footer class="colophon">
+    <div class="colophon-inner">
+        <span>MyDP — MUNDP Digital Portal</span>
+        <span>
+            {% if external_website_url %}<a href="{{ external_website_url }}" target="_blank" rel="noopener noreferrer">Website</a> ·{% endif %}
+            <a href="{{ url_for('help_page') }}">Help</a> ·
+            <a href="{{ url_for('contact') }}">Contact</a> ·
+            <a href="{{ url_for('credits') }}">Credits</a>
+        </span>
+        <span>Crafted by Baristas</span>
+    </div>
+</footer>
+
 {% block scripts %}{% endblock %}
+<script>
+// Theme toggle — every .theme-toggle button flips the edition and persists it.
+(function () {
+    var root = document.documentElement;
+    document.querySelectorAll(".theme-toggle").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            root.setAttribute("data-theme", next);
+            try { localStorage.setItem("mydp-theme", next); } catch (e) { /* ignore */ }
+        });
+    });
+})();
+</script>
+<script>
+// Masthead dateline — the folio date, Türkiye time.
+(function () {
+    var el = document.getElementById("masthead-date");
+    if (!el) return;
+    try {
+        el.textContent = new Date().toLocaleDateString("en-GB", {
+            timeZone: "Europe/Istanbul",
+            weekday: "long", day: "numeric", month: "long", year: "numeric",
+        });
+    } catch (e) { /* ignore */ }
+})();
+</script>
 {% if current_user %}
 <script>
-// Live sidebar badge sync — fetches counts every 8 seconds and updates the
+// Live nav badge sync — fetches counts every 8 seconds and updates the
 // nav-badge spans in place. New badges are inserted, zeroed badges removed.
 (function () {
     const NAV_KEYS = ["resolutions", "amendments", "notes"];
     function navItemFor(key) {
-        // Find by href endpoint
         const map = {
             resolutions: "{{ url_for('dashboard') }}",
             amendments: "{{ url_for('amendments_overview') }}",
@@ -193,7 +268,7 @@
         };
         const href = map[key];
         if (!href) return null;
-        return document.querySelector(`.sidebar-nav a[href="${href}"]`);
+        return document.querySelector(`.rail-nav a[href="${href}"]`);
     }
     async function tick() {
         try {
@@ -270,18 +345,15 @@
 (function () {
     const hamburger = document.getElementById('nav-hamburger');
     if (!hamburger) return;
-    const nav = document.querySelector('.sidebar-nav');
-    const footer = document.querySelector('.sidebar-footer');
+    const nav = document.querySelector('.rail-nav');
     const overlay = document.getElementById('nav-overlay');
     function open() {
         nav.classList.add('nav-open');
-        footer && footer.classList.add('nav-open');
         overlay.classList.add('visible');
         document.body.style.overflow = 'hidden';
     }
     function close() {
         nav.classList.remove('nav-open');
-        footer && footer.classList.remove('nav-open');
         overlay.classList.remove('visible');
         document.body.style.overflow = '';
     }

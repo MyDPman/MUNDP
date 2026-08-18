@@ -2,7 +2,9 @@
 {% block title %}Tally — MUNDP Portal{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h1>Tally Tracker</h1>
+    <div>
+        <h1>Tally Tracker</h1>
+    </div>
 </div>
 
 {% if not items %}
@@ -15,7 +17,7 @@
 <section class="card tally-card">
     <header class="committee-header">
         <h2>Assigned delegations</h2>
-        <span class="muted small">{{ items|length }} delegation{{ '' if items|length == 1 else 's' }}</span>
+        <span class="muted small mono">{{ items|length }} delegation{{ '' if items|length == 1 else 's' }}</span>
     </header>
 
     <table class="data-table embedded tally-table">

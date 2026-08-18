@@ -2,7 +2,9 @@
 {% block title %}Tally Tracker — MUNDP Portal{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h1>Tally Tracker</h1>
+    <div>
+        <h1>Tally Tracker</h1>
+    </div>
     {% if scope_committees %}
     <div class="header-actions">
         <a class="button" href="{{ url_for('tally_export_csv') }}" download
@@ -24,13 +26,13 @@
 <section class="card tally-card" data-committee="{{ committee }}">
     <header class="committee-header">
         <h2>{{ committee }}</h2>
-        <span class="muted small">{{ delegations|length }} delegation{{ '' if delegations|length == 1 else 's' }}</span>
+        <span class="muted small mono">{{ delegations|length }} delegation{{ '' if delegations|length == 1 else 's' }}</span>
         <span class="spacer"></span>
         <form method="post" action="{{ url_for('tally_reset') }}" class="inline"
               onsubmit="return confirm('Reset all {{ committee }} tally entries to zero? You can undo this from the Recent resets section.');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="committee" value="{{ committee }}">
-            <button type="submit" class="button">↺ Reset {{ committee }}</button>
+            <button type="submit" class="button outline button-sm">↺ Reset {{ committee }}</button>
         </form>
     </header>
 

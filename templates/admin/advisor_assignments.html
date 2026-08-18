@@ -11,12 +11,14 @@
         </p>
     </div>
     <div class="header-actions">
-        <a href="{{ url_for('admin_users') }}" class="button">← Back to users</a>
+        <a href="{{ url_for('admin_users') }}" class="button outline">← Back to users</a>
     </div>
 </div>
 
 <section class="card">
-    <h2>Add a delegation</h2>
+    <div class="section-head">
+        <h2>Add a delegation</h2>
+    </div>
     <p class="muted small">Each row gives this advisor read access to one delegation in one committee.</p>
     <form method="post" class="form form-grid">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -41,7 +43,10 @@
 </section>
 
 <section class="card">
-    <h2>Current assignments ({{ assignments|length }})</h2>
+    <div class="section-head">
+        <h2>Current assignments</h2>
+        <span class="muted small mono">{{ assignments|length }} on file</span>
+    </div>
     {% if assignments %}
     <div class="table-scroll">
     <table class="data-table">
@@ -79,7 +84,7 @@
     </table>
     </div>
     {% else %}
-    <p class="muted small empty-committee">This advisor has no delegations assigned yet.</p>
+    <p class="muted small empty-committee">Nothing on the ledger yet — this advisor has no delegations assigned.</p>
     {% endif %}
 </section>
 {% endblock %}

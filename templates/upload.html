@@ -1,8 +1,19 @@
 {% extends "base.html" %}
 {% block title %}Submit a Resolution / Clause — MUNDP Portal{% endblock %}
+
+{% block head %}
+<style>
+    /* Submission desk — page-local fit (tokens only) */
+    .upload-shell { max-width: 860px; }
+    .upload-shell .form .section-head { margin: 4px 0 0; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
-    <h1>Submit a Resolution / Clause</h1>
+    <div>
+        <h1>Submit a Resolution / Clause</h1>
+    </div>
     {% if permission_until_iso and not permission_blocked %}
     <div class="header-actions">
         <span class="permission-badge" data-until="{{ permission_until_iso }}">
@@ -17,6 +28,7 @@
 {% if permission_blocked %}
 <div class="upload-block-overlay">
     <div class="upload-block-card">
+        <span class="section-label">By permit only</span>
         <h2>Submission is permission-based</h2>
         <p>Resolution / clause submissions are gated. Ask your committee's chair to grant
             you a <strong>10-minute</strong> submission window — once they do,
@@ -29,46 +41,57 @@
 {% endif %}
 <form method="post" enctype="multipart/form-data" class="form card">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>
-        Committee
-        {% if locked_committee %}
-            <div class="locked-field">
-                <span class="committee-tag">{{ locked_committee }}</span>
-                <span class="muted small">You upload only to your own committee.</span>
-            </div>
-            <input type="hidden" name="committee" value="{{ locked_committee }}">
-        {% else %}
-            <select name="committee" id="upload-committee" required>
-                <option value="" disabled selected>Choose a committee…</option>
-                {% for c in committees %}
-                    <option value="{{ c }}">{{ c }}</option>
-                {% endfor %}
-            </select>
-        {% endif %}
-    </label>
-    <label>
-        Agenda item
-        <select name="agenda_item" id="upload-agenda" required>
+
+    <div class="section-head">
+        <h3>Particulars</h3>
+    </div>
+    <div class="form-grid">
+        <label>
+            Committee
             {% if locked_committee %}
-                <option value="" disabled selected>Pick an agenda item…</option>
-                {% for item in committee_info[locked_committee].agenda_items %}
-                    {% if item %}<option value="{{ item }}">{{ item }}</option>{% endif %}
-                {% endfor %}
+                <div class="locked-field">
+                    <span class="committee-tag">{{ locked_committee }}</span>
+                    <span class="muted small">You upload only to your own committee.</span>
+                </div>
+                <input type="hidden" name="committee" value="{{ locked_committee }}">
             {% else %}
-                <option value="" disabled selected>Pick a committee first…</option>
+                <select name="committee" id="upload-committee" required>
+                    <option value="" disabled selected>Choose a committee…</option>
+                    {% for c in committees %}
+                        <option value="{{ c }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
             {% endif %}
-        </select>
-    </label>
+        </label>
+        <label>
+            Agenda item
+            <select name="agenda_item" id="upload-agenda" required>
+                {% if locked_committee %}
+                    <option value="" disabled selected>Pick an agenda item…</option>
+                    {% for item in committee_info[locked_committee].agenda_items %}
+                        {% if item %}<option value="{{ item }}">{{ item }}</option>{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <option value="" disabled selected>Pick a committee first…</option>
+                {% endif %}
+            </select>
+        </label>
+    </div>
+
+    <div class="section-head">
+        <h3>The document</h3>
+    </div>
     <label>
         Google Doc URL <span class="muted small">(required)</span>
         <input type="text" name="google_doc_url" required maxlength="500"
                placeholder="https://docs.google.com/document/d/...">
-        <span class="muted small">
+        <span class="field-help">
             Set sharing to "Anyone with the link · Viewer" (or Commenter / Editor) so delegates can read the live document.
         </span>
     </label>
+
     <div class="form-actions">
-        <a href="{{ url_for('dashboard') }}" class="button">Cancel</a>
+        <a href="{{ url_for('dashboard') }}" class="button outline">Cancel</a>
         <button type="submit" class="primary"{% if permission_blocked %} disabled{% endif %}>Upload</button>
     </div>
 </form>

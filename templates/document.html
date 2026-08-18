@@ -128,8 +128,10 @@
 {% if doc.voting_status != 'closed' or chair_owns %}
 <section class="voting-card voting-{{ doc.voting_status }}">
     <header class="voting-header">
-        <h2>{% if is_final %}Final result{% else %}Voting{% endif %}</h2>
-        <span class="voting-status-pill voting-pill-{{ doc.voting_status }}">
+        <div>
+            <h2>{% if is_final %}Final result{% else %}Voting{% endif %}</h2>
+        </div>
+        <span class="voting-status-pill voting-pill-{{ doc.voting_status }} voting-status-pill-{{ doc.voting_status }}">
             {% if is_final and doc.status == 'passed' %}Passed
             {% elif is_final and doc.status == 'failed' %}Failed
             {% elif doc.voting_status == 'closed' %}Not open
@@ -241,7 +243,7 @@
     <section class="pdf-pane">
         <div class="pdf-toolbar">
             <button id="prev-page" type="button">‹ Prev</button>
-            <span>Page <span id="page-num">1</span> / <span id="page-count">?</span></span>
+            <span class="pdf-folio">Page <span id="page-num">1</span> / <span id="page-count">?</span></span>
             <button id="next-page" type="button">Next ›</button>
             <span class="spacer"></span>
             <button id="zoom-out" type="button">−</button>
@@ -256,7 +258,9 @@
 
     {% if not is_final %}
     <aside class="comments-pane">
-        <h2>Amendments</h2>
+        <div class="comments-pane-head">
+            <h2>Amendments</h2>
+        </div>
         <div id="comments-list" class="comments-list">
             <p class="muted small">Loading…</p>
         </div>

@@ -1,13 +1,99 @@
 {% extends "base.html" %}
 {% block title %}Configurations — MUNDP Portal{% endblock %}
+
+{% block head %}
+<style>
+/* Department № 11 — the composing room.
+   Cfg rows are set as ruled ledger lines: fields write on the rule,
+   textareas are galley proofs, add-buttons are dashed cut marks.
+   Tokens only; overrides the system .cfg-* look for this desk. */
+
+.mono-input { font-family: var(--font-mono); letter-spacing: 0.02em; }
+
+/* Schools ledger: the row rule is the writing line */
+.cfg-table th { font-size: 0.64rem; }
+.cfg-table td input[type="text"] {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    border-radius: 0;
+    padding: 6px 2px;
+}
+.cfg-table td input[type="text"]:hover { border-bottom-color: var(--ink-3); }
+.cfg-table td input[type="text"]:focus {
+    background: transparent;
+    border-bottom-color: var(--ink);
+}
+
+/* Committee & schedule entries: ruled ledger blocks, not boxes */
+.cfg-committee-list {
+    gap: 0;
+    border-top: 2px solid var(--rule-strong);
+}
+.cfg-committee-row {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 16px 0 18px;
+}
+.cfg-committee-head { justify-content: space-between; }
+.cfg-committee-head input[type="text"] {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    padding: 8px 2px;
+    flex: 1 1 200px;
+    width: auto;
+    min-width: 160px;
+}
+.cfg-committee-head input[type="text"]:hover { border-bottom-color: var(--ink-3); }
+.cfg-committee-head input[type="text"]:focus {
+    background: transparent;
+    border-bottom-color: var(--ink);
+}
+
+/* Galley proofs: agenda and schedule lines in set type */
+.cfg-committee-row textarea {
+    background: var(--paper-2);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.7;
+}
+
+/* Add-a-line controls: dashed until you commit the line */
+.cfg-add {
+    background: transparent;
+    border: 1px dashed var(--ink-3);
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+.cfg-add:hover {
+    background: transparent;
+    border-style: solid;
+    border-color: var(--ink);
+    color: var(--ink);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
-    <h1>Configurations</h1>
+    <div>
+        <h1>Configurations</h1>
+    </div>
 </div>
 
 <!-- ============================== Schools ============================== -->
 <section class="card">
-    <h2>Schools</h2>
+    <div class="section-head">
+        <h2>Schools</h2>
+    </div>
     <form method="post" action="{{ url_for('admin_config_schools') }}" class="form" id="schools-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <table class="data-table cfg-table">
@@ -44,7 +130,9 @@
 
 <!-- ============================ Committees ============================== -->
 <section class="card">
-    <h2>Committees &amp; agenda items</h2>
+    <div class="section-head">
+        <h2>Committees &amp; agenda items</h2>
+    </div>
     <form method="post" action="{{ url_for('admin_config_committees') }}" class="form" id="committees-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div id="committees-rows" class="cfg-committee-list">
@@ -82,7 +170,9 @@
 
 <!-- ============================== Roles ================================= -->
 <section class="card">
-    <h2>EXEC/GC roles</h2>
+    <div class="section-head">
+        <h2>EXEC/GC roles</h2>
+    </div>
     {% if roles %}
     <table class="data-table cfg-table">
         <thead>
@@ -111,7 +201,7 @@
         </tbody>
     </table>
     {% else %}
-    <p class="muted small empty-committee">No roles yet — add one below.</p>
+    <p class="muted small empty-committee">No roles on the books yet — add one below.</p>
     {% endif %}
     <form method="post" action="{{ url_for('admin_config_add_role') }}" class="form cfg-add-role-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -125,7 +215,9 @@
 
 <!-- ========================= Chairs roster ============================== -->
 <section class="card">
-    <h2>Chairs roster</h2>
+    <div class="section-head">
+        <h2>Chairs roster</h2>
+    </div>
     <p class="muted small">Each chair is a user account auto-named from committee + position. Edit their human name here.</p>
     {% for code, slots in roster.items() %}
     <div class="cfg-roster-committee">
@@ -155,7 +247,9 @@
 
 <!-- ============================== Conference =========================== -->
 <section class="card">
-    <h2>Conference info</h2>
+    <div class="section-head">
+        <h2>Conference info</h2>
+    </div>
     <form method="post" action="{{ url_for('admin_config_conference') }}" class="form form-grid">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label>
@@ -182,7 +276,9 @@
 
 <!-- ============================== Schedule ============================= -->
 <section class="card">
-    <h2>Schedule</h2>
+    <div class="section-head">
+        <h2>Schedule</h2>
+    </div>
     <p class="muted small">Each day has a title and a block of items. Format: <code>TIME | Label</code> (one per line).</p>
     <form method="post" action="{{ url_for('admin_config_schedule') }}" class="form" id="schedule-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

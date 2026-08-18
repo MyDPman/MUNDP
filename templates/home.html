@@ -3,104 +3,138 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ asset_url('css/intro.css') }}">
-<style>
-/* ── Hero ────────────────────────────────────────────────────── */
-.home-hero {
-    text-align: center;
-    padding: 80px 0 72px;
-    animation: heroFadeIn 0.6s ease both;
-}
-@keyframes heroFadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-.home-hero-logo {
-    width: 180px;
-    height: 180px;
-    object-fit: contain;
-    display: block;
-    margin: 0 auto 36px;
-    filter: drop-shadow(0 8px 28px rgba(7,5,77,0.13));
-    animation: logoFloat 6s ease-in-out infinite;
-}
-@keyframes logoFloat {
-    0%, 100% { transform: translateY(0px); }
-    50%       { transform: translateY(-8px); }
-}
-.home-hero-title {
-    font-size: 4.6rem;
-    font-weight: 800;
-    letter-spacing: -4px;
-    color: #07054d;
-    margin: 0 0 10px;
-    line-height: 1;
-}
-.home-hero-sub {
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: rgba(7,5,77,0.38);
-    margin: 0 0 28px;
-}
-.home-hero-line {
-    width: 36px;
-    height: 2px;
-    background: rgba(7,5,77,0.18);
-    margin: 0 auto 20px;
-    border-radius: 2px;
-}
-.home-hero-greeting {
-    font-size: 1rem;
-    color: rgba(7,5,77,0.50);
-    margin: 0;
-    letter-spacing: 0.01em;
-}
-.home-hero-greeting strong {
-    color: #07054d;
-    font-weight: 700;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .home-hero     { animation: none; }
-    .home-hero-logo { animation: none; }
-}
-
-/* ── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 700px) {
-    .home-hero-title { font-size: 2.8rem; letter-spacing: -2px; }
-    .home-hero { padding: 52px 0 48px; }
-    .home-hero-logo { width: 130px; height: 130px; }
-}
-@media (max-width: 420px) {
-    .home-hero-title { font-size: 2.1rem; letter-spacing: -1px; }
-    .home-hero-logo { width: 100px; height: 100px; }
-}
-</style>
 {% endblock %}
 
 {% block content %}
 {% set intro_manual = true %}
 {% include "_intro.html" %}
 
-<div class="ambient-collage" id="ambient-collage" aria-hidden="true"></div>
-
-<div class="home-hero" id="main-content">
-    <img class="home-hero-logo"
+<section class="front-hero" id="main-content">
+    <div>
+        <h1 class="front-hero-title">The <span class="hero-role" id="hero-role">Delegate's</span><br><span class="accent-line">Edition</span></h1>
+        <p class="front-hero-standfirst">
+            Good day, <strong>{{ current_user.display_name }}</strong>.
+            This is MyDP — resolutions, committees, notes and the summit,
+            typeset for MUNDP 2027.
+        </p>
+        <div class="front-hero-actions">
+            <a class="button" href="{{ url_for('dashboard') }}">Open Resolutions →</a>
+            <button type="button" class="button outline home-intro-btn" id="intro-replay">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+                Play intro
+            </button>
+        </div>
+    </div>
+    <img class="front-hero-logo"
          src="{{ url_for('static', filename='img/mydp_world_fix.png') }}"
          alt="MyDP">
-    <h1 class="home-hero-title">Welcome to MyDP</h1>
-    <p class="home-hero-sub">MUNDP Digital Interface</p>
-    <div class="home-hero-line"></div>
-    <p class="home-hero-greeting">Hello, <strong>{{ current_user.display_name }}</strong></p>
-    <button type="button" class="button home-intro-btn" id="intro-replay">
-        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
-        Intro
-    </button>
-</div>
+</section>
+
+<section class="front-countdown" aria-label="Countdown to MUNDP 2027">
+    <p class="countdown-label">Convenes February 11, 2027</p>
+    <div class="countdown-grid">
+        <div class="countdown-unit">
+            <span class="countdown-figure" id="cd-days">&#8212;</span>
+            <span class="countdown-cap">Days</span>
+        </div>
+        <div class="countdown-sep" aria-hidden="true"></div>
+        <div class="countdown-unit">
+            <span class="countdown-figure" id="cd-hours">&#8212;</span>
+            <span class="countdown-cap">Hours</span>
+        </div>
+        <div class="countdown-sep" aria-hidden="true"></div>
+        <div class="countdown-unit">
+            <span class="countdown-figure" id="cd-mins">&#8212;</span>
+            <span class="countdown-cap">Minutes</span>
+        </div>
+        <div class="countdown-sep" aria-hidden="true"></div>
+        <div class="countdown-unit">
+            <span class="countdown-figure" id="cd-secs">&#8212;</span>
+            <span class="countdown-cap">Seconds</span>
+        </div>
+    </div>
+</section>
 {% endblock %}
 
 {% block scripts %}
+<script>
+(function () {
+    // Conference countdown — ticks to the opening of MUNDP 2027,
+    // February 11, 2027, Istanbul time.
+    var TARGET = new Date("2027-02-11T00:00:00+03:00").getTime();
+    var days = document.getElementById("cd-days");
+    var hours = document.getElementById("cd-hours");
+    var mins = document.getElementById("cd-mins");
+    var secs = document.getElementById("cd-secs");
+    if (!days || !hours || !mins || !secs) return;
+
+    function pad(n) { return n < 10 ? "0" + n : String(n); }
+
+    function tick() {
+        var diff = Math.max(0, TARGET - Date.now());
+        var s = Math.floor(diff / 1000);
+        days.textContent = String(Math.floor(s / 86400));
+        hours.textContent = pad(Math.floor(s / 3600) % 24);
+        mins.textContent = pad(Math.floor(s / 60) % 60);
+        secs.textContent = pad(s % 60);
+    }
+
+    tick();
+    setInterval(tick, 1000);
+})();
+</script>
+<script>
+(function () {
+    // Hero role carousel — "The <role>'s Edition" types itself out and back
+    // every few seconds. Under prefers-reduced-motion the word simply swaps.
+    var el = document.getElementById("hero-role");
+    if (!el) return;
+    var ROLES = ["Delegate's", "Advisor's", "Chair's", "Executive's"];
+    var HOLD = 2600, TYPE = 70, ERASE = 42, GAP = 350;
+    var i = 0;
+
+    var reduce = false;
+    try {
+        reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    } catch (e) { /* ignore */ }
+    if (reduce) {
+        setInterval(function () {
+            i = (i + 1) % ROLES.length;
+            el.textContent = ROLES[i];
+        }, 4000);
+        return;
+    }
+
+    function erase(then) {
+        el.classList.add("is-typing");
+        var t = el.textContent;
+        if (t.length === 0) {
+            then();
+            return;
+        }
+        el.textContent = t.slice(0, -1);
+        setTimeout(function () { erase(then); }, ERASE);
+    }
+
+    function type(word, pos) {
+        if (pos > word.length) {
+            el.classList.remove("is-typing");
+            setTimeout(next, HOLD);
+            return;
+        }
+        el.textContent = word.slice(0, pos);
+        setTimeout(function () { type(word, pos + 1); }, TYPE);
+    }
+
+    function next() {
+        erase(function () {
+            i = (i + 1) % ROLES.length;
+            setTimeout(function () { type(ROLES[i], 1); }, GAP);
+        });
+    }
+
+    setTimeout(next, HOLD);
+})();
+</script>
 <script defer src="{{ asset_url('js/intro.js') }}"></script>
-<script defer src="{{ asset_url('js/ambient-collage.js') }}"></script>
 {% endblock %}

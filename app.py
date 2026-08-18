@@ -591,7 +591,7 @@ def setup():
                 return redirect(url_for("login"))
             except Exception as e:
                 error = str(e)
-    return f"""<!doctype html><html><body style="font-family:sans-serif;max-width:400px;margin:80px auto;padding:20px">
+    return f"""<!doctype html><html><body style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;max-width:400px;margin:80px auto;padding:20px">
     <h2>First-run setup</h2>
     {"<p style='color:red'>" + error + "</p>" if error else ""}
     <form method=post>

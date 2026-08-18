@@ -3,11 +3,15 @@
 {% block title %}Users — MUNDP Portal{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h1>User management</h1>
+    <div>
+        <h1>User management</h1>
+    </div>
 </div>
 
 <section class="card">
-    <h2>Create user</h2>
+    <div class="section-head">
+        <h2>Create user</h2>
+    </div>
     <form method="post" class="form form-grid" id="create-user-form" data-no-loading>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label class="manual-name-field">
@@ -80,18 +84,21 @@
 </section>
 
 <section class="card">
-    <div class="users-head">
-        <h2>All users (<span id="user-count">{{ users|length }}</span>)</h2>
-        <input type="search" id="user-search" class="users-search"
-               placeholder="Search name, username, or delegation…" autocomplete="off">
+    <div class="section-head">
+        <h2>All users</h2>
+        <span class="users-count">On file: <span id="user-count">{{ users|length }}</span></span>
     </div>
 
-    <div class="filter-pills" id="role-filter" role="tablist">
-        <button type="button" class="filter-pill active" data-role="">All</button>
-        <button type="button" class="filter-pill" data-role="admin">Admin</button>
-        <button type="button" class="filter-pill" data-role="chair">Chair</button>
-        <button type="button" class="filter-pill" data-role="delegate">Delegate</button>
-        <button type="button" class="filter-pill" data-role="advisor">Advisor</button>
+    <div class="users-head">
+        <div class="filter-pills" id="role-filter" role="tablist">
+            <button type="button" class="filter-pill active" data-role="">All</button>
+            <button type="button" class="filter-pill" data-role="admin">Admin</button>
+            <button type="button" class="filter-pill" data-role="chair">Chair</button>
+            <button type="button" class="filter-pill" data-role="delegate">Delegate</button>
+            <button type="button" class="filter-pill" data-role="advisor">Advisor</button>
+        </div>
+        <input type="search" id="user-search" class="users-search"
+               placeholder="Search name, username, or delegation…" autocomplete="off">
     </div>
 
     <ul class="user-list" id="user-list">

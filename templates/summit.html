@@ -1,8 +1,19 @@
 {% extends "base.html" %}
 {% block title %}International Summit — MUNDP Portal{% endblock %}
+{% block head %}
+<style>
+    /* Summit — each committee reads as a dossier of editorial tiles */
+    .committee-card { display: flex; flex-direction: column; gap: 10px; }
+    .committee-card .committee-header { margin-bottom: 2px; padding: 0 2px; }
+    .committee-masthead { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+    .committee-masthead h2 { margin: 0; }
+</style>
+{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h1>International Summit</h1>
+    <div>
+        <h1>International Summit</h1>
+    </div>
 </div>
 
 <div class="summit-grid">
@@ -11,7 +22,9 @@
     {% set submission = by_committee[committee] %}
     <section class="committee-card">
         <header class="committee-header">
-            <h2>{{ committee }}</h2>
+            <div class="committee-masthead">
+                <h2>{{ committee }}</h2>
+            </div>
             {% if submission %}
                 <span class="status-badge status-summit">Submitted</span>
             {% endif %}

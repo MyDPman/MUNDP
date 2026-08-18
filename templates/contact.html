@@ -2,13 +2,16 @@
 {% block title %}Contact — MUNDP Portal{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h1>Contact the Secretariat</h1>
+    <div>
+        <h1>Contact the Secretariat</h1>
+    </div>
 </div>
 
 <form method="post" class="form card contact-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <p class="contact-recipient">
-        To: <strong>{{ secretariat_email }}</strong>
+        <span class="section-label">Addressed to</span>
+        <strong>{{ secretariat_email }}</strong>
     </p>
     <div class="form-grid">
         <label>

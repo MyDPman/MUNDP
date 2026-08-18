@@ -3,15 +3,30 @@
 {% block content %}
 
 {% if not committee %}
-<div class="page-header"><h1>{{ 'Committees' if current_user.role in ('exec_gc', 'dsg') else 'My Committee' }}</h1></div>
+<div class="page-header">
+    <div>
+        <h1>{{ 'Committees' if current_user.role in ('exec_gc', 'dsg') else 'My Committee' }}</h1>
+    </div>
+</div>
 {% if current_user.role in ('exec_gc', 'dsg') and all_committees %}
-<section class="card">
-    <h2>Committees</h2>
+<section>
+    <div class="section-head">
+        <h2>Committees</h2>
+    </div>
     <div class="table-scroll">
     <table class="data-table">
+        <thead>
+            <tr>
+                <th>Committee</th>
+                <th></th>
+            </tr>
+        </thead>
         <tbody>
         {% for c in all_committees %}
-        <tr><td><a href="{{ url_for('my_committee') }}?c={{ c | urlencode }}"><strong>{{ c }}</strong></a></td></tr>
+        <tr>
+            <td><a href="{{ url_for('my_committee') }}?c={{ c | urlencode }}"><strong>{{ c }}</strong></a></td>
+            <td class="td-action"><a href="{{ url_for('my_committee') }}?c={{ c | urlencode }}">Open →</a></td>
+        </tr>
         {% endfor %}
         </tbody>
     </table>
@@ -29,59 +44,72 @@
     <div>
         <h1>{{ committee }}</h1>
         {% if current_user.delegation %}
-        <p class="muted small">Representing <strong>{{ current_user.delegation }}</strong></p>
+        <p class="page-meta">Representing <strong>{{ current_user.delegation }}</strong></p>
         {% endif %}
     </div>
     {% if current_user.role in ('exec_gc', 'dsg') %}
     <div class="header-actions">
-        <a href="{{ url_for('my_committee') }}" class="button">← All Committees</a>
+        <a href="{{ url_for('my_committee') }}" class="button outline">← All Committees</a>
     </div>
     {% endif %}
 </div>
 
-<section class="card">
-    <h2>Chairboard</h2>
-    <div class="table-scroll">
-    <table class="data-table">
-        <tbody>
-            <tr>
-                <td class="muted small">President</td>
-                <td><strong>{{ info.president or '—' }}</strong></td>
-            </tr>
+<div class="my-committee-grid">
+    <details class="committee-section chairs-toggle" open>
+        <summary class="section-label">
+            Chairboard
+            <svg class="chairs-chev" viewBox="0 0 24 24" width="14" height="14" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </summary>
+        <ul class="people-list">
+            <li>
+                <span class="role-tag">President</span>
+                <span class="person-name">{{ info.president or '—' }}</span>
+            </li>
             {% for dp in info.deputy_presidents %}
-            <tr>
-                <td class="muted small">Deputy President</td>
-                <td>{{ dp or '—' }}</td>
-            </tr>
+            <li>
+                <span class="role-tag">Deputy President</span>
+                <span class="person-name">{{ dp or '—' }}</span>
+            </li>
             {% endfor %}
-        </tbody>
-    </table>
-    </div>
-</section>
-
-<section class="card">
-    <h2>Agenda Items</h2>
-    <div class="table-scroll">
-    <table class="data-table">
-        <tbody>
-        {% for item in info.agenda_items %}
-            <tr>
-                <td class="muted small">{{ loop.index }}.</td>
-                <td>{{ item or '—' }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    </div>
-</section>
+        </ul>
+    </details>
+    <details class="committee-section agenda-toggle" open>
+        <summary class="section-label">
+            Agenda Items
+            <svg class="chairs-chev" viewBox="0 0 24 24" width="14" height="14" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </summary>
+        <ol class="agenda-list">
+            {% for item in info.agenda_items %}
+            <li>{{ item or '—' }}</li>
+            {% endfor %}
+        </ol>
+    </details>
+</div>
 
 {% set total_res = (awaiting|length) + (pending|length) + (debated|length) %}
+{% set sec = namespace(n=0) %}
 
 {% if awaiting %}
-<section class="card">
-    <h2>Awaiting approval <span class="muted small">({{ awaiting|length }})</span></h2>
+{% set sec.n = sec.n + 1 %}
+<section>
+    <div class="section-head">
+        <h2>Awaiting approval <span class="tab-count">{{ awaiting|length }}</span></h2>
+    </div>
     <div class="table-scroll">
     <table class="data-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Uploaded by</th>
+                <th></th>
+            </tr>
+        </thead>
         <tbody>
         {% for d in awaiting %}
         <tr>
@@ -97,10 +125,21 @@
 {% endif %}
 
 {% if pending %}
-<section class="card">
-    <h2>To be debated <span class="muted small">({{ pending|length }})</span></h2>
+{% set sec.n = sec.n + 1 %}
+<section>
+    <div class="section-head">
+        <h2>To be debated <span class="tab-count">{{ pending|length }}</span></h2>
+    </div>
     <div class="table-scroll">
     <table class="data-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Uploaded by</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
         <tbody>
         {% for d in pending %}
         {% set can_view = current_user.role in ('admin', 'chair') or
@@ -135,10 +174,21 @@
 {% endif %}
 
 {% if debated %}
-<section class="card">
-    <h2>Debated <span class="muted small">({{ debated|length }})</span></h2>
+{% set sec.n = sec.n + 1 %}
+<section>
+    <div class="section-head">
+        <h2>Debated <span class="tab-count">{{ debated|length }}</span></h2>
+    </div>
     <div class="table-scroll">
     <table class="data-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Uploaded by</th>
+                <th>Outcome</th>
+                <th></th>
+            </tr>
+        </thead>
         <tbody>
         {% for d in debated %}
         <tr class="mc-row-debated">
@@ -159,15 +209,21 @@
 {% endif %}
 
 {% if total_res == 0 %}
-<section class="card">
-    <h2>Resolutions</h2>
+{% set sec.n = sec.n + 1 %}
+<section>
+    <div class="section-head">
+        <h2>Resolutions</h2>
+    </div>
     <p class="muted small empty-committee">No resolutions yet.</p>
 </section>
 {% endif %}
 
 {% if committee_members %}
-<section class="card">
-    <h2>Delegations <span class="muted small">({{ committee_members|length }})</span></h2>
+{% set sec.n = sec.n + 1 %}
+<section>
+    <div class="section-head">
+        <h2>Delegations <span class="tab-count">{{ committee_members|length }}</span></h2>
+    </div>
     <div class="table-scroll">
     <table class="data-table">
         <thead>
@@ -218,8 +274,12 @@
 {% endif %}
 
 {% if current_user.role in ('admin', 'exec_gc', 'dsg') and committee_tally %}
-<section class="card">
-    <h2>Tally <span class="muted small">by points</span></h2>
+{% set sec.n = sec.n + 1 %}
+<section>
+    <div class="section-head">
+        <h2>Tally</h2>
+        <span class="muted small">by points</span>
+    </div>
     <div class="table-scroll">
     <table class="data-table">
         <thead>
@@ -253,8 +313,11 @@
 {% endif %}
 
 {% if current_user.role in ('chair', 'admin') and notes_in_committee %}
-<section class="card">
-    <h2>Notes <span class="muted small">({{ notes_in_committee|length }})</span></h2>
+{% set sec.n = sec.n + 1 %}
+<section>
+    <div class="section-head">
+        <h2>Notes <span class="tab-count">{{ notes_in_committee|length }}</span></h2>
+    </div>
     <ul class="notes-list">
         {% for n in notes_in_committee %}
         <li class="note-item">

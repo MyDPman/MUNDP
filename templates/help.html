@@ -2,26 +2,30 @@
 {% block title %}Help — MUNDP Portal{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h1>Help</h1>
+    <div>
+        <h1>Help</h1>
+    </div>
 </div>
 
-<section class="card help-summary">
+<section class="card">
+    <span class="section-label">Signed in as</span>
     <p>
-        Signed in as
         <strong>{{ current_user.display_name }}</strong>
         <span class="role role-{{ current_user.role }}">{{ current_user.role }}</span>
         {% if current_user.committee %}<span class="committee-tag">{{ current_user.committee }}</span>{% endif %}
         {% if current_user.delegation %}, representing <strong>{{ current_user.delegation }}</strong>{% endif %}.
     </p>
-    <p class="muted small">Scroll for the sections that apply to your role.</p>
+    <p class="muted small">Only the sections that apply to your role are printed below.</p>
 </section>
 
 {# ---------- DELEGATE ---------- #}
 {% if current_user.role == 'delegate' or current_user.role == 'admin' %}
-<section class="card help-section">
-    <h2>For delegates</h2>
+<details class="card help-section" open>
+    <summary class="help-summary">
+        <h2>For delegates</h2>
+    </summary>
 
-    <h3>Tabs</h3>
+    <h3 class="section-label">Tabs</h3>
     <ul class="help-list">
         <li><strong>Resolutions</strong>: all approved resolutions.</li>
         <li><strong>International Summit</strong>: one promoted submission per committee.</li>
@@ -32,7 +36,7 @@
         <li><strong>Settings</strong>: profile, contact info, password.</li>
     </ul>
 
-    <h3>Submitting a resolution</h3>
+    <h3 class="section-label">Submitting a resolution</h3>
     <ol class="help-list">
         <li>Open <strong>Upload</strong>.</li>
         <li>Pick your agenda item.</li>
@@ -42,95 +46,99 @@
         <li>Submit. The resolution stays hidden until your chair approves it.</li>
     </ol>
 
-    <h3>Proposing amendments</h3>
+    <h3 class="section-label">Proposing amendments</h3>
     <ul class="help-list">
         <li>Open the resolution; use the <strong>Amendments</strong> panel on the right.</li>
         <li>Fill in <strong>Location</strong> (e.g. <code>3, a, ii</code>) and the amendment body.</li>
         <li>Submit. Amendments cannot be edited or deleted, so be precise.</li>
     </ul>
 
-    <h3>Voting</h3>
+    <h3 class="section-label">Voting</h3>
     <ul class="help-list">
         <li>When the chair opens voting, green <strong>For</strong> and red <strong>Against</strong> buttons appear.</li>
         <li>You can change your vote until the chair locks the count.</li>
         <li>Once locked, the tally is final.</li>
     </ul>
 
-    <h3>Note passing</h3>
+    <h3 class="section-label">Note passing</h3>
     <ul class="help-list">
         <li>Pick a recipient country or <strong>Chairboard</strong>.</li>
         <li>Notes stay within your committee.</li>
         <li>Every note is visible to the chairs.</li>
     </ul>
 
-    <h3>Settings</h3>
+    <h3 class="section-label">Settings</h3>
     <ul class="help-list">
         <li>Participant name is admin-set. Ask an admin to fix typos.</li>
         <li>Email and phone are yours to edit.</li>
         <li>Changing your password signs out your other devices.</li>
     </ul>
-</section>
+</details>
 {% endif %}
 
 {# ---------- CHAIR ---------- #}
 {% if current_user.role == 'chair' or current_user.role == 'admin' %}
-<section class="card help-section">
-    <h2>For chairs</h2>
+<details class="card help-section" open>
+    <summary class="help-summary">
+        <h2>For chairs</h2>
+    </summary>
     <p class="muted small">Everything a delegate can do, plus the following.</p>
 
-    <h3>Approving resolutions</h3>
+    <h3 class="section-label">Approving resolutions</h3>
     <ul class="help-list">
         <li>New uploads land in <strong>My Committee</strong> under "Awaiting approval".</li>
         <li>Open, review, and click <strong>Approve and publish</strong>.</li>
     </ul>
 
-    <h3>Resolution status</h3>
+    <h3 class="section-label">Resolution status</h3>
     <ul class="help-list">
         <li>Four states: Pending, Debated, Passed, Failed.</li>
         <li>Set via the status row at the top of the resolution.</li>
         <li>Locking a vote sets the status automatically.</li>
     </ul>
 
-    <h3>Voting controls</h3>
+    <h3 class="section-label">Voting controls</h3>
     <ul class="help-list">
         <li><strong>Open voting</strong> when the committee is ready.</li>
         <li><strong>Reset</strong> wipes votes; <strong>Reopen</strong> unlocks a locked vote.</li>
         <li><strong>Lock vote &amp; count</strong> freezes the tally. Ties resolve as Debated.</li>
     </ul>
 
-    <h3>International Summit</h3>
+    <h3 class="section-label">International Summit</h3>
     <ul class="help-list">
         <li>Promote one approved resolution per committee.</li>
         <li>Picking a new one withdraws the previous.</li>
     </ul>
 
-    <h3>Amendments</h3>
+    <h3 class="section-label">Amendments</h3>
     <ul class="help-list">
         <li>All amendments for a resolution sit inside that resolution's page.</li>
         <li>You cannot edit or delete amendments. Discuss them in debate.</li>
     </ul>
 
-    <h3>Tally Tracker</h3>
+    <h3 class="section-label">Tally Tracker</h3>
     <ul class="help-list">
         <li>Click <strong>+POI</strong> (1), <strong>+Speech</strong> (2), or <strong>+Amendment</strong> (2) next to a delegation.</li>
         <li>Use <strong>Undo</strong> to remove a misclick.</li>
     </ul>
 
-    <h3>Notes</h3>
+    <h3 class="section-label">Notes</h3>
     <ul class="help-list">
         <li>You see every note in your committee.</li>
         <li>You can send notes as <em>Chair</em>.</li>
         <li>Chairboard notes are visible only to chairs and admins.</li>
     </ul>
-</section>
+</details>
 {% endif %}
 
 {# ---------- EXEC/GC ---------- #}
 {% if current_user.role in ('exec_gc', 'dsg') or current_user.role == 'admin' %}
-<section class="card help-section">
-    <h2>For EXEC/GC</h2>
+<details class="card help-section" open>
+    <summary class="help-summary">
+        <h2>For EXEC/GC</h2>
+    </summary>
 
-    <h3>Tabs you'll see</h3>
+    <h3 class="section-label">Tabs you'll see</h3>
     <ul class="help-list">
         <li><strong>Schedule</strong>: the full conference programme.</li>
         <li><strong>Tally</strong>: per-committee delegation activity (POIs, speeches, amendments).</li>
@@ -139,21 +147,23 @@
         <li><strong>Help</strong>: this page.</li>
     </ul>
 
-    <h3>About your role</h3>
+    <h3 class="section-label">About your role</h3>
     <p class="muted small">
         <!-- Placeholder — fill in with the official EXEC/GC role description. -->
         Your role description will appear here.
     </p>
-</section>
+</details>
 {% endif %}
 
 {# ---------- ADMIN ---------- #}
 {% if current_user.role == 'admin' %}
-<section class="card help-section">
-    <h2>For admins</h2>
+<details class="card help-section" open>
+    <summary class="help-summary">
+        <h2>For admins</h2>
+    </summary>
     <p class="muted small">Full visibility across all committees.</p>
 
-    <h3>User management</h3>
+    <h3 class="section-label">User management</h3>
     <ul class="help-list">
         <li>Open <strong>Users</strong>. Create with username, display name, participant name, password, role, committee, delegation.</li>
         <li>Delegates require a delegation; chairs and admins do not.</li>
@@ -161,29 +171,27 @@
         <li><strong>Delete</strong> removes the user. Their amendments and resolutions remain; their notes are removed.</li>
     </ul>
 
-    <h3>Note passing</h3>
+    <h3 class="section-label">Note passing</h3>
     <ul class="help-list">
         <li>You can send into any committee.</li>
         <li>The recipient sees the sender as "Admin".</li>
     </ul>
 
-    <h3>Maintenance</h3>
+    <h3 class="section-label">Maintenance</h3>
     <ul class="help-list">
         <li>Restart: <code>lsof -ti:5050 | xargs kill</code>, then <code>python3 app.py</code>.</li>
         <li>Database: <code>data/app.db</code>. Back it up before each conference.</li>
         <li>Uploads: <code>uploads/</code>.</li>
         <li>Network: set <code>ALLOWED_IP_PREFIXES</code> in <code>.env</code>.</li>
     </ul>
-</section>
+</details>
 {% endif %}
 
 <section class="card help-section">
     <h2>Reporting an issue</h2>
     <p>Reach the secretariat at <a href="mailto:{{ secretariat_email }}">{{ secretariat_email }}</a>.</p>
-    <div class="form-actions" style="justify-content: flex-start;">
+    <div class="form-actions">
         <a href="{{ url_for('contact') }}" class="primary button">Contact the Secretariat</a>
     </div>
 </section>
 {% endblock %}
-</content>
-</invoke>

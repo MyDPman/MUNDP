@@ -2,11 +2,15 @@
 {% block title %}Settings — MUNDP Portal{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h1>Settings</h1>
+    <div>
+        <h1>Settings</h1>
+    </div>
 </div>
 
 <section class="card">
-    <h2>Your profile</h2>
+    <div class="section-head">
+        <h2>Your profile</h2>
+    </div>
     <dl class="settings-list">
         <div class="settings-row">
             <dt>Participant name</dt>
@@ -55,7 +59,9 @@
 </section>
 
 <section class="card">
-    <h2>Contact details</h2>
+    <div class="section-head">
+        <h2>Contact details</h2>
+    </div>
     <form method="post" action="{{ url_for('settings_update_contact') }}" class="form form-grid">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label>
@@ -75,7 +81,9 @@
 </section>
 
 <section class="card">
-    <h2>Change password</h2>
+    <div class="section-head">
+        <h2>Change password</h2>
+    </div>
     <form method="post" action="{{ url_for('settings_change_password') }}" class="form form-grid">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label class="full-width">
@@ -98,15 +106,19 @@
 </section>
 
 <section class="card">
-    <h2>Credits</h2>
+    <div class="section-head">
+        <h2>Credits</h2>
+    </div>
     <p class="muted small">The people and tools behind MyDP.</p>
-    <div class="form-actions" style="justify-content: flex-start; margin-top: 12px;">
+    <div class="form-actions">
         <a href="{{ url_for('credits') }}" class="button">View Credits →</a>
     </div>
 </section>
 
 <section class="card">
-    <h2>Active sessions</h2>
+    <div class="section-head">
+        <h2>Active sessions</h2>
+    </div>
     {% if other_sessions > 0 %}
     <p>You have <strong>{{ other_sessions }}</strong> other active session{{ '' if other_sessions == 1 else 's' }} signed in.</p>
     <form method="post" action="{{ url_for('settings_sign_out_others') }}" class="inline"
