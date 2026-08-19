@@ -67,7 +67,7 @@
                         <span>{{ a.country }}</span>
                     </span>
                 </td>
-                <td><span class="committee-tag">{{ a.committee }}</span></td>
+                <td><span class="committee-tag">{{ a.committee | committee_label }}</span></td>
                 <td class="muted small">{{ a.created_at | local_date }}</td>
                 <td>
                     <form method="post" class="inline"

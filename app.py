@@ -371,6 +371,16 @@ def _local_time_only(value):
     return _local_time(value, "%H:%M")
 
 
+@app.template_filter("committee_label")
+def _committee_label(code):
+    """Display form of a committee code. APQ carries a light "AB" suffix
+    (Amazon Basin) everywhere its code is shown as text."""
+    from markupsafe import Markup, escape
+    if code == "APQ":
+        return Markup('APQ<span class="code-light">AB</span>')
+    return escape(code or "")
+
+
 @app.template_global()
 def asset_url(filename: str) -> str:
     """Static URL with an mtime cache-buster so redesigns reach cached
@@ -755,7 +765,12 @@ def dashboard():
     FINAL = ("passed", "failed", "debated")
     active_docs  = [d for d in docs if d["status"] not in FINAL]
     debated_docs = [d for d in docs if d["status"] in FINAL]
-    return render_template("dashboard.html", active_docs=active_docs, debated_docs=debated_docs)
+    return render_template(
+        "dashboard.html",
+        active_docs=active_docs,
+        debated_docs=debated_docs,
+        committees=_cfg_committees(),
+    )
 
 
 # ---------------------------------------------------------------------------

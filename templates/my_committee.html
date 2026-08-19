@@ -23,7 +23,7 @@
         </div>
         {% endif %}
         <div class="cm-card__body">
-            <h3 class="cm-card__name">{{ c }}</h3>
+            <h3 class="cm-card__name">{{ c | committee_label }}</h3>
             {% if meta %}<p class="cm-card__desc">{{ meta[0] }}</p>{% endif %}
             <div class="cm-card__actions">
                 <span class="cm-card__link">
@@ -47,7 +47,7 @@
     <div>
         {% import '_committee_meta.html' as cm %}
         {% set meta = cm.committee_meta.get(committee) %}
-        <h1>{{ committee }}</h1>
+        <h1>{{ committee | committee_label }}</h1>
         {% if meta %}<p class="committee-fullname">{{ meta[0] }}</p>{% endif %}
         {% if current_user.delegation %}
         <p class="page-meta">Representing <strong>{{ current_user.delegation }}</strong></p>

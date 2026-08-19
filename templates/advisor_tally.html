@@ -38,7 +38,7 @@
                         <img class="country-flag-inline" alt="" data-country-flag="{{ it.country }}">
                         <span>
                             <strong>{{ it.country }}</strong> –
-                            <span class="committee-tag">{{ it.committee }}</span>
+                            <span class="committee-tag">{{ it.committee | committee_label }}</span>
                             {% if it.participant_name %}
                                 <span class="muted small">({{ it.participant_name }})</span>
                             {% else %}

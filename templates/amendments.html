@@ -19,7 +19,7 @@
 {% set items = by_committee[committee] %}
 <section class="amendments-section">
     <div class="section-head">
-        <h2>{{ committee }}</h2>
+        <h2>{{ committee | committee_label }}</h2>
         <span class="section-tail">{{ items|length }} amendment{{ '' if items|length == 1 else 's' }}</span>
     </div>
 
@@ -73,7 +73,7 @@
     </table>
     </div>
     {% else %}
-    <p class="muted small empty-committee">No amendments for {{ committee }} yet.</p>
+    <p class="muted small empty-committee">No amendments for {{ committee | committee_label }} yet.</p>
     {% endif %}
 </section>
 {% endfor %}

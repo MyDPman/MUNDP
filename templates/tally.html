@@ -25,14 +25,14 @@
 {% set delegations = data[committee] %}
 <section class="card tally-card" data-committee="{{ committee }}">
     <header class="committee-header">
-        <h2>{{ committee }}</h2>
+        <h2>{{ committee | committee_label }}</h2>
         <span class="muted small mono">{{ delegations|length }} delegation{{ '' if delegations|length == 1 else 's' }}</span>
         <span class="spacer"></span>
         <form method="post" action="{{ url_for('tally_reset') }}" class="inline"
               onsubmit="return confirm('Reset all {{ committee }} tally entries to zero? You can undo this from the Recent resets section.');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="committee" value="{{ committee }}">
-            <button type="submit" class="button outline button-sm">↺ Reset {{ committee }}</button>
+            <button type="submit" class="button outline button-sm">↺ Reset {{ committee | committee_label }}</button>
         </form>
     </header>
 
@@ -80,7 +80,7 @@
         </tbody>
     </table>
     {% else %}
-    <p class="muted small empty-committee">No delegations assigned to {{ committee }} yet.</p>
+    <p class="muted small empty-committee">No delegations assigned to {{ committee | committee_label }} yet.</p>
     {% endif %}
 </section>
 {% endfor %}
@@ -92,7 +92,7 @@
         {% for r in recent_resets %}
         <li>
             <span class="muted small mono">{{ r.performed_at | local_short }}</span>
-            <span class="committee-tag">{{ r.committee }}</span>
+            <span class="committee-tag">{{ r.committee | committee_label }}</span>
             <span>{{ r.entry_count }} entries archived</span>
             <span class="muted small">by {{ r.performer_name or '—' }}</span>
             <form method="post" action="{{ url_for('tally_reset_undo', reset_id=r.id) }}"
@@ -117,7 +117,7 @@
                 <img class="country-flag-inline" alt="" data-country-flag="{{ r.delegation }}">
                 <span>{{ r.delegation }}</span>
             </span>
-            <span class="committee-tag">{{ r.committee }}</span>
+            <span class="committee-tag">{{ r.committee | committee_label }}</span>
             <span class="tally-event tally-event-{{ r.kind }}">{{ tally_labels[r.kind] }} +{{ r.points }}</span>
             <span class="muted small">by {{ r.recorder_name }}</span>
             <form method="post" action="{{ url_for('delete_tally', entry_id=r.id) }}"

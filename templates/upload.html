@@ -50,7 +50,7 @@
             Committee
             {% if locked_committee %}
                 <div class="locked-field">
-                    <span class="committee-tag">{{ locked_committee }}</span>
+                    <span class="committee-tag">{{ locked_committee | committee_label }}</span>
                     <span class="muted small">You upload only to your own committee.</span>
                 </div>
                 <input type="hidden" name="committee" value="{{ locked_committee }}">

@@ -1077,6 +1077,10 @@ select:focus { outline: none; border-color: var(--ink); }
 
 .committee-tag { color: var(--navy); border-color: var(--navy-line); }
 
+/* APQ renders as "APQ" + a lighter-weight "AB" (Amazon Basin) suffix,
+   emitted by the committee_label template filter. */
+.code-light { font-weight: 300; }
+
 .status-badge::before {
     content: "";
     width: 7px;

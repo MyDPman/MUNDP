@@ -111,10 +111,10 @@
                     <div class="notes-from-pill">
                         {% if is_chair and not current_user.delegation %}
                             <span class="role role-chair">chair</span>
-                            <span>{{ current_user.display_name }} · {{ user_committee }}</span>
+                            <span>{{ current_user.display_name }} · {{ user_committee | committee_label }}</span>
                         {% else %}
                             <img class="country-flag-inline" alt="" data-country-flag="{{ current_user.delegation }}">
-                            <span>{{ current_user.delegation }} · {{ user_committee }}</span>
+                            <span>{{ current_user.delegation }} · {{ user_committee | committee_label }}</span>
                         {% endif %}
                     </div>
                 </div>
@@ -160,7 +160,7 @@
                     </span>
                 </span>
                 <span class="note-dateline">
-                    {% if current_user.role in ('admin', 'chair') %}<span class="committee-tag">{{ n.committee }}</span>{% endif %}
+                    {% if current_user.role in ('admin', 'chair') %}<span class="committee-tag">{{ n.committee | committee_label }}</span>{% endif %}
                     {{ n.created_at | local }}
                 </span>
             </div>

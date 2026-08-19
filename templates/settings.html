@@ -34,7 +34,7 @@
         <div class="settings-row">
             <dt>Committee</dt>
             <dd>
-                {% if me.committee %}<span class="committee-tag">{{ me.committee }}</span>
+                {% if me.committee %}<span class="committee-tag">{{ me.committee | committee_label }}</span>
                 {% else %}<span class="muted small">—</span>{% endif %}
             </dd>
         </div>

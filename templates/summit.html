@@ -23,7 +23,7 @@
     <section class="committee-card">
         <header class="committee-header">
             <div class="committee-masthead">
-                <h2>{{ committee }}</h2>
+                <h2>{{ committee | committee_label }}</h2>
             </div>
             {% if submission %}
                 <span class="status-badge status-summit">Submitted</span>
@@ -78,7 +78,7 @@
                 </span>
             </a>
             {% else %}
-            <p class="muted small empty-committee">{{ committee }} has not yet submitted a resolution to the Summit.</p>
+            <p class="muted small empty-committee">{{ committee | committee_label }} has not yet submitted a resolution to the Summit.</p>
             {% endif %}
         </div>
     </section>

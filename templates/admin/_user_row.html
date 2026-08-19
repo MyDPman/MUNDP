@@ -13,7 +13,7 @@
             {% endif %}
         </div>
         <div class="user-meta">
-            {% if u.committee %}<span class="committee-tag">{{ u.committee }}</span>{% endif %}
+            {% if u.committee %}<span class="committee-tag">{{ u.committee | committee_label }}</span>{% endif %}
             {% if u.exec_role_name %}<span class="committee-tag">{{ u.exec_role_name }}</span>{% endif %}
         </div>
         <div class="user-meta">

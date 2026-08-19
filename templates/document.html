@@ -63,7 +63,7 @@
     {% if chair_owns %}
     <div class="approval-text">
         <strong>Awaiting your approval.</strong>
-        Only the uploader and chairs of {{ doc.committee }} can see this resolution until you approve it.
+        Only the uploader and chairs of {{ doc.committee | committee_label }} can see this resolution until you approve it.
     </div>
     <form method="post" action="{{ url_for('approve_document', doc_id=doc.id) }}" class="inline">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -72,7 +72,7 @@
     {% else %}
     <div class="approval-text">
         <strong>Pending chair approval.</strong>
-        Other delegates won't see this resolution until a chair of {{ doc.committee }} approves it.
+        Other delegates won't see this resolution until a chair of {{ doc.committee | committee_label }} approves it.
     </div>
     {% endif %}
 </div>
@@ -213,7 +213,7 @@
             <button type="submit" class="status-btn status-btn-failed">Reset</button>
         </form>
         {% endif %}
-        <span class="muted small">{{ eligible_voters }} eligible delegate{{ '' if eligible_voters == 1 else 's' }} in {{ doc.committee }}.</span>
+        <span class="muted small">{{ eligible_voters }} eligible delegate{{ '' if eligible_voters == 1 else 's' }} in {{ doc.committee | committee_label }}.</span>
     </div>
     {% endif %}
 </section>
@@ -287,7 +287,7 @@
         </form>
         {% elif current_user.role == 'delegate' %}
         <div class="chair-amendment-notice muted small">
-            You can view amendments here, but only delegates of {{ doc.committee }} can submit them.
+            You can view amendments here, but only delegates of {{ doc.committee | committee_label }} can submit them.
         </div>
         {% else %}
         <div class="chair-amendment-notice muted small">

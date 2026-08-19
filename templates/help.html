@@ -12,7 +12,7 @@
     <p>
         <strong>{{ current_user.display_name }}</strong>
         <span class="role role-{{ current_user.role }}">{{ current_user.role }}</span>
-        {% if current_user.committee %}<span class="committee-tag">{{ current_user.committee }}</span>{% endif %}
+        {% if current_user.committee %}<span class="committee-tag">{{ current_user.committee | committee_label }}</span>{% endif %}
         {% if current_user.delegation %}, representing <strong>{{ current_user.delegation }}</strong>{% endif %}.
     </p>
     <p class="muted small">Only the sections that apply to your role are printed below.</p>
